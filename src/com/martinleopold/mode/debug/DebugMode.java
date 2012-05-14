@@ -1,4 +1,4 @@
-package com.mydomain.mymode;
+package com.martinleopold.mode.debug;
 
 import java.io.File;
 import processing.app.Base;
@@ -10,8 +10,8 @@ import processing.mode.java.JavaMode;
  * Mode Template for extending Java mode in Processing IDE 2.0a5 or later.
  *
  */
-public class TemplateMode extends JavaMode {
-    public TemplateMode(Base base, File folder) {
+public class DebugMode extends JavaMode {
+    public DebugMode(Base base, File folder) {
         super(base, folder);
     }
 
@@ -23,7 +23,7 @@ public class TemplateMode extends JavaMode {
      */
     @Override
     public String getTitle() {
-        return "TemplateMode";
+        return "Debug";
     }
 
     /**

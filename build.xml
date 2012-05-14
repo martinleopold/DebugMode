@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<project name="skel-mode" default="install" basedir="./">
-    <description>Template for extending Java Mode in Processing >2.0a5</description>
+<project name="debug-mode" default="install" basedir="./">
+    <description>Debugger for the PDE, Processing >2.0a5</description>
 
     <!-- name of your mode package (will be used as dir name) -->
-    <property name="lib.name" 	value="TemplateMode" />
+    <property name="lib.name" 	value="DebugMode" />
 
     <!-- version -->
     <property name="release" 	value="0.0.1" />

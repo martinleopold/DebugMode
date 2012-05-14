@@ -1,4 +1,6 @@
-/nbproject/
 /build/
-/dist/
-/build.number
+
+# OS generated files #
+######################
+.DS_Store*
+Thumbs.db
