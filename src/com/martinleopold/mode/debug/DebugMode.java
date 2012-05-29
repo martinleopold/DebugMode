@@ -1,10 +1,10 @@
 package com.martinleopold.mode.debug;
 
 import java.io.File;
-import processing.app.Base;
-import processing.app.Editor;
-import processing.app.EditorState;
+import processing.app.*;
+import processing.mode.java.JavaBuild;
 import processing.mode.java.JavaMode;
+import processing.mode.java.runner.Runner;
 
 /**
  * Mode Template for extending Java mode in Processing IDE 2.0a5 or later.
@@ -25,6 +25,36 @@ public class DebugMode extends JavaMode {
     public String getTitle() {
         return "Debug";
     }
+
+    @Override
+    public Runner handleRun(Sketch sketch, RunnerListener listener) throws SketchException {
+        JavaBuild build = new JavaBuild(sketch);
+
+        System.out.println("building sketch");
+        String appletClassName = build.build();
+
+        if (appletClassName != null) {
+            final Runner runtime = new DebugRunner(build, listener);
+            runtime.launch(false);
+            return runtime;
+
+            /*
+            // launch runner in new thread
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    runtime.launch(false);  // this blocks until finished
+                }
+            }).start();
+            return runtime;
+            */
+        }
+        return null;
+    }
+
+
+
 
     /**
      * Create a new editor associated with this mode.
