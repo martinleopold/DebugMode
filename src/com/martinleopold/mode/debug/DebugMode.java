@@ -7,10 +7,15 @@ import processing.mode.java.JavaMode;
 import processing.mode.java.runner.Runner;
 
 /**
- * Mode Template for extending Java mode in Processing IDE 2.0a5 or later.
  *
+ * @author mlg
  */
 public class DebugMode extends JavaMode {
+
+    // important inherited fields:
+    // protected Base base;
+
+
     public DebugMode(Base base, File folder) {
         super(base, folder);
     }
@@ -26,45 +31,13 @@ public class DebugMode extends JavaMode {
         return "Debug";
     }
 
-    @Override
-    public Runner handleRun(Sketch sketch, RunnerListener listener) throws SketchException {
-        JavaBuild build = new JavaBuild(sketch);
-
-        System.out.println("building sketch");
-        String appletClassName = build.build();
-
-        if (appletClassName != null) {
-            final Runner runtime = new DebugRunner(build, listener);
-            runtime.launch(false);
-            return runtime;
-
-            /*
-            // launch runner in new thread
-            new Thread(new Runnable() {
-
-                @Override
-                public void run() {
-                    runtime.launch(false);  // this blocks until finished
-                }
-            }).start();
-            return runtime;
-            */
-        }
-        return null;
-    }
-
-
-
-
     /**
      * Create a new editor associated with this mode.
      */
-    /*
     @Override
     public Editor createEditor(Base base, String path, EditorState state) {
-        return null;
+        return new DebugEditor(base, path, state, this);
     }
-    */
 
     /**
      * Returns the default extension for this editor setup.

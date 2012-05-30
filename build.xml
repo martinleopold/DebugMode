@@ -6,7 +6,7 @@
     <property name="lib.name" 	value="DebugMode" />
 
     <!-- version -->
-    <property name="release" 	value="0.0.1" />
+    <property name="release" 	value="0.1" />
 
     <!-- java version -->
     <property name="java.target.version" value="1.6" />
@@ -52,6 +52,12 @@
     <target name="build">
         <propertyfile file="build.number" /> <!-- create the build.number file if it doesn't exist -->
         <buildnumber file="build.number" />
+
+        <!-- insert build nos. in source code -->
+        <!--
+        <replace dir="${src}" token="@@version@@" value="${build.number}" />
+        <replace dir="${src}" token="@@pretty-version@@" value="${release}" />
+        -->
 
         <mkdir dir="${build}" />
 
