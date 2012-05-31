@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.martinleopold.mode.debug;
 
 import com.sun.jdi.event.Event;
@@ -9,13 +5,20 @@ import com.sun.jdi.event.EventQueue;
 import com.sun.jdi.event.EventSet;
 
 /**
- *
+ * Reader Thread for VM Events.
+ * Constantly monitors a VMs EventQueue for new events and forwards them to an VMEventListener.
  * @author mlg
  */
 public class VMEventReader extends Thread {
     EventQueue eventQueue;
     VMEventListener listener;
 
+    /**
+     * Construct a VMEventReader.
+     * Needs to be kicked off with start() once constructed.
+     * @param eventQueue The queue to read events from. Can be obtained from a VirtualMachine via eventQueue().
+     * @param listener the listener to forward events to.
+     */
     public VMEventReader(EventQueue eventQueue, VMEventListener listener) {
         this.eventQueue = eventQueue;
         this.listener = listener;

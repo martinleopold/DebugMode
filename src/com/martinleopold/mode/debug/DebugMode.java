@@ -7,7 +7,8 @@ import processing.mode.java.JavaMode;
 import processing.mode.java.runner.Runner;
 
 /**
- *
+ * Debug Mode for Processing.
+ * Built on top of JavaMode.
  * @author mlg
  */
 public class DebugMode extends JavaMode {

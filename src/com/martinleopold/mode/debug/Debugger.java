@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.martinleopold.mode.debug;
 
 import com.sun.jdi.VirtualMachine;
@@ -10,9 +6,9 @@ import com.sun.jdi.event.EventSet;
 import processing.mode.java.JavaBuild;
 
 /**
- * Main Controller class for debugging mode
- * mainly works with DebugEditor as the corresponding "view"
- * uses DebugRunner to launch a VM
+ * Main controller class for debugging mode.
+ * Mainly works with DebugEditor as the corresponding "view".
+ * Uses DebugRunner to launch a VM.
  *
  * @author mlg
  */
@@ -21,12 +17,18 @@ public class Debugger implements VMEventListener {
     DebugEditor editor; // editor window, acting as main view
     DebugRunner runtime; // the runtime, contains debuggee VM
 
-    Debugger(DebugEditor view) {
-        this.editor = view;
+    /**
+     * Construct a Debugger object.
+     * @param editor The Editor that will act as primary view
+     */
+    Debugger(DebugEditor editor) {
+        this.editor = editor;
     }
 
     /**
-     * start debugging session
+     * Start a debugging session.
+     * Builds the sketch and launches a VM to run it. VM starts suspended.
+     * Should produce a VMStartEvent.
      */
     void startDebug() {
         stopDebug(); // stop any running sessions
@@ -65,7 +67,8 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * end debugging session
+     * End debugging session.
+     * Stops and disconnects VM. Should produce VMDisconnectEvent.
      */
     void stopDebug() {
         if (runtime != null) {
@@ -76,23 +79,34 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * resume paused debugging session
+     * Resume paused debugging session.
+     * Resumes VM.
      */
     void continueDebug() {
-        if (runtime != null && runtime.vm() != null) {
+        if (isConnected()) {
             runtime.vm().resume();
         }
     }
 
     /**
-     * callback for vm events will be called from another thread
+     * Callback for VM events.
+     * Will be called from another thread. (VMEventReader)
      *
-     * @param es incoming set of events from vm
+     * @param es Incoming set of events from VM
      */
     @Override
     public void vmEvent(EventSet es) {
         for (Event e : es) {
             System.out.println("VM Event: " + e.toString());
         }
+    }
+
+    /**
+     * Checks whether the debugger is connected to a debuggee VM.
+     * i.e. a debugging session is running.
+     * @return true if connected to debuggee VM
+     */
+    boolean isConnected() {
+        return runtime != null && runtime.vm() != null;
     }
 }

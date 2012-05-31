@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.martinleopold.mode.debug;
 
 import java.awt.event.ActionEvent;
@@ -16,8 +12,8 @@ import processing.app.Mode;
 import processing.mode.java.JavaEditor;
 
 /**
- * Main View Class
- * handles the editor window incl. toolbar and menu. has access to the sketch.
+ * Main View Class.
+ * Handles the editor window incl. toolbar and menu. Has access to the Sketch.
  * @author mlg
  */
 public class DebugEditor extends JavaEditor implements ActionListener {
@@ -48,9 +44,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     }
 
     /**
-     * creates the debug menu incl. ActionListeners for the menu items.
-     * intended for adding to the menu bar.
-     * @return the debug menu.
+     * Creates the debug menu.
+     * Includes ActionListeners for the menu items. Intended for adding to the menu bar.
+     * @return The debug menu
      */
     JMenu buildDebugMenu() {
         debugMenu = new JMenu("Debug");
@@ -82,8 +78,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     }
 
     /**
-     * callback for menu items (swing actionlistener)
-     * @param ae action event
+     * Callback for menu items.
+     * IMplementation of Swing ActionListener.
+     * @param ae Action event
      */
     @Override
     public void actionPerformed(ActionEvent ae) {

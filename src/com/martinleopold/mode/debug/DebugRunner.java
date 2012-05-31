@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.martinleopold.mode.debug;
 
 import com.sun.jdi.VirtualMachine;
@@ -19,7 +15,8 @@ import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 
 /**
- * Launches a JavaBuild in a new Debuggee VM
+ * Runs a JavaBuild.
+ * Launches the build in a new Debuggee VM.
  * @author mlg
  */
 public class DebugRunner extends processing.mode.java.runner.Runner {
