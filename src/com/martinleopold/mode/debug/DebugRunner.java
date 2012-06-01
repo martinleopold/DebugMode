@@ -82,6 +82,16 @@ public class DebugRunner extends processing.mode.java.runner.Runner {
     public VirtualMachine launch() {
         String[] machineParamList = getMachineParams();
         String[] sketchParamList = getSketchParams();
+        /*
+        System.out.println("vm launch sketch params:");
+        for (int i=0; i<sketchParamList.length; i++) {
+            System.out.println(sketchParamList[i]);
+        }
+        System.out.println("vm launch machine params:");
+        for (int i=0; i<machineParamList.length; i++) {
+            System.out.println(machineParamList[i]);
+        }
+        * */
         vm = launchVirtualMachine(machineParamList, sketchParamList); // will return null on failure
         return vm;
     }

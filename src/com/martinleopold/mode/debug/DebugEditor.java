@@ -27,6 +27,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     JMenuItem debugMenuItem;
     JMenuItem continueMenuItem;
     JMenuItem stopMenuItem;
+    JMenuItem stepOverMenuItem;
+    JMenuItem stepIntoMenuItem;
+    JMenuItem stepOutMenuItem;
 
     DebugMode dmode;
     Debugger dbg;
@@ -61,9 +64,12 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         JMenuItem setBreakPointMenuItem = new JMenuItem("Toggle Breakpoint");
         setBreakPointMenuItem.addActionListener(this);
 
-        JMenuItem stepOverMenuItem = new JMenuItem("Step Over");
-        JMenuItem stepIntoMenuItem = new JMenuItem("Step Into");
-        JMenuItem stepOutMenuItem = new JMenuItem("Step Out");
+        stepOverMenuItem = new JMenuItem("Step Over");
+        stepOverMenuItem.addActionListener(this);
+        stepIntoMenuItem = new JMenuItem("Step Into");
+        stepIntoMenuItem.addActionListener(this);
+        stepOutMenuItem = new JMenuItem("Step Out");
+        stepOutMenuItem.addActionListener(this);
 
         debugMenu.add(debugMenuItem);
         debugMenu.add(continueMenuItem);
@@ -99,6 +105,15 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             System.out.println("clicked continue menu item");
             //dmode.handleDebug(sketch, this);
             dbg.continueDebug();
+        } else if (source == stepOverMenuItem) {
+            System.out.println("clicked step over menu item");
+            dbg.stepOver();
+        } else if (source == stepIntoMenuItem) {
+            System.out.println("clicked step into menu item");
+            dbg.stepInto();
+        } else if (source == stepOutMenuItem) {
+            System.out.println("clicked step out menu item");
+            dbg.stepOut();
         }
     }
 

@@ -4,6 +4,9 @@ import com.sun.jdi.*;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.BreakpointRequest;
 import com.sun.jdi.request.ClassPrepareRequest;
+import com.sun.jdi.request.EventRequestManager;
+import com.sun.jdi.request.StepRequest;
+import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import processing.app.Sketch;
@@ -21,7 +24,12 @@ public class Debugger implements VMEventListener {
     DebugRunner runtime; // the runtime, contains debuggee VM
     boolean started = false; // debuggee vm has started, VMStartEvent received
     ThreadReference initialThread; // initial thread of debuggee vm
-    String mainClassName;
+    ThreadReference lastBpThread; // thread the last breakpoint occured in
+    String mainClassName; // name of the main class that's currently being debugged
+    String srcPath; // path to the src folder of the current build
+
+    // for debugging
+    JavaBuild build = null;
 
     /**
      * Construct a Debugger object.
@@ -40,28 +48,30 @@ public class Debugger implements VMEventListener {
         stopDebug(); // stop any running sessions
 
         try {
-            Sketch sketch = editor.getSketch();
-            JavaBuild build = new JavaBuild(sketch);
+                Sketch sketch = editor.getSketch();
+                build = new JavaBuild(sketch);
 
-            System.out.println("building sketch: " + sketch.getName());
-            String appletClassName = build.build();
-            System.out.println("class: " + appletClassName);
-            // folder with assembled/preprocessed src
-            System.out.println("build src: " + build.getSrcFolder().getPath());
-            // folder with compiled code (.class files)
-            System.out.println("build bin: " + build.getBinFolder().getPath());
+                System.out.println("building sketch: " + sketch.getName());
+                mainClassName = build.build(false);
+                System.out.println("class: " + mainClassName);
+                // folder with assembled/preprocessed src
+                srcPath = build.getSrcFolder().getPath();
+                System.out.println("build src: " + srcPath);
+                // folder with compiled code (.class files)
+                System.out.println("build bin: " + build.getBinFolder().getPath());
 
-            if (appletClassName != null) {
-                mainClassName = appletClassName;
+            if (mainClassName != null) {
                 System.out.println("init debuggee runtime");
                 runtime = new DebugRunner(build, editor);
                 System.out.println("launching debuggee runtime");
                 VirtualMachine vm = runtime.launch(); // non-blocking
+                if (vm == null) {
+                    System.out.println("error 37: launch failed");
+                }
 
                 // start receiving vm events
                 VMEventReader eventThread = new VMEventReader(vm.eventQueue(), this);
                 eventThread.start();
-
 
                 //return runtime;
 
@@ -93,6 +103,7 @@ public class Debugger implements VMEventListener {
             System.out.println("closing runtime");
             runtime.close();
             runtime = null;
+            build = null;
         }
         started = false;
     }
@@ -106,6 +117,28 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    void step(int stepDepth) {
+        if (isConnected()) {
+            StepRequest sr =
+                    runtime.vm().eventRequestManager().createStepRequest(lastBpThread, StepRequest.STEP_LINE, stepDepth);
+            sr.addCountFilter(1); // valid for one step only
+            sr.enable();
+            runtime.vm().resume();
+        }
+    }
+
+    void stepOver() {
+        step(StepRequest.STEP_OVER);
+    }
+
+    void stepInto() {
+        step(StepRequest.STEP_INTO);
+    }
+
+    void stepOut() {
+        step(StepRequest.STEP_OUT);
+    }
+
     /**
      * Callback for VM events. Will be called from another thread.
      * (VMEventReader)
@@ -115,7 +148,7 @@ public class Debugger implements VMEventListener {
     @Override
     public void vmEvent(EventSet es) {
         for (Event e : es) {
-            System.out.println("VM Event: " + e.toString());
+            System.out.println("*** VM Event: " + e.toString());
 
             if (e instanceof VMStartEvent) {
                 initialThread = ((VMStartEvent) e).thread();
@@ -165,14 +198,40 @@ public class Debugger implements VMEventListener {
                 debugPrint(rt);
 
                 System.out.println("setting breakpoint on setup()");
-                // get setup() location
                 Location setupLocation = rt.methodsByName("setup").get(0).location();
                 BreakpointRequest setupBp = runtime.vm().eventRequestManager().createBreakpointRequest(setupLocation);
                 setupBp.enable();
+
+                System.out.println("setting breakpoint on draw()");
+                Location drawLocation = rt.methodsByName("draw").get(0).location();
+                BreakpointRequest drawBp = runtime.vm().eventRequestManager().createBreakpointRequest(drawLocation);
+                drawBp.enable();
+
                 runtime.vm().resume();
             } else if (e instanceof BreakpointEvent) {
+                ThreadReference t = ((BreakpointEvent) e).thread();
+                lastBpThread = t;
                 System.out.println("stack trace:");
-                printStackTrace(((BreakpointEvent) e).thread());
+                printStackTrace(t);
+                System.out.println("source location:");
+                printLocation(t);
+                System.out.println("local variables:");
+                printLocalVariables(t);
+                /*
+                 * System.out.println("this:"); printThis(t);
+                 *
+                 */
+            } else if (e instanceof StepEvent) {
+                StepEvent se = (StepEvent) e;
+                ThreadReference t = se.thread();
+                printLocation(se.location());
+                System.out.println("local variables:");
+                printLocalVariables(t);
+
+                // delete all steprequests so new ones can be placed (only one per thread)
+                // todo: per thread
+                EventRequestManager mgr = runtime.vm().eventRequestManager();
+                mgr.deleteEventRequests(mgr.stepRequests());
             }
         }
     }
@@ -188,8 +247,8 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Print call stack trace of a thread.
-     * Only works on suspended threads.
+     * Print call stack trace of a thread. Only works on suspended threads.
+     *
      * @param t suspended thread to print stack trace of
      */
     void printStackTrace(ThreadReference t) {
@@ -206,8 +265,113 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Print debug info about a ReferenceType.
-     * Prints class name, source file name, lists methods.
+     * Print local variables on a suspended thread. Takes the topmost stack
+     * frame and lists all local variables and their values.
+     *
+     * @param t suspended thread
+     */
+    void printLocalVariables(ThreadReference t) {
+        try {
+            if (t.frameCount() == 0) {
+                System.out.println("call stack empty");
+            } else {
+                StackFrame sf = t.frame(0);
+                for (LocalVariable lv : sf.visibleVariables()) {
+                    System.out.println(lv.typeName() + " " + lv.name() + " = " + sf.getValue(lv));
+                }
+            }
+        } catch (IncompatibleThreadStateException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (AbsentInformationException ex) {
+            System.out.println("local variable information not available");
+        }
+    }
+
+    /**
+     * todo: seems to kill VMEventReader thread
+     *
+     * @param t
+     */
+    void printThis(ThreadReference t) {
+        try {
+            if (t.frameCount() == 0) {
+                System.out.println("call stack empty");
+            } else {
+                StackFrame sf = t.frame(0);
+                ObjectReference thisObject = sf.thisObject();
+                ReferenceType type = thisObject.referenceType();
+                System.out.println("this type: " + type.name());
+                for (Field f : type.allFields()) {
+                    Value v = thisObject.getValue(f);
+                    System.out.println(f.typeName() + " " + f.name() + " = " + v.toString());
+                }
+            }
+        } catch (IncompatibleThreadStateException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    void printLocation(Location l) {
+        try {
+            //System.out.println(l.sourceName() + ":" + l.lineNumber());
+            System.out.println(getSourceLine(l.sourcePath(), l.lineNumber()));
+
+        } catch (AbsentInformationException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * Read a line from the given file in the builds src folder (1-based i.e.
+     * first line is no. 1)
+     *
+     * @param filePath
+     * @param lineNo
+     * @return
+     */
+    String getSourceLine(String filePath, int lineNo) {
+        if (lineNo == -1) {
+            return "";
+        }
+        File f = new File(srcPath + File.separator + filePath);
+        try {
+
+            BufferedReader r = new BufferedReader(new FileReader(f));
+            int i = 0;
+            String line = "";
+            while (i++ < lineNo) {
+                line = r.readLine();
+                //System.out.println("reading line: " + line);
+            }
+            r.close();
+            return f.getName() + ":" + lineNo + " | " + line;
+        } catch (FileNotFoundException ex) {
+            //System.err.println(ex);
+            return f.getName() + ":" + lineNo;
+        } catch (IOException ex) {
+            System.err.println(ex);
+            return "";
+        }
+
+    }
+
+    void printLocation(ThreadReference t) {
+        try {
+            if (t.frameCount() == 0) {
+                System.out.println("call stack empty");
+            } else {
+                StackFrame sf = t.frame(0);
+                printLocation(sf.location());
+            }
+        } catch (IncompatibleThreadStateException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * Print debug info about a ReferenceType. Prints class name, source file
+     * name, lists methods.
+     *
      * @param rt the reference type to print out
      */
     private void debugPrint(ReferenceType rt) {
@@ -222,6 +386,5 @@ public class Debugger implements VMEventListener {
         for (Method m : rt.methods()) {
             System.out.println(m.toString());
         }
-        // get the threads run method for (Method m :
     }
 }
