@@ -54,12 +54,14 @@
                     <ide-action name="run"/>
                 </context-menu>
             </view>
-            <subprojects/>
+            <subprojects>
+                <project>/Users/mlg/Documents/NetBeansProjects/p5-svn</project>
+            </subprojects>
         </general-data>
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/3">
             <compilation-unit>
                 <package-root>src</package-root>
-                <classpath mode="compile">/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/pde.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/core.jar</classpath>
+                <classpath mode="compile">/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/pde.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/core.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/ecj.jar</classpath>
                 <source-level>1.6</source-level>
             </compilation-unit>
         </java-data>

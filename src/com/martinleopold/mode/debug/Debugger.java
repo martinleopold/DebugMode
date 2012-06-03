@@ -10,7 +10,6 @@ import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import processing.app.Sketch;
-import processing.mode.java.JavaBuild;
 
 /**
  * Main controller class for debugging mode. Mainly works with DebugEditor as
@@ -29,7 +28,7 @@ public class Debugger implements VMEventListener {
     String srcPath; // path to the src folder of the current build
 
     // for debugging
-    JavaBuild build = null;
+    DebugBuild build = null;
 
     /**
      * Construct a Debugger object.
@@ -49,7 +48,7 @@ public class Debugger implements VMEventListener {
 
         try {
                 Sketch sketch = editor.getSketch();
-                build = new JavaBuild(sketch);
+                build = new DebugBuild(sketch);
 
                 System.out.println("building sketch: " + sketch.getName());
                 mainClassName = build.build(false);
