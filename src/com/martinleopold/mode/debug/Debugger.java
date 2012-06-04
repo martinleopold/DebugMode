@@ -7,6 +7,7 @@ import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
 import java.io.*;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import processing.app.Sketch;
@@ -22,8 +23,8 @@ public class Debugger implements VMEventListener {
     DebugEditor editor; // editor window, acting as main view
     DebugRunner runtime; // the runtime, contains debuggee VM
     boolean started = false; // debuggee vm has started, VMStartEvent received
-    ThreadReference initialThread; // initial thread of debuggee vm
-    ThreadReference lastBpThread; // thread the last breakpoint occured in
+    //ThreadReference initialThread; // initial thread of debuggee vm
+    ThreadReference lastThread; // thread the last breakpoint or step occured in
     String mainClassName; // name of the main class that's currently being debugged
     String srcPath; // path to the src folder of the current build
 
@@ -119,7 +120,7 @@ public class Debugger implements VMEventListener {
     void step(int stepDepth) {
         if (isConnected()) {
             StepRequest sr =
-                    runtime.vm().eventRequestManager().createStepRequest(lastBpThread, StepRequest.STEP_LINE, stepDepth);
+                    runtime.vm().eventRequestManager().createStepRequest(lastThread, StepRequest.STEP_LINE, stepDepth);
             sr.addCountFilter(1); // valid for one step only
             sr.enable();
             runtime.vm().resume();
@@ -138,6 +139,30 @@ public class Debugger implements VMEventListener {
         step(StepRequest.STEP_OUT);
     }
 
+    void printStackTrace() {
+        if (isConnected()) {
+            printStackTrace(lastThread);
+        }
+    }
+
+    void printLocals() {
+        if (isConnected()) {
+            printLocalVariables(lastThread);
+        }
+    }
+
+    void printThis() {
+        if (isConnected()) {
+            printThis(lastThread);
+        }
+    }
+
+    void printSource() {
+        if (isConnected()) {
+            printLocation(lastThread);
+        }
+    }
+
     /**
      * Callback for VM events. Will be called from another thread.
      * (VMEventReader)
@@ -150,10 +175,11 @@ public class Debugger implements VMEventListener {
             System.out.println("*** VM Event: " + e.toString());
 
             if (e instanceof VMStartEvent) {
-                initialThread = ((VMStartEvent) e).thread();
+                //initialThread = ((VMStartEvent) e).thread();
+                ThreadReference t = ((VMStartEvent) e).thread();
                 started = true;
 
-                printStackTrace(initialThread);
+                printStackTrace(t);
 
                 // ref.type of the thread.
                 /*
@@ -188,13 +214,14 @@ public class Debugger implements VMEventListener {
                  * System.out.println(m.toString()); } }
                  */
 
+                // break on main class load
                 ClassPrepareRequest mainClassPrepare = runtime.vm().eventRequestManager().createClassPrepareRequest();
                 mainClassPrepare.addClassFilter(mainClassName);
                 mainClassPrepare.enable();
                 runtime.vm().resume();
             } else if (e instanceof ClassPrepareEvent) {
                 ReferenceType rt = ((ClassPrepareEvent) e).referenceType();
-                debugPrint(rt);
+                printType(rt);
 
                 System.out.println("setting breakpoint on setup()");
                 Location setupLocation = rt.methodsByName("setup").get(0).location();
@@ -208,29 +235,20 @@ public class Debugger implements VMEventListener {
 
                 runtime.vm().resume();
             } else if (e instanceof BreakpointEvent) {
-                ThreadReference t = ((BreakpointEvent) e).thread();
-                lastBpThread = t;
-                System.out.println("stack trace:");
-                printStackTrace(t);
-                System.out.println("source location:");
-                printLocation(t);
-                System.out.println("local variables:");
-                printLocalVariables(t);
-                /*
-                 * System.out.println("this:"); printThis(t);
-                 *
-                 */
-            } else if (e instanceof StepEvent) {
-                StepEvent se = (StepEvent) e;
-                ThreadReference t = se.thread();
-                printLocation(se.location());
-                System.out.println("local variables:");
-                printLocalVariables(t);
+                BreakpointEvent be = (BreakpointEvent)e;
+                lastThread = be.thread(); // save this thread
+                BreakpointRequest br = (BreakpointRequest)be.request();
 
-                // delete all steprequests so new ones can be placed (only one per thread)
-                // todo: per thread
+                printLocation(lastThread);
+            } else if (e instanceof StepEvent) {
+                StepEvent se = (StepEvent)e;
+                lastThread = se.thread();
+
+                printLocation(lastThread);
+
+                // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
                 EventRequestManager mgr = runtime.vm().eventRequestManager();
-                mgr.deleteEventRequests(mgr.stepRequests());
+                mgr.deleteEventRequest(se.request());
             }
         }
     }
@@ -252,11 +270,11 @@ public class Debugger implements VMEventListener {
      */
     void printStackTrace(ThreadReference t) {
         try {
-            System.out.println("thread: " + t.name());
+            System.out.println("stack trace for thread " + t.name() + ":");
             int i = 0;
             for (StackFrame f : t.frames()) {
                 Location l = f.location();
-                System.out.println(i++ + ": " + f.toString() + " @ " + l);
+                System.out.println(i++ + ": " + f.toString());
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
@@ -275,7 +293,12 @@ public class Debugger implements VMEventListener {
                 System.out.println("call stack empty");
             } else {
                 StackFrame sf = t.frame(0);
-                for (LocalVariable lv : sf.visibleVariables()) {
+                List<LocalVariable> locals = sf.visibleVariables();
+                if (locals.size() == 0) {
+                    System.out.println("no local variables");
+                    return;
+                }
+                for (LocalVariable lv : locals) {
                     System.out.println(lv.typeName() + " " + lv.name() + " = " + sf.getValue(lv));
                 }
             }
@@ -287,7 +310,7 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * todo: seems to kill VMEventReader thread
+     *
      *
      * @param t
      */
@@ -299,11 +322,23 @@ public class Debugger implements VMEventListener {
                 StackFrame sf = t.frame(0);
                 ObjectReference thisObject = sf.thisObject();
                 ReferenceType type = thisObject.referenceType();
-                System.out.println("this type: " + type.name());
-                for (Field f : type.allFields()) {
-                    Value v = thisObject.getValue(f);
-                    System.out.println(f.typeName() + " " + f.name() + " = " + v.toString());
+                System.out.println("fields in this (" + type.name() + "):");
+                for (Field f : type.visibleFields()) {
+                    System.out.println(f.typeName() + " " + f.name() + " = " + thisObject.getValue(f));
                 }
+            }
+        } catch (IncompatibleThreadStateException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    void printLocation(ThreadReference t) {
+        try {
+            if (t.frameCount() == 0) {
+                System.out.println("call stack empty");
+            } else {
+                Location l = t.frame(0).location(); // current stack frame location
+                printLocation(l);
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
@@ -313,7 +348,8 @@ public class Debugger implements VMEventListener {
     void printLocation(Location l) {
         try {
             //System.out.println(l.sourceName() + ":" + l.lineNumber());
-            System.out.println(getSourceLine(l.sourcePath(), l.lineNumber()));
+            System.out.println("in method " + l.method() + ":");
+            System.out.println(getSourceLine(l.sourcePath(), l.lineNumber(), 2));
 
         } catch (AbsentInformationException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
@@ -321,29 +357,36 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Read a line from the given file in the builds src folder (1-based i.e.
-     * first line is no. 1)
+     * Read a line from the given file in the builds src folder.
+     * 1-based i.e. first line has line no. 1
      *
      * @param filePath
      * @param lineNo
      * @return
      */
-    String getSourceLine(String filePath, int lineNo) {
+    String getSourceLine(String filePath, int lineNo, int radius) {
         if (lineNo == -1) {
+            System.err.println("invalid line number: " + lineNo);
             return "";
         }
+        //System.out.println("getting line: " + lineNo);
         File f = new File(srcPath + File.separator + filePath);
+        String output = "";
         try {
-
             BufferedReader r = new BufferedReader(new FileReader(f));
-            int i = 0;
-            String line = "";
-            while (i++ < lineNo) {
-                line = r.readLine();
-                //System.out.println("reading line: " + line);
+            int i = 1;
+            //String line = "";
+            while (i <= lineNo+radius) {
+                String line = r.readLine(); // line no. i
+                if (line == null) break; // end of file
+                if (i >= lineNo-radius) {
+                    if (i > lineNo-radius) output += "\n"; // add newlines before all lines but the first
+                    output += f.getName() + ":" + i + (i==lineNo ? " =>  " : "     ") + line;
+                }
+                i++;
             }
             r.close();
-            return f.getName() + ":" + lineNo + " | " + line;
+            return output;
         } catch (FileNotFoundException ex) {
             //System.err.println(ex);
             return f.getName() + ":" + lineNo;
@@ -354,26 +397,13 @@ public class Debugger implements VMEventListener {
 
     }
 
-    void printLocation(ThreadReference t) {
-        try {
-            if (t.frameCount() == 0) {
-                System.out.println("call stack empty");
-            } else {
-                StackFrame sf = t.frame(0);
-                printLocation(sf.location());
-            }
-        } catch (IncompatibleThreadStateException ex) {
-            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
     /**
-     * Print debug info about a ReferenceType. Prints class name, source file
+     * Print info about a ReferenceType. Prints class name, source file
      * name, lists methods.
      *
      * @param rt the reference type to print out
      */
-    private void debugPrint(ReferenceType rt) {
+    private void printType(ReferenceType rt) {
         System.out.println("ref.type: " + rt);
         System.out.println("name: " + rt.name());
         try {

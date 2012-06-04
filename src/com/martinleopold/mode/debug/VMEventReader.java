@@ -1,5 +1,6 @@
 package com.martinleopold.mode.debug;
 
+import com.sun.jdi.VMDisconnectedException;
 import com.sun.jdi.event.Event;
 import com.sun.jdi.event.EventQueue;
 import com.sun.jdi.event.EventSet;
@@ -36,8 +37,10 @@ public class VMEventReader extends Thread {
                 }
                 */
             }
+        } catch (VMDisconnectedException e) {
+            System.out.println("VMEventReader quit on VM disconnect");
         } catch (Exception e) {
-            System.out.println("VMEventReader quit: " + e.toString());
+            System.err.println("VMEventReader quit: " + e.toString());
         }
     }
 }

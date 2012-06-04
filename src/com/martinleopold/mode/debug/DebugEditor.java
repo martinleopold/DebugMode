@@ -24,12 +24,23 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     //protected EditorToolbar toolbar;
 
     JMenu debugMenu;
+    // debugger control
     JMenuItem debugMenuItem;
     JMenuItem continueMenuItem;
     JMenuItem stopMenuItem;
+    // breakpoints
+    JMenuItem setBreakpointMenuItem;
+    JMenuItem removeBreakpointMenuItem;
+    JMenuItem listBreakpointsMenuItem;
+    // stepping
     JMenuItem stepOverMenuItem;
     JMenuItem stepIntoMenuItem;
     JMenuItem stepOutMenuItem;
+    // info
+    JMenuItem printStackTraceMenuItem;
+    JMenuItem printLocalsMenuItem;
+    JMenuItem printThisMenuItem;
+    JMenuItem printSourceMenuItem;
 
     DebugMode dmode;
     Debugger dbg;
@@ -61,8 +72,12 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         stopMenuItem = new JMenuItem("Stop");
         stopMenuItem.addActionListener(this);
 
-        JMenuItem setBreakPointMenuItem = new JMenuItem("Toggle Breakpoint");
-        setBreakPointMenuItem.addActionListener(this);
+        setBreakpointMenuItem = new JMenuItem("Set Breakpoint");
+        setBreakpointMenuItem.addActionListener(this);
+        removeBreakpointMenuItem = new JMenuItem("Remove Breakpoint");
+        removeBreakpointMenuItem.addActionListener(this);
+        listBreakpointsMenuItem = new JMenuItem("List Breakpoints");
+        listBreakpointsMenuItem.addActionListener(this);
 
         stepOverMenuItem = new JMenuItem("Step Over");
         stepOverMenuItem.addActionListener(this);
@@ -71,15 +86,34 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         stepOutMenuItem = new JMenuItem("Step Out");
         stepOutMenuItem.addActionListener(this);
 
+        printStackTraceMenuItem = new JMenuItem("Print Stack trace");
+        printStackTraceMenuItem.addActionListener(this);
+        printLocalsMenuItem = new JMenuItem("Print Locals");
+        printLocalsMenuItem.addActionListener(this);
+        printThisMenuItem = new JMenuItem("Print this fields");
+        printThisMenuItem.addActionListener(this);
+        printSourceMenuItem = new JMenuItem("Print Source Location");
+        printSourceMenuItem.addActionListener(this);
+
         debugMenu.add(debugMenuItem);
         debugMenu.add(continueMenuItem);
         debugMenu.add(stopMenuItem);
+        /*
         debugMenu.addSeparator();
-        debugMenu.add(setBreakPointMenuItem);
+        debugMenu.add(setBreakpointMenuItem);
+        debugMenu.add(removeBreakpointMenuItem);
+        debugMenu.add(listBreakpointsMenuItem);
+        *
+        */
         debugMenu.addSeparator();
         debugMenu.add(stepOverMenuItem);
         debugMenu.add(stepIntoMenuItem);
         debugMenu.add(stepOutMenuItem);
+        debugMenu.addSeparator();
+        debugMenu.add(printStackTraceMenuItem);
+        debugMenu.add(printLocalsMenuItem);
+        debugMenu.add(printThisMenuItem);
+        debugMenu.add(printSourceMenuItem);
         return debugMenu;
     }
 
@@ -94,26 +128,38 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
         JMenuItem source = (JMenuItem)ae.getSource();
         if (source == debugMenuItem) {
-            System.out.println("clicked debug menu item");
+            System.out.println("# clicked debug menu item");
             //dmode.handleDebug(sketch, this);
             dbg.startDebug();
         } else if (source == stopMenuItem) {
-            System.out.println("clicked stop menu item");
+            System.out.println("# clicked stop menu item");
             //dmode.handleDebug(sketch, this);
             dbg.stopDebug();
         } else if (source == continueMenuItem) {
-            System.out.println("clicked continue menu item");
+            System.out.println("# clicked continue menu item");
             //dmode.handleDebug(sketch, this);
             dbg.continueDebug();
         } else if (source == stepOverMenuItem) {
-            System.out.println("clicked step over menu item");
+            System.out.println("# clicked step over menu item");
             dbg.stepOver();
         } else if (source == stepIntoMenuItem) {
-            System.out.println("clicked step into menu item");
+            System.out.println("# clicked step into menu item");
             dbg.stepInto();
         } else if (source == stepOutMenuItem) {
-            System.out.println("clicked step out menu item");
+            System.out.println("# clicked step out menu item");
             dbg.stepOut();
+        } else if (source == printStackTraceMenuItem) {
+            System.out.println("# clicked print stack trace menu item");
+            dbg.printStackTrace();
+        } else if (source == printLocalsMenuItem) {
+            System.out.println("# clicked print locals menu item");
+            dbg.printLocals();
+        } else if (source == printThisMenuItem) {
+            System.out.println("# clicked print this menu item");
+            dbg.printThis();
+        } else if (source == printSourceMenuItem) {
+            System.out.println("# clicked print source menu item");
+            dbg.printSource();
         }
     }
 
