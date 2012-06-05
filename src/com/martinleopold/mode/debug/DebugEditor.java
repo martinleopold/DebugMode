@@ -98,13 +98,10 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         debugMenu.add(debugMenuItem);
         debugMenu.add(continueMenuItem);
         debugMenu.add(stopMenuItem);
-        /*
         debugMenu.addSeparator();
         debugMenu.add(setBreakpointMenuItem);
         debugMenu.add(removeBreakpointMenuItem);
         debugMenu.add(listBreakpointsMenuItem);
-        *
-        */
         debugMenu.addSeparator();
         debugMenu.add(stepOverMenuItem);
         debugMenu.add(stepIntoMenuItem);
@@ -160,7 +157,29 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         } else if (source == printSourceMenuItem) {
             System.out.println("# clicked print source menu item");
             dbg.printSource();
+        } else if (source == setBreakpointMenuItem) {
+            System.out.println("# clicked set breakpoint menu item");
+            dbg.setBreakpoint();
+        } else if (source == removeBreakpointMenuItem) {
+            System.out.println("# clicked remove breakpoint menu item");
+            dbg.removeBreakpoint();
+        } else if (source == listBreakpointsMenuItem) {
+            System.out.println("# clicked list breakpoints menu item");
+            dbg.listBreakpoints();
         }
     }
 
+    @Override
+    public void handleRun() {
+        dbg.continueDebug();
+    }
+
+    @Override
+    public void handleStop() {
+        dbg.stopDebug();
+    }
+
+    public void clearConsole() {
+        console.clear();
+    }
 }

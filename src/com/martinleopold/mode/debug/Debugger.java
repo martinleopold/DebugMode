@@ -7,7 +7,10 @@ import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import processing.app.Sketch;
@@ -22,14 +25,15 @@ public class Debugger implements VMEventListener {
 
     DebugEditor editor; // editor window, acting as main view
     DebugRunner runtime; // the runtime, contains debuggee VM
-    boolean started = false; // debuggee vm has started, VMStartEvent received
+    boolean started = false; // debuggee vm has started, VMStartEvent received, main class loaded
     //ThreadReference initialThread; // initial thread of debuggee vm
     ThreadReference lastThread; // thread the last breakpoint or step occured in
     String mainClassName; // name of the main class that's currently being debugged
+    ReferenceType mainClass;
     String srcPath; // path to the src folder of the current build
-
-    // for debugging
-    DebugBuild build = null;
+    DebugBuild build; // todo: might not need to be global
+    Map<LineID, LineID> lineMap; // maps source lines from "sketch-space" to "java-space" and vice-versa
+    List<LineID> breakpoints = new ArrayList(); // list of breakpoints in "sketch-space"
 
     /**
      * Construct a Debugger object.
@@ -47,23 +51,37 @@ public class Debugger implements VMEventListener {
     void startDebug() {
         stopDebug(); // stop any running sessions
 
-        try {
-                Sketch sketch = editor.getSketch();
-                build = new DebugBuild(sketch);
+        // clear console
+        editor.clearConsole();
 
-                System.out.println("building sketch: " + sketch.getName());
-                mainClassName = build.build(false);
-                System.out.println("class: " + mainClassName);
-                // folder with assembled/preprocessed src
-                srcPath = build.getSrcFolder().getPath();
-                System.out.println("build src: " + srcPath);
-                // folder with compiled code (.class files)
-                System.out.println("build bin: " + build.getBinFolder().getPath());
+        try {
+            Sketch sketch = editor.getSketch();
+            build = new DebugBuild(sketch);
+
+            System.out.println("building sketch: " + sketch.getName());
+            LineMapping.addLineNumbers(sketch); // annotate
+            mainClassName = build.build(false);
+            LineMapping.removeLineNumbers(sketch); // annotate
+
+            System.out.println("class: " + mainClassName);
+            // folder with assembled/preprocessed src
+            srcPath = build.getSrcFolder().getPath();
+            System.out.println("build src: " + srcPath);
+            // folder with compiled code (.class files)
+            System.out.println("build bin: " + build.getBinFolder().getPath());
 
             if (mainClassName != null) {
-                System.out.println("init debuggee runtime");
-                runtime = new DebugRunner(build, editor);
+                // generate the source line mapping
+                System.out.println("generating source line mapping (sketch <-> java)");
+                lineMap = LineMapping.generateMapping(srcPath + File.separator + mainClassName + ".java");
+                /*
+                for (Entry<LineID, LineID> entry : lineMap.entrySet()) {
+                    System.out.println(entry.getKey() + " -> " + entry.getValue());
+                }
+                */
+
                 System.out.println("launching debuggee runtime");
+                runtime = new DebugRunner(build, editor);
                 VirtualMachine vm = runtime.launch(); // non-blocking
                 if (vm == null) {
                     System.out.println("error 37: launch failed");
@@ -112,8 +130,11 @@ public class Debugger implements VMEventListener {
      * Resume paused debugging session. Resumes VM.
      */
     void continueDebug() {
+        deselect();
         if (isConnected()) {
             runtime.vm().resume();
+        } else {
+            startDebug();
         }
     }
 
@@ -163,6 +184,48 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    void setBreakpoint() {
+        LineID line = getCurrentLine();
+        breakpoints.add(line);
+        System.out.println("setting breakpoint on line " + line);
+        System.out.println("note: breakpoints on method declarations will not work, use first line of method instead");
+        System.out.println("note: changes take effect after (re)starting the debug session");
+    }
+
+    void removeBreakpoint() {
+        LineID line = getCurrentLine();
+        if (breakpoints.contains(line)) {
+            breakpoints.remove(line);
+            System.out.println("removed breakpoint " + line);
+            System.out.println("note: changes take effect after (re)starting the debug session");
+        } else {
+            System.out.println("no breakpoint on line " + line);
+        }
+    }
+
+    void listBreakpoints() {
+        if (breakpoints.isEmpty()) {
+            System.out.println("no breakpoints");
+        } else {
+            System.out.println("line breakpoints:");
+            for (LineID line : breakpoints) {
+                System.out.println(line);
+            }
+        }
+    }
+
+    /**
+     * Retrieve line id in sketch where the cursor currently resides.
+     *
+     * @return
+     */
+    private LineID getCurrentLine() {
+        Sketch s = editor.getSketch();
+        String tab = s.getCurrentCode().getFileName();
+        int lineNo = editor.getTextArea().getCaretLine() + 1;
+        return new LineID(tab, lineNo);
+    }
+
     /**
      * Callback for VM events. Will be called from another thread.
      * (VMEventReader)
@@ -177,9 +240,7 @@ public class Debugger implements VMEventListener {
             if (e instanceof VMStartEvent) {
                 //initialThread = ((VMStartEvent) e).thread();
                 ThreadReference t = ((VMStartEvent) e).thread();
-                started = true;
-
-                printStackTrace(t);
+                //printStackTrace(t);
 
                 // ref.type of the thread.
                 /*
@@ -215,40 +276,57 @@ public class Debugger implements VMEventListener {
                  */
 
                 // break on main class load
+                System.out.println("requesting event on class load: " + mainClassName);
                 ClassPrepareRequest mainClassPrepare = runtime.vm().eventRequestManager().createClassPrepareRequest();
                 mainClassPrepare.addClassFilter(mainClassName);
                 mainClassPrepare.enable();
                 runtime.vm().resume();
             } else if (e instanceof ClassPrepareEvent) {
-                ReferenceType rt = ((ClassPrepareEvent) e).referenceType();
-                printType(rt);
+                ClassPrepareEvent ce = (ClassPrepareEvent) e;
+                ReferenceType rt = ce.referenceType();
+                //printType(rt);
+                mainClass = rt;
 
                 System.out.println("setting breakpoint on setup()");
                 Location setupLocation = rt.methodsByName("setup").get(0).location();
                 BreakpointRequest setupBp = runtime.vm().eventRequestManager().createBreakpointRequest(setupLocation);
                 setupBp.enable();
 
-                System.out.println("setting breakpoint on draw()");
-                Location drawLocation = rt.methodsByName("draw").get(0).location();
-                BreakpointRequest drawBp = runtime.vm().eventRequestManager().createBreakpointRequest(drawLocation);
-                drawBp.enable();
+                /*
+                 * System.out.println("setting breakpoint on draw()"); Location
+                 * drawLocation = rt.methodsByName("draw").get(0).location();
+                 * BreakpointRequest drawBp =
+                 * runtime.vm().eventRequestManager().createBreakpointRequest(drawLocation);
+                 * drawBp.enable();
+                 */
 
+                System.out.println("setting breakpoints:");
+                if (breakpoints.isEmpty()) System.out.println("no breakpoints set");
+                for (LineID sketchLine : breakpoints) {
+                    setBreakpoint(sketchLine);
+                }
+                started = true;
                 runtime.vm().resume();
             } else if (e instanceof BreakpointEvent) {
-                BreakpointEvent be = (BreakpointEvent)e;
+                BreakpointEvent be = (BreakpointEvent) e;
                 lastThread = be.thread(); // save this thread
-                BreakpointRequest br = (BreakpointRequest)be.request();
+                BreakpointRequest br = (BreakpointRequest) be.request();
 
                 printLocation(lastThread);
+                selectLocation(be.location());
             } else if (e instanceof StepEvent) {
-                StepEvent se = (StepEvent)e;
+                StepEvent se = (StepEvent) e;
                 lastThread = se.thread();
 
                 printLocation(lastThread);
+                selectLocation(se.location());
+
 
                 // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
                 EventRequestManager mgr = runtime.vm().eventRequestManager();
                 mgr.deleteEventRequest(se.request());
+            } else if (e instanceof VMDisconnectEvent) {
+                started = false;
             }
         }
     }
@@ -357,8 +435,8 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Read a line from the given file in the builds src folder.
-     * 1-based i.e. first line has line no. 1
+     * Read a line from the given file in the builds src folder. 1-based i.e.
+     * first line has line no. 1
      *
      * @param filePath
      * @param lineNo
@@ -376,12 +454,16 @@ public class Debugger implements VMEventListener {
             BufferedReader r = new BufferedReader(new FileReader(f));
             int i = 1;
             //String line = "";
-            while (i <= lineNo+radius) {
+            while (i <= lineNo + radius) {
                 String line = r.readLine(); // line no. i
-                if (line == null) break; // end of file
-                if (i >= lineNo-radius) {
-                    if (i > lineNo-radius) output += "\n"; // add newlines before all lines but the first
-                    output += f.getName() + ":" + i + (i==lineNo ? " =>  " : "     ") + line;
+                if (line == null) {
+                    break; // end of file
+                }
+                if (i >= lineNo - radius) {
+                    if (i > lineNo - radius) {
+                        output += "\n"; // add newlines before all lines but the first
+                    }
+                    output += f.getName() + ":" + i + (i == lineNo ? " =>  " : "     ") + line;
                 }
                 i++;
             }
@@ -398,8 +480,8 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Print info about a ReferenceType. Prints class name, source file
-     * name, lists methods.
+     * Print info about a ReferenceType. Prints class name, source file name,
+     * lists methods.
      *
      * @param rt the reference type to print out
      */
@@ -414,6 +496,60 @@ public class Debugger implements VMEventListener {
         System.out.println("methods:");
         for (Method m : rt.methods()) {
             System.out.println(m.toString());
+        }
+    }
+
+    private void selectLocation(Location l) {
+        // mark line in editor
+        // switch to appropriate tab
+        try {
+            LineID sketchLine = lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
+            deselect();
+            if (sketchLine != null) {
+                int lineNo = sketchLine.lineNo - 1; // 0-based line number
+                String tab = sketchLine.fileName;
+                System.out.println("sketch line: " + sketchLine);
+
+                // switch to tab
+                Sketch s = editor.getSketch();
+                for (int i = 0; i < s.getCodeCount(); i++) {
+                    if (tab.equals(s.getCode(i).getFileName())) {
+                        s.setCurrentCode(i);
+                        break;
+                    }
+                }
+                // select line
+                editor.setSelection(editor.getLineStartOffset(lineNo), editor.getLineStopOffset(lineNo));
+            }
+        } catch (AbsentInformationException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void deselect() {
+        editor.setSelection(editor.getCaretOffset(), editor.getCaretOffset());
+    }
+
+    void setBreakpoint(LineID sketchLine) {
+        // find line in java space
+        LineID javaLine = lineMap.get(sketchLine);
+        if (javaLine == null) {
+            System.out.println("Couldn't find line " + sketchLine + " in the java code");
+            return;
+        }
+        try {
+            List<Location> locations = mainClass.locationsOfLine(javaLine.lineNo);
+            if (locations.isEmpty()) {
+                System.out.println("no location found for line " + sketchLine + " -> " + javaLine);
+                return;
+            }
+            for (Location l : locations) {
+                BreakpointRequest bpr = runtime.vm().eventRequestManager().createBreakpointRequest(l);
+                bpr.enable();
+                System.out.println(sketchLine + " -> " + javaLine);
+            }
+        } catch (AbsentInformationException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
