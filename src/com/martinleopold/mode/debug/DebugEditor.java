@@ -1,19 +1,27 @@
 package com.martinleopold.mode.debug;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.text.Document;
+import javax.swing.text.Position;
 import processing.app.Base;
 import processing.app.EditorState;
-import processing.app.EditorToolbar;
 import processing.app.Mode;
+import processing.app.SketchCode;
+import processing.app.syntax.JEditTextArea;
+import processing.app.syntax.PdeTextAreaDefaults;
 import processing.mode.java.JavaEditor;
 
 /**
- * Main View Class.
- * Handles the editor window incl. toolbar and menu. Has access to the Sketch.
+ * Main View Class. Handles the editor window incl. toolbar and menu. Has access
+ * to the Sketch.
+ *
  * @author mlg
  */
 public class DebugEditor extends JavaEditor implements ActionListener {
@@ -22,7 +30,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     //protected Sketch sketch;
     //private JMenu fileMenu;
     //protected EditorToolbar toolbar;
-
     JMenu debugMenu;
     // debugger control
     JMenuItem debugMenuItem;
@@ -41,9 +48,10 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     JMenuItem printLocalsMenuItem;
     JMenuItem printThisMenuItem;
     JMenuItem printSourceMenuItem;
-
     DebugMode dmode;
     Debugger dbg;
+    VariableInspector vi;
+    TextArea ta;
 
     DebugEditor(Base base, String path, EditorState state, Mode mode) {
         super(base, path, state, mode);
@@ -51,15 +59,23 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         // add debug menu to editor frame
         JMenuBar menuBar = getJMenuBar();
         menuBar.add(buildDebugMenu());
-        dmode = (DebugMode)mode;
+        dmode = (DebugMode) mode;
 
         // init controller class
         dbg = new Debugger(this);
+
+        // variable inspector window
+        vi = new VariableInspector();
+        //vi.setVisible(true);
+
+        ta = (TextArea) textarea;
+        //ta.setLineBgColor(1, Color.YELLOW);
     }
 
     /**
-     * Creates the debug menu.
-     * Includes ActionListeners for the menu items. Intended for adding to the menu bar.
+     * Creates the debug menu. Includes ActionListeners for the menu items.
+     * Intended for adding to the menu bar.
+     *
      * @return The debug menu
      */
     JMenu buildDebugMenu() {
@@ -115,15 +131,15 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     }
 
     /**
-     * Callback for menu items.
-     * IMplementation of Swing ActionListener.
+     * Callback for menu items. Implementation of Swing ActionListener.
+     *
      * @param ae Action event
      */
     @Override
     public void actionPerformed(ActionEvent ae) {
         //System.out.println("ActionEvent: " + ae.toString());
 
-        JMenuItem source = (JMenuItem)ae.getSource();
+        JMenuItem source = (JMenuItem) ae.getSource();
         if (source == debugMenuItem) {
             System.out.println("# clicked debug menu item");
             //dmode.handleDebug(sketch, this);
@@ -179,7 +195,88 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         dbg.stopDebug();
     }
 
+    /**
+     * Clear the console.
+     */
     public void clearConsole() {
         console.clear();
+    }
+
+    /**
+     * Clear current selection.
+     */
+    public void clearSelection() {
+        setSelection(getCaretOffset(), getCaretOffset());
+    }
+
+    public VariableInspector variableInspector() {
+        return vi;
+    }
+
+    // @override does not work here...
+    //@Override
+    protected JEditTextArea createTextArea() {
+        //System.out.println("overriding creation of text area");
+        return new TextArea(new PdeTextAreaDefaults(mode));
+    }
+
+
+//    Map<LineID, Color> lineColors = new HashMap();
+//    public Position setLineBgColor(LineID l, Color c) {
+//        // todo: manage tabs
+//        lineColors.put(l, c);
+//        return ta.setLineBgColor(l.lineNo - 1, c);
+//    }
+//
+//    public void clearLineBgColor(Position p) {
+//        // todo
+//        ta.clearLineBgColor(p);
+//    }
+//
+//    public void clearLineBgColor(LineID l) {
+//        // todo
+//        ta.clearLineBgColor(l.lineNo - 1);
+//        lineColors.remove(l);
+//    }
+
+    
+    protected Map<LineID, Color> lineColors = new HashMap(); // line background colors for all tabs
+    public void setLineBgColor(LineID l, Color c) {
+        ta.setLineBgColor(l.lineNo - 1, c);
+        lineColors.put(l, c);
+    }
+
+    public void clearLineBgColor(LineID l) {
+        ta.clearLineBgColor(l.lineNo - 1);
+        lineColors.remove(l);
+    }
+
+    /**
+     * Called when switching between tabs.
+     *
+     * @param code tab to switch to
+     */
+    @Override
+    protected void setCode(SketchCode code) {
+        System.out.println("tab switch");
+        super.setCode(code); // set the new document in the textarea, etc. need to do this first
+
+        // set line background colors for tab
+        if (ta != null) { // can be null when setCode is called the first time (in constructor)
+            // clear all line backgrounds
+            ta.clearLineBgColors();
+            // load appropriate line backgrounds for tab
+            for (Map.Entry<LineID, Color> e : lineColors.entrySet()) {
+                LineID l = e.getKey();
+                Color c = e.getValue();
+                if (l.fileName.equals(code.getFileName())) {
+                    ta.setLineBgColor(l.lineNo - 1, c);
+                }
+            }
+        }
+    }
+
+    public Document currentDocument() {
+        return ta.getDocument();
     }
 }

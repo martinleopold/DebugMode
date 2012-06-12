@@ -6,6 +6,7 @@ import com.sun.jdi.request.BreakpointRequest;
 import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
+import java.awt.Color;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 import processing.app.Sketch;
 
 /**
@@ -40,7 +44,7 @@ public class Debugger implements VMEventListener {
      *
      * @param editor The Editor that will act as primary view
      */
-    Debugger(DebugEditor editor) {
+    public Debugger(DebugEditor editor) {
         this.editor = editor;
     }
 
@@ -48,7 +52,7 @@ public class Debugger implements VMEventListener {
      * Start a debugging session. Builds the sketch and launches a VM to run it.
      * VM starts suspended. Should produce a VMStartEvent.
      */
-    void startDebug() {
+    public void startDebug() {
         stopDebug(); // stop any running sessions
 
         // clear console
@@ -75,10 +79,10 @@ public class Debugger implements VMEventListener {
                 System.out.println("generating source line mapping (sketch <-> java)");
                 lineMap = LineMapping.generateMapping(srcPath + File.separator + mainClassName + ".java");
                 /*
-                for (Entry<LineID, LineID> entry : lineMap.entrySet()) {
-                    System.out.println(entry.getKey() + " -> " + entry.getValue());
-                }
-                */
+                 * for (Entry<LineID, LineID> entry : lineMap.entrySet()) {
+                 * System.out.println(entry.getKey() + " -> " +
+                 * entry.getValue()); }
+                 */
 
                 System.out.println("launching debuggee runtime");
                 runtime = new DebugRunner(build, editor);
@@ -116,7 +120,7 @@ public class Debugger implements VMEventListener {
      * End debugging session. Stops and disconnects VM. Should produce
      * VMDisconnectEvent.
      */
-    void stopDebug() {
+    public void stopDebug() {
         if (runtime != null) {
             System.out.println("closing runtime");
             runtime.close();
@@ -129,8 +133,8 @@ public class Debugger implements VMEventListener {
     /**
      * Resume paused debugging session. Resumes VM.
      */
-    void continueDebug() {
-        deselect();
+    public void continueDebug() {
+        editor.clearSelection();
         if (isConnected()) {
             runtime.vm().resume();
         } else {
@@ -148,52 +152,57 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    void stepOver() {
+    public void stepOver() {
         step(StepRequest.STEP_OVER);
     }
 
-    void stepInto() {
+    public void stepInto() {
         step(StepRequest.STEP_INTO);
     }
 
-    void stepOut() {
+    public void stepOut() {
         step(StepRequest.STEP_OUT);
     }
 
-    void printStackTrace() {
+    public void printStackTrace() {
         if (isConnected()) {
             printStackTrace(lastThread);
         }
     }
 
-    void printLocals() {
+    public void printLocals() {
         if (isConnected()) {
             printLocalVariables(lastThread);
         }
     }
 
-    void printThis() {
+    public void printThis() {
         if (isConnected()) {
             printThis(lastThread);
         }
     }
 
-    void printSource() {
+    public void printSource() {
         if (isConnected()) {
             printLocation(lastThread);
         }
     }
 
-    void setBreakpoint() {
-        LineID line = getCurrentLine();
+    public void setBreakpoint() {
+        LineID line = getCurrentLineID();
+        line.enableTracking(editor.currentDocument());
+        line.setView(editor);
         breakpoints.add(line);
+        //editor.setLineBgColor(line, new Color(255, 170, 170));
         System.out.println("setting breakpoint on line " + line);
         System.out.println("note: breakpoints on method declarations will not work, use first line of method instead");
         System.out.println("note: changes take effect after (re)starting the debug session");
     }
 
-    void removeBreakpoint() {
-        LineID line = getCurrentLine();
+    public void removeBreakpoint() {
+        LineID line = getCurrentLineID();
+        line.disableTracking();
+        editor.clearLineBgColor(line);
         if (breakpoints.contains(line)) {
             breakpoints.remove(line);
             System.out.println("removed breakpoint " + line);
@@ -203,7 +212,7 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    void listBreakpoints() {
+    public void listBreakpoints() {
         if (breakpoints.isEmpty()) {
             System.out.println("no breakpoints");
         } else {
@@ -219,11 +228,18 @@ public class Debugger implements VMEventListener {
      *
      * @return
      */
-    private LineID getCurrentLine() {
+    protected LineID getCurrentLineID() {
         Sketch s = editor.getSketch();
         String tab = s.getCurrentCode().getFileName();
         int lineNo = editor.getTextArea().getCaretLine() + 1;
-        return new LineID(tab, lineNo);
+
+        // check if there already is a breakpoint on the current line
+        LineID newID = new LineID(tab, lineNo);
+        if (breakpoints.contains(newID)) {
+            return breakpoints.get(breakpoints.indexOf(newID));
+        } else {
+            return newID;
+        }
     }
 
     /**
@@ -301,7 +317,9 @@ public class Debugger implements VMEventListener {
                  */
 
                 System.out.println("setting breakpoints:");
-                if (breakpoints.isEmpty()) System.out.println("no breakpoints set");
+                if (breakpoints.isEmpty()) {
+                    System.out.println("no breakpoints set");
+                }
                 for (LineID sketchLine : breakpoints) {
                     setBreakpoint(sketchLine);
                 }
@@ -314,13 +332,14 @@ public class Debugger implements VMEventListener {
 
                 printLocation(lastThread);
                 selectLocation(be.location());
+                displayLocalVariables(lastThread);
             } else if (e instanceof StepEvent) {
                 StepEvent se = (StepEvent) e;
                 lastThread = se.thread();
 
                 printLocation(lastThread);
                 selectLocation(se.location());
-
+                displayLocalVariables(lastThread);
 
                 // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
                 EventRequestManager mgr = runtime.vm().eventRequestManager();
@@ -379,6 +398,35 @@ public class Debugger implements VMEventListener {
                 for (LocalVariable lv : locals) {
                     System.out.println(lv.typeName() + " " + lv.name() + " = " + sf.getValue(lv));
                 }
+            }
+        } catch (IncompatibleThreadStateException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (AbsentInformationException ex) {
+            System.out.println("local variable information not available");
+        }
+    }
+
+    // display in variableinspector
+    void displayLocalVariables(ThreadReference t) {
+        JTree tree = editor.variableInspector().getTree();
+        try {
+            if (t.frameCount() == 0) {
+                System.out.println("call stack empty");
+            } else {
+                StackFrame sf = t.frame(0);
+                List<LocalVariable> locals = sf.visibleVariables();
+                if (locals.size() == 0) {
+                    System.out.println("no local variables");
+                    return;
+                }
+                DefaultMutableTreeNode localVarsNode = new DefaultMutableTreeNode("Local Variables");
+                DefaultMutableTreeNode rootNode = editor.variableInspector().getRootNode();
+                for (LocalVariable lv : locals) {
+                    DefaultMutableTreeNode node = new DefaultMutableTreeNode(lv.typeName() + " " + lv.name() + " = " + sf.getValue(lv));
+                    localVarsNode.add(node);
+                }
+                rootNode.add(localVarsNode);
+                editor.variableInspector().repaint();
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
@@ -504,7 +552,7 @@ public class Debugger implements VMEventListener {
         // switch to appropriate tab
         try {
             LineID sketchLine = lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
-            deselect();
+            editor.clearSelection();
             if (sketchLine != null) {
                 int lineNo = sketchLine.lineNo - 1; // 0-based line number
                 String tab = sketchLine.fileName;
@@ -524,10 +572,6 @@ public class Debugger implements VMEventListener {
         } catch (AbsentInformationException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-
-    private void deselect() {
-        editor.setSelection(editor.getCaretOffset(), editor.getCaretOffset());
     }
 
     void setBreakpoint(LineID sketchLine) {

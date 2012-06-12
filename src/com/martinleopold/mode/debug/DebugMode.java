@@ -36,7 +36,7 @@ public class DebugMode extends JavaMode {
      * Create a new editor associated with this mode.
      */
     @Override
-    public Editor createEditor(Base base, String path, EditorState state) {
+    public processing.app.Editor createEditor(Base base, String path, EditorState state) {
         return new DebugEditor(base, path, state, this);
     }
 
