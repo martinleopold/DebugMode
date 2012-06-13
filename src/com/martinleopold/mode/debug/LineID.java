@@ -11,18 +11,21 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
+import javax.swing.text.Element;
 import javax.swing.text.Position;
 
 /**
- * Describes an ID for a code line. Comprised of a file name and a line number.
- * Allows tracking the line when editing by attaching to a Document.
+ * Describes an ID for a code line. Comprised of a file name and a (1-based)
+ * line number. Allows tracking the line when editing by attaching to a
+ * Document.<p>TODO: split the tracking and highlighting features into a subclass
+ * "LineBreakpoint"
  *
  * @author mlg
  */
 public class LineID implements DocumentListener {
 
-    public String fileName;
-    public int lineNo;
+    public String fileName; // the filename
+    public int lineNo; // the line number, 1-based
 
     public LineID(String fileName, int lineNo) {
         this.fileName = fileName;
@@ -34,6 +37,12 @@ public class LineID implements DocumentListener {
         return toString().hashCode();
     }
 
+    /**
+     * Test whether this {@link LineID} is equal to another object. Two {@link LineID}'s are equal when both their fileName and lineNo are equal.
+     *
+     * @param obj the object to test for equality
+     * @return {@code true} if equal
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -56,20 +65,27 @@ public class LineID implements DocumentListener {
     public String toString() {
         return fileName + ":" + lineNo;
     }
+    protected Document doc; // the Document to use for line number tracking
+    protected Position pos; // the Position acquired during line number tracking
 
-    protected Document doc;
-    protected Position pos;
     /**
-     * Attach a Document to enable line number tracking when editing.
-     * @param doc
+     * Attach a {@link Document} to enable line number tracking when editing. The
+     * position to track is before the first non-whitespace character on the
+     * line. Edits happening before that position will cause the line number to
+     * update accordingly.
+     *
+     * @param doc the {@link Document} to use for line number tracking
      */
     public void enableTracking(Document doc) {
         try {
-            int offset = doc.getDefaultRootElement().getElement(lineNo-1).getStartOffset(); // todo check if line exists
-            pos = doc.createPosition(offset);
+            // todo check if line exists
+            Element line = doc.getDefaultRootElement().getElement(lineNo - 1);
+            String lineText = doc.getText(line.getStartOffset(), line.getEndOffset() - line.getStartOffset());
+            // set tracking position at (=before) first non-white space character on line
+            pos = doc.createPosition(line.getStartOffset() + nonWhiteSpaceOffset(lineText));
             this.doc = doc;
             doc.addDocumentListener(this);
-            System.out.println("creating position @ " + pos.getOffset());
+            //System.out.println("creating position @ " + pos.getOffset());
         } catch (BadLocationException ex) {
             Logger.getLogger(LineID.class.getName()).log(Level.SEVERE, null, ex);
             pos = null;
@@ -91,55 +107,83 @@ public class LineID implements DocumentListener {
             // offset to lineNo
             int newLineNo = doc.getDefaultRootElement().getElementIndex(offset) + 1;
             if (newLineNo != lineNo) {
+                // update the view (line background colors in edior)
                 if (editor != null) {
-                    editor.clearLineBgColor(new LineID(fileName, lineNo));
-                    editor.setLineBgColor(new LineID(fileName, newLineNo), BGCOLOR);
+                    editor.clearLineBgColor(new LineID(fileName, lineNo)); // clear old line background
+                    editor.setLineBgColor(new LineID(fileName, newLineNo), BGCOLOR); // set new line background
                 }
                 lineNo = newLineNo;
             }
         }
     }
+    public static final Color BGCOLOR = new Color(255, 170, 170); // the background color for highlighting lines
+    protected DebugEditor editor; // the view, used for highlighting lines by setting a background color
 
-    public static final Color BGCOLOR = new Color(255, 170, 170);
-    protected DebugEditor editor;
+    /**
+     * Set a view for visually representing this line using a colored
+     * background.
+     *
+     * @param editor the {@link DebugEditor} to use as view
+     */
     public void setView(DebugEditor editor) {
         this.editor = editor;
         editor.setLineBgColor(this, BGCOLOR);
     }
 
-  // todo: use this to track from the first non-whitespace position in the line
-//      public int getLineStartNonWhiteSpaceOffset(int line)
-//  {
-//    int offset = getLineStartOffset(line);
-//    int length = getLineLength(line);
-//    String str = getText(offset, length);
-//
-//    for(int i = 0; i < str.length(); i++) {
-//      if(!Character.isWhitespace(str.charAt(i))) {
-//        return offset + i;
-//      }
-//    }
-//    return offset + length;
-//  }
+    /**
+     * Calculate the offset of the first non-whitespace character in a string.
+     *
+     * @param str the string to examine
+     * @return offset of first non-whitespace character in str
+     */
+    protected static int nonWhiteSpaceOffset(String str) {
+        for (int i = 0; i < str.length(); i++) {
+            if (!Character.isWhitespace(str.charAt(i))) {
+                return i;
+            }
+        }
+        return str.length();
+    }
 
+    /**
+     * Called when the {@link Document} registered using {@link enableTracking()} is edited.
+     * This happens when text is inserted or removed.
+     *
+     * @param de
+     */
     protected void editEvent(DocumentEvent de) {
-        System.out.println("document edit @ " + de.getOffset());
-        if (de.getOffset() < pos.getOffset()) {
+        //System.out.println("document edit @ " + de.getOffset());
+        if (de.getOffset() <= pos.getOffset()) {
             updatePosition();
-            System.out.println("updating, new line no: " + lineNo);
+            //System.out.println("updating, new line no: " + lineNo);
         }
     }
 
+    /**
+     * {@link DocumentListener} callback. Called when text is inserted.
+     *
+     * @param de
+     */
     @Override
     public void insertUpdate(DocumentEvent de) {
         editEvent(de);
     }
 
+    /**
+     * {@link DocumentListener} callback. Called when text is removed.
+     *
+     * @param de
+     */
     @Override
     public void removeUpdate(DocumentEvent de) {
         editEvent(de);
     }
 
+    /**
+     * {@link DocumentListener} callback. Called when attributes are changed. Not used.
+     *
+     * @param de
+     */
     @Override
     public void changedUpdate(DocumentEvent de) {
         // not needed.
