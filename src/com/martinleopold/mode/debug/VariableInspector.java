@@ -5,14 +5,15 @@
 package com.martinleopold.mode.debug;
 
 import javax.swing.JTree;
-import javax.swing.UIManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
+ * Variable Inspector window.
  *
  * @author mlg
  */
 public class VariableInspector extends javax.swing.JFrame {
+
     DefaultMutableTreeNode rootNode;
 
     /**
@@ -20,6 +21,8 @@ public class VariableInspector extends javax.swing.JFrame {
      */
     public VariableInspector() {
         initComponents();
+        jTree1.setRootVisible(false);
+        this.setTitle("Variable Inspector");
     }
 
     /**
@@ -35,7 +38,7 @@ public class VariableInspector extends javax.swing.JFrame {
         rootNode = new DefaultMutableTreeNode();
         jTree1 = new javax.swing.JTree(rootNode);
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
 
         jScrollPane1.setViewportView(jTree1);
 
@@ -86,7 +89,7 @@ public class VariableInspector extends javax.swing.JFrame {
     }
 
     protected static void run(final VariableInspector vi) {
-                /*
+        /*
          * Create and display the form
          */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -98,14 +101,23 @@ public class VariableInspector extends javax.swing.JFrame {
         });
     }
 
+    /**
+     * Access the JTree.
+     *
+     * @return
+     */
     public JTree getTree() {
         return jTree1;
     }
 
+    /**
+     * Access the root node of the JTree.
+     *
+     * @return
+     */
     public DefaultMutableTreeNode getRootNode() {
         return rootNode;
     }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTree jTree1;

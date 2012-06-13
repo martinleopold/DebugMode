@@ -9,7 +9,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.text.Document;
-import javax.swing.text.Position;
 import processing.app.Base;
 import processing.app.EditorState;
 import processing.app.Mode;
@@ -66,10 +65,10 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
         // variable inspector window
         vi = new VariableInspector();
-        //vi.setVisible(true);
+        vi.setVisible(true);
 
+        // access to customized (i.e. subclassed) text area
         ta = (TextArea) textarea;
-        //ta.setLineBgColor(1, Color.YELLOW);
     }
 
     /**
@@ -209,6 +208,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         setSelection(getCaretOffset(), getCaretOffset());
     }
 
+    /**
+     * Access variable inspector window.
+     *
+     * @return
+     */
     public VariableInspector variableInspector() {
         return vi;
     }
@@ -219,33 +223,24 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         //System.out.println("overriding creation of text area");
         return new TextArea(new PdeTextAreaDefaults(mode));
     }
-
-
-//    Map<LineID, Color> lineColors = new HashMap();
-//    public Position setLineBgColor(LineID l, Color c) {
-//        // todo: manage tabs
-//        lineColors.put(l, c);
-//        return ta.setLineBgColor(l.lineNo - 1, c);
-//    }
-//
-//    public void clearLineBgColor(Position p) {
-//        // todo
-//        ta.clearLineBgColor(p);
-//    }
-//
-//    public void clearLineBgColor(LineID l) {
-//        // todo
-//        ta.clearLineBgColor(l.lineNo - 1);
-//        lineColors.remove(l);
-//    }
-
-    
     protected Map<LineID, Color> lineColors = new HashMap(); // line background colors for all tabs
+
+    /**
+     * Set background color of a sketch line.
+     *
+     * @param l identifies sketch line to colorize
+     * @param c the color
+     */
     public void setLineBgColor(LineID l, Color c) {
         ta.setLineBgColor(l.lineNo - 1, c);
         lineColors.put(l, c);
     }
 
+    /**
+     * Clear background color of a sketch line.
+     *
+     * @param l identifies sketch line to clear
+     */
     public void clearLineBgColor(LineID l) {
         ta.clearLineBgColor(l.lineNo - 1);
         lineColors.remove(l);
@@ -276,6 +271,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         }
     }
 
+    /**
+     * Access the currently edited document.
+     */
     public Document currentDocument() {
         return ta.getDocument();
     }

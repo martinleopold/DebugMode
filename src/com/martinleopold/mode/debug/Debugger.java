@@ -6,17 +6,16 @@ import com.sun.jdi.request.BreakpointRequest;
 import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
-import java.awt.Color;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import processing.app.Sketch;
 
 /**
@@ -27,17 +26,17 @@ import processing.app.Sketch;
  */
 public class Debugger implements VMEventListener {
 
-    DebugEditor editor; // editor window, acting as main view
-    DebugRunner runtime; // the runtime, contains debuggee VM
-    boolean started = false; // debuggee vm has started, VMStartEvent received, main class loaded
+    protected DebugEditor editor; // editor window, acting as main view
+    protected DebugRunner runtime; // the runtime, contains debuggee VM
+    protected boolean started = false; // debuggee vm has started, VMStartEvent received, main class loaded
     //ThreadReference initialThread; // initial thread of debuggee vm
-    ThreadReference lastThread; // thread the last breakpoint or step occured in
-    String mainClassName; // name of the main class that's currently being debugged
-    ReferenceType mainClass;
-    String srcPath; // path to the src folder of the current build
-    DebugBuild build; // todo: might not need to be global
-    Map<LineID, LineID> lineMap; // maps source lines from "sketch-space" to "java-space" and vice-versa
-    List<LineID> breakpoints = new ArrayList(); // list of breakpoints in "sketch-space"
+    protected ThreadReference lastThread; // thread the last breakpoint or step occured in
+    protected String mainClassName; // name of the main class that's currently being debugged
+    protected ReferenceType mainClass;
+    protected String srcPath; // path to the src folder of the current build
+    protected DebugBuild build; // todo: might not need to be global
+    protected Map<LineID, LineID> lineMap; // maps source lines from "sketch-space" to "java-space" and vice-versa
+    protected List<LineID> breakpoints = new ArrayList(); // list of breakpoints in "sketch-space"
 
     /**
      * Construct a Debugger object.
@@ -142,7 +141,13 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    void step(int stepDepth) {
+    /**
+     * Step through source code lines.
+     *
+     * @param stepDepth the step depth ({@link StepRequest}{@code .STEP_OVER}, {@link StepRequest}{@code .STEP_INTO}
+     * or {@link StepRequest}{@code .STEP_OUT})
+     */
+    protected void step(int stepDepth) {
         if (isConnected()) {
             StepRequest sr =
                     runtime.vm().eventRequestManager().createStepRequest(lastThread, StepRequest.STEP_LINE, stepDepth);
@@ -152,42 +157,67 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    /**
+     * Step over current statement.s
+     */
     public void stepOver() {
         step(StepRequest.STEP_OVER);
     }
 
+    /**
+     * Step into current statement.
+     */
     public void stepInto() {
         step(StepRequest.STEP_INTO);
     }
 
+    /**
+     * Step out of current function.
+     */
     public void stepOut() {
         step(StepRequest.STEP_OUT);
     }
 
+    /**
+     * Print the current stack trace.
+     */
     public void printStackTrace() {
         if (isConnected()) {
             printStackTrace(lastThread);
         }
     }
 
+    /**
+     * Print local variables. Outputs type, name and value of each variable.
+     */
     public void printLocals() {
         if (isConnected()) {
             printLocalVariables(lastThread);
         }
     }
 
+    /**
+     * Print fields of current {@code this}-object. Outputs type, name and value
+     * of each field.
+     */
     public void printThis() {
         if (isConnected()) {
             printThis(lastThread);
         }
     }
 
+    /**
+     * Print a source code snippet of the current location.
+     */
     public void printSource() {
         if (isConnected()) {
-            printLocation(lastThread);
+            printSourceLocation(lastThread);
         }
     }
 
+    /**
+     * Set a breakpoint on the current line.
+     */
     public void setBreakpoint() {
         LineID line = getCurrentLineID();
         line.enableTracking(editor.currentDocument());
@@ -199,6 +229,9 @@ public class Debugger implements VMEventListener {
         System.out.println("note: changes take effect after (re)starting the debug session");
     }
 
+    /**
+     * Remove a breakpoint from the current line (if set).
+     */
     public void removeBreakpoint() {
         LineID line = getCurrentLineID();
         line.disableTracking();
@@ -212,6 +245,9 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    /**
+     * Print a list of currently set breakpoints.
+     */
     public void listBreakpoints() {
         if (breakpoints.isEmpty()) {
             System.out.println("no breakpoints");
@@ -224,7 +260,7 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Retrieve line id in sketch where the cursor currently resides.
+     * Retrieve line of sketch where the cursor currently resides.
      *
      * @return
      */
@@ -244,7 +280,7 @@ public class Debugger implements VMEventListener {
 
     /**
      * Callback for VM events. Will be called from another thread.
-     * (VMEventReader)
+     * ({@link VMEventReader})
      *
      * @param es Incoming set of events from VM
      */
@@ -303,10 +339,14 @@ public class Debugger implements VMEventListener {
                 //printType(rt);
                 mainClass = rt;
 
-                System.out.println("setting breakpoint on setup()");
-                Location setupLocation = rt.methodsByName("setup").get(0).location();
-                BreakpointRequest setupBp = runtime.vm().eventRequestManager().createBreakpointRequest(setupLocation);
-                setupBp.enable();
+                /*
+                 * System.out.println("setting breakpoint on setup()"); Location
+                 * setupLocation = rt.methodsByName("setup").get(0).location();
+                 * BreakpointRequest setupBp =
+                 * runtime.vm().eventRequestManager().createBreakpointRequest(setupLocation);
+                 * setupBp.enable();
+                 *
+                 */
 
                 /*
                  * System.out.println("setting breakpoint on draw()"); Location
@@ -314,6 +354,7 @@ public class Debugger implements VMEventListener {
                  * BreakpointRequest drawBp =
                  * runtime.vm().eventRequestManager().createBreakpointRequest(drawLocation);
                  * drawBp.enable();
+                 *
                  */
 
                 System.out.println("setting breakpoints:");
@@ -330,16 +371,16 @@ public class Debugger implements VMEventListener {
                 lastThread = be.thread(); // save this thread
                 BreakpointRequest br = (BreakpointRequest) be.request();
 
-                printLocation(lastThread);
-                selectLocation(be.location());
-                displayLocalVariables(lastThread);
+                printSourceLocation(lastThread);
+                selectSourceLocation(be.location());
+                updateVariableInspector(lastThread);
             } else if (e instanceof StepEvent) {
                 StepEvent se = (StepEvent) e;
                 lastThread = se.thread();
 
-                printLocation(lastThread);
-                selectLocation(se.location());
-                displayLocalVariables(lastThread);
+                printSourceLocation(lastThread);
+                selectSourceLocation(se.location());
+                updateVariableInspector(lastThread);
 
                 // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
                 EventRequestManager mgr = runtime.vm().eventRequestManager();
@@ -356,7 +397,7 @@ public class Debugger implements VMEventListener {
      *
      * @return true if connected to debuggee VM
      */
-    boolean isConnected() {
+    public boolean isConnected() {
         return started && runtime != null && runtime.vm() != null;
     }
 
@@ -365,7 +406,10 @@ public class Debugger implements VMEventListener {
      *
      * @param t suspended thread to print stack trace of
      */
-    void printStackTrace(ThreadReference t) {
+    protected void printStackTrace(ThreadReference t) {
+        if (!t.isSuspended()) {
+            return;
+        }
         try {
             System.out.println("stack trace for thread " + t.name() + ":");
             int i = 0;
@@ -384,7 +428,10 @@ public class Debugger implements VMEventListener {
      *
      * @param t suspended thread
      */
-    void printLocalVariables(ThreadReference t) {
+    protected void printLocalVariables(ThreadReference t) {
+        if (!t.isSuspended()) {
+            return;
+        }
         try {
             if (t.frameCount() == 0) {
                 System.out.println("call stack empty");
@@ -406,27 +453,66 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    // display in variableinspector
-    void displayLocalVariables(ThreadReference t) {
-        JTree tree = editor.variableInspector().getTree();
+    /**
+     * Update variable inspector window. Displays local variables and this
+     * fields.
+     *
+     * @param t suspended thread to retrieve locals and this
+     */
+    protected void updateVariableInspector(ThreadReference t) {
+        if (!t.isSuspended()) {
+            return;
+        }
+        VariableInspector vi = editor.variableInspector();
+        JTree tree = vi.getTree();
+        DefaultMutableTreeNode rootNode = vi.getRootNode();
+        rootNode.removeAllChildren(); // clear tree
+
         try {
             if (t.frameCount() == 0) {
                 System.out.println("call stack empty");
             } else {
                 StackFrame sf = t.frame(0);
+
+                // local variables
+                DefaultMutableTreeNode localVarsNode = new DefaultMutableTreeNode("Locals");
                 List<LocalVariable> locals = sf.visibleVariables();
-                if (locals.size() == 0) {
-                    System.out.println("no local variables");
-                    return;
+                if (locals.isEmpty()) {
+                    localVarsNode.add(new DefaultMutableTreeNode("none"));
+                } else {
+                    for (LocalVariable lv : locals) {
+                        DefaultMutableTreeNode node = new DefaultMutableTreeNode(lv.name() + " (" + lv.typeName() + "): " + sf.getValue(lv));
+                        localVarsNode.add(node);
+                    }
                 }
-                DefaultMutableTreeNode localVarsNode = new DefaultMutableTreeNode("Local Variables");
-                DefaultMutableTreeNode rootNode = editor.variableInspector().getRootNode();
-                for (LocalVariable lv : locals) {
-                    DefaultMutableTreeNode node = new DefaultMutableTreeNode(lv.typeName() + " " + lv.name() + " = " + sf.getValue(lv));
-                    localVarsNode.add(node);
-                }
+
                 rootNode.add(localVarsNode);
-                editor.variableInspector().repaint();
+
+                // this fields
+                DefaultMutableTreeNode thisNode = new DefaultMutableTreeNode("this");
+                ObjectReference thisObject = sf.thisObject();
+                ReferenceType type = thisObject.referenceType();
+                if (type.visibleFields().isEmpty()) {
+                    thisNode.add(new DefaultMutableTreeNode("empty"));
+                } else {
+                    for (Field f : type.visibleFields()) {
+                        DefaultMutableTreeNode node = new DefaultMutableTreeNode(f.name() + " (" + f.typeName() + "): " + thisObject.getValue(f));
+                        thisNode.add(node);
+                    }
+                }
+                rootNode.add(thisNode);
+
+                // notify tree (using model)
+                //http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
+                DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+                model.nodeStructureChanged(rootNode);
+                // expand top level nodes
+                // needs to happen after nodeStructureChanged
+                tree.expandPath(new TreePath(new Object[]{rootNode, localVarsNode}));
+                tree.expandPath(new TreePath(new Object[]{rootNode, thisNode}));
+
+                //tree.repaint();
+                //vi.repaint();
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
@@ -436,11 +522,15 @@ public class Debugger implements VMEventListener {
     }
 
     /**
+     * Print visible fields of current "this" object on a suspended thread.
+     * Prints type, name and value.
      *
-     *
-     * @param t
+     * @param t suspended thread
      */
-    void printThis(ThreadReference t) {
+    protected void printThis(ThreadReference t) {
+        if (!t.isSuspended()) {
+            return;
+        }
         try {
             if (t.frameCount() == 0) {
                 System.out.println("call stack empty");
@@ -458,20 +548,30 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    void printLocation(ThreadReference t) {
+    /**
+     * Print source code snippet of current location in a suspended thread.
+     *
+     * @param t suspended thread
+     */
+    protected void printSourceLocation(ThreadReference t) {
         try {
             if (t.frameCount() == 0) {
                 System.out.println("call stack empty");
             } else {
                 Location l = t.frame(0).location(); // current stack frame location
-                printLocation(l);
+                printSourceLocation(l);
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    void printLocation(Location l) {
+    /**
+     * Print source code snippet.
+     *
+     * @param l {@link Location} object to print source code for
+     */
+    protected void printSourceLocation(Location l) {
         try {
             //System.out.println(l.sourceName() + ":" + l.lineNumber());
             System.out.println("in method " + l.method() + ":");
@@ -490,7 +590,7 @@ public class Debugger implements VMEventListener {
      * @param lineNo
      * @return
      */
-    String getSourceLine(String filePath, int lineNo, int radius) {
+    protected String getSourceLine(String filePath, int lineNo, int radius) {
         if (lineNo == -1) {
             System.err.println("invalid line number: " + lineNo);
             return "";
@@ -524,7 +624,6 @@ public class Debugger implements VMEventListener {
             System.err.println(ex);
             return "";
         }
-
     }
 
     /**
@@ -533,7 +632,7 @@ public class Debugger implements VMEventListener {
      *
      * @param rt the reference type to print out
      */
-    private void printType(ReferenceType rt) {
+    protected void printType(ReferenceType rt) {
         System.out.println("ref.type: " + rt);
         System.out.println("name: " + rt.name());
         try {
@@ -547,9 +646,13 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    private void selectLocation(Location l) {
-        // mark line in editor
-        // switch to appropriate tab
+    /**
+     * Mark a line in the editor by selecting it. Switches to appropriate tab.
+     *
+     * @param l {@link Location} object that describes source location to
+     * select.
+     */
+    protected void selectSourceLocation(Location l) {
         try {
             LineID sketchLine = lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
             editor.clearSelection();
@@ -574,7 +677,12 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    void setBreakpoint(LineID sketchLine) {
+    /**
+     * Set a breakpoint on a sketch line.
+     *
+     * @param sketchLine specifies the line to set a breakpoint on
+     */
+    protected void setBreakpoint(LineID sketchLine) {
         // find line in java space
         LineID javaLine = lineMap.get(sketchLine);
         if (javaLine == null) {
