@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import processing.app.Sketch;
 
@@ -476,29 +477,15 @@ public class Debugger implements VMEventListener {
 
                 // local variables
                 DefaultMutableTreeNode localVarsNode = new DefaultMutableTreeNode("Locals");
-                List<LocalVariable> locals = sf.visibleVariables();
-                if (locals.isEmpty()) {
-                    localVarsNode.add(new DefaultMutableTreeNode("none"));
-                } else {
-                    for (LocalVariable lv : locals) {
-                        DefaultMutableTreeNode node = new DefaultMutableTreeNode(lv.name() + " (" + lv.typeName() + "): " + sf.getValue(lv));
-                        localVarsNode.add(node);
-                    }
+                for (VariableNode var : getLocals(t, 1)) {
+                    localVarsNode.add(var);
                 }
-
                 rootNode.add(localVarsNode);
 
                 // this fields
                 DefaultMutableTreeNode thisNode = new DefaultMutableTreeNode("this");
-                ObjectReference thisObject = sf.thisObject();
-                ReferenceType type = thisObject.referenceType();
-                if (type.visibleFields().isEmpty()) {
-                    thisNode.add(new DefaultMutableTreeNode("empty"));
-                } else {
-                    for (Field f : type.visibleFields()) {
-                        DefaultMutableTreeNode node = new DefaultMutableTreeNode(f.name() + " (" + f.typeName() + "): " + thisObject.getValue(f));
-                        thisNode.add(node);
-                    }
+                for (VariableNode var : getThisFields(t, 1)) {
+                    thisNode.add(var);
                 }
                 rootNode.add(thisNode);
 
@@ -516,9 +503,81 @@ public class Debugger implements VMEventListener {
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    protected List<VariableNode> getLocals(ThreadReference t, int depth) {
+        //System.out.println("getting locals");
+        List<VariableNode> vars = new ArrayList();
+        try {
+            if (t.frameCount() > 0) {
+                StackFrame sf = t.frame(0);
+                for (LocalVariable lv : sf.visibleVariables()) {
+                    //System.out.println("local var: " + lv.name());
+                    Value val = sf.getValue(lv);
+                    VariableNode var = new VariableNode(lv.name(), lv.typeName(), val == null ? "null" : val);
+                    if (val != null) {
+                        try {
+                            // is this local var an object?
+                            if (val instanceof ObjectReference) {
+                                ObjectReference env = (ObjectReference) val;
+                                for (Field f : ((ReferenceType) lv.type()).visibleFields()) {
+                                    var.addChild(getFieldRecursive(f, env, 1, depth));
+                                }
+                            }
+                        } catch (ClassNotLoadedException ex) {
+                            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    vars.add(var);
+                }
+            }
+        } catch (IncompatibleThreadStateException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
         } catch (AbsentInformationException ex) {
             System.out.println("local variable information not available");
         }
+        return vars;
+    }
+
+    protected List<VariableNode> getThisFields(ThreadReference t, int depth) {
+        //System.out.println("getting this");
+        List<VariableNode> vars = new ArrayList();
+        try {
+            if (t.frameCount() > 0) {
+                StackFrame sf = t.frame(0);
+                ObjectReference thisObj = sf.thisObject();
+                //System.out.println("type: " + thisObj.referenceType().name());
+                for (Field f : thisObj.referenceType().visibleFields()) {
+                    //System.out.println("recursively adding field: " + f.name());
+                    vars.add(getFieldRecursive(f, thisObj, 0, depth));
+                }
+            }
+        } catch (IncompatibleThreadStateException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return vars;
+    }
+
+    // recursively resolve a field using an object reference as environment
+    protected VariableNode getFieldRecursive(Field field, ObjectReference obj, int depth, int maxDepth) {
+        // resolve the field to a value using the provided object reference
+        Value val = obj.getValue(field);
+        VariableNode var = new VariableNode(field.name(), field.typeName(), val == null ? "null" : val.toString());
+        //System.out.println("field: " + var);
+
+        if (val != null && depth < maxDepth) {
+            // add all child fields (if field represents an object)
+            if (val instanceof ObjectReference) {
+                ObjectReference env = (ObjectReference) val;
+                //add all children
+                for (Field f : env.referenceType().visibleFields()) {
+                    //System.out.print(String.format(String.format("%%0%dd", depth + 1), 0).replace("0", "  "));
+                    var.addChild(getFieldRecursive(f, env, depth + 1, maxDepth));
+                }
+            }
+        }
+        return var;
     }
 
     /**
