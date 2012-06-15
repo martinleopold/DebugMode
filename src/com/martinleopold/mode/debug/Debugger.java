@@ -6,6 +6,7 @@ import com.sun.jdi.request.BreakpointRequest;
 import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
+import java.awt.Color;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -125,6 +126,8 @@ public class Debugger implements VMEventListener {
             runtime.close();
             runtime = null;
             build = null;
+            // need to clear highlight here because, VMDisconnectedEvent seems to be unreliable. TODO: likely synchronization problem
+            clearHighlight();
         }
         started = false;
     }
@@ -133,7 +136,8 @@ public class Debugger implements VMEventListener {
      * Resume paused debugging session. Resumes VM.
      */
     public void continueDebug() {
-        editor.clearSelection();
+        //editor.clearSelection();
+        clearHighlight();
         if (isConnected()) {
             runtime.vm().resume();
         } else {
@@ -221,7 +225,7 @@ public class Debugger implements VMEventListener {
     public void setBreakpoint() {
         LineID line = getCurrentLineID();
         line.enableTracking(editor.currentDocument());
-        line.setView(editor);
+        line.setView(editor, DebugEditor.BREAKPOINT_COLOR);
         breakpoints.add(line);
         //editor.setLineBgColor(line, new Color(255, 170, 170));
         System.out.println("setting breakpoint on line " + line);
@@ -372,14 +376,16 @@ public class Debugger implements VMEventListener {
                 BreakpointRequest br = (BreakpointRequest) be.request();
 
                 printSourceLocation(lastThread);
-                selectSourceLocation(be.location());
+                //selectSourceLocation(be.location());
+                highlightSourceLocation(be.location());
                 updateVariableInspector(lastThread);
             } else if (e instanceof StepEvent) {
                 StepEvent se = (StepEvent) e;
                 lastThread = se.thread();
 
                 printSourceLocation(lastThread);
-                selectSourceLocation(se.location());
+                //selectSourceLocation(se.location());
+                highlightSourceLocation(se.location());
                 updateVariableInspector(lastThread);
 
                 // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
@@ -387,6 +393,9 @@ public class Debugger implements VMEventListener {
                 mgr.deleteEventRequest(se.request());
             } else if (e instanceof VMDisconnectEvent) {
                 started = false;
+                // clear line highlight
+                clearHighlight();
+            } else if (e instanceof VMDeathEvent) {
             }
         }
     }
@@ -715,7 +724,7 @@ public class Debugger implements VMEventListener {
             LineID sketchLine = lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
             editor.clearSelection();
             if (sketchLine != null) {
-                int lineNo = sketchLine.lineNo - 1; // 0-based line number
+                int lineIdx = sketchLine.lineNo - 1; // 0-based line number
                 String tab = sketchLine.fileName;
                 System.out.println("sketch line: " + sketchLine);
 
@@ -728,10 +737,53 @@ public class Debugger implements VMEventListener {
                     }
                 }
                 // select line
-                editor.setSelection(editor.getLineStartOffset(lineNo), editor.getLineStopOffset(lineNo));
+                editor.selectLine(lineIdx);
             }
         } catch (AbsentInformationException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    protected LineID highlightedLine; // the current source line, when suspended
+
+    protected void highlightSourceLocation(Location l) {
+        try {
+            // clear currently highlighted line
+            clearHighlight();
+
+            // translate java line to sketch line
+            LineID sketchLine = lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
+
+            if (sketchLine != null) {
+                int lineIdx = sketchLine.lineNo - 1; // 0-based line number
+                String tab = sketchLine.fileName;
+                System.out.println("sketch line: " + sketchLine);
+
+                // switch to tab
+                Sketch s = editor.getSketch();
+                for (int i = 0; i < s.getCodeCount(); i++) {
+                    if (tab.equals(s.getCode(i).getFileName())) {
+                        s.setCurrentCode(i);
+                        break;
+                    }
+                }
+                // select line
+                highlightedLine = sketchLine;
+                highlightedLine.enableTracking(editor.currentDocument());
+                highlightedLine.setView(editor, DebugEditor.CURRENT_LINE_COLOR);
+                // "scroll" to line
+                editor.cursorToLineStart(lineIdx);
+            }
+        } catch (AbsentInformationException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    protected void clearHighlight() {
+        // clear line highlight
+        if (highlightedLine != null) {
+            highlightedLine.disableTracking();
+            editor.clearLineBgColor(highlightedLine);
+            highlightedLine = null;
         }
     }
 

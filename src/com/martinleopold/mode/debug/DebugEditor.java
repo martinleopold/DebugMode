@@ -5,7 +5,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -26,6 +28,9 @@ import processing.mode.java.JavaEditor;
  * @author mlg
  */
 public class DebugEditor extends JavaEditor implements ActionListener {
+
+    public static final Color BREAKPOINT_COLOR = new Color(255, 170, 170); // the background color for highlighting elines
+    public static final Color CURRENT_LINE_COLOR = new Color(255, 255, 0); // the background color for highlighting lines
 
     // important fields from superclass
     //protected Sketch sketch;
@@ -234,6 +239,18 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         setSelection(getCaretOffset(), getCaretOffset());
     }
 
+    public void selectLine(int lineIdx) {
+        setSelection(getLineStartOffset(lineIdx), getLineStopOffset(lineIdx));
+    }
+
+    public void cursorToLineStart(int lineIdx) {
+        setSelection(getLineStartOffset(lineIdx), getLineStartOffset(lineIdx));
+    }
+
+    public void cursorToLineEnd(int lineIdx) {
+        setSelection(getLineStopOffset(lineIdx), getLineStopOffset(lineIdx));
+    }
+
     /**
      * Access variable inspector window.
      *
@@ -265,7 +282,17 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         //System.out.println("overriding creation of text area");
         return new TextArea(new PdeTextAreaDefaults(mode));
     }
-    protected Map<LineID, Color> lineColors = new HashMap(); // line background colors for all tabs
+    //protected Map<LineID, Color> lineColors = new HashMap(); // line background colors for all tabs
+
+    protected class LineColor {
+        public LineID line;
+        public Color color;
+        LineColor(LineID line, Color color) {
+            this.line = line;
+            this.color = color;
+        }
+    }
+    protected Map<LineID, List<Color>> lineColors = new HashMap();
 
     /**
      * Set background color of a sketch line.
@@ -274,8 +301,16 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      * @param c the color
      */
     public void setLineBgColor(LineID l, Color c) {
+        // push, overwriting the color for this line
+        List<Color> colors = lineColors.get(l);
+        if (colors == null) {
+            colors = new ArrayList();
+            colors.add(c);
+            lineColors.put(l, colors);
+        } else {
+            colors.add(c);
+        }
         ta.setLineBgColor(l.lineNo - 1, c);
-        lineColors.put(l, c);
     }
 
     /**
@@ -284,8 +319,18 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      * @param l identifies sketch line to clear
      */
     public void clearLineBgColor(LineID l) {
-        ta.clearLineBgColor(l.lineNo - 1);
-        lineColors.remove(l);
+        // remove last and restore previous color
+        List<Color> colors = lineColors.get(l);
+        if (colors != null) {
+            if (colors.size() > 0) colors.remove(colors.size() - 1);
+            if (colors.size() > 0) {
+                ta.setLineBgColor(l.lineNo - 1, colors.get(colors.size()-1));
+            } else {
+                // no more colors for this line
+                ta.clearLineBgColor(l.lineNo - 1);
+                colors.remove(l);
+            }
+        }
     }
 
     /**
@@ -303,11 +348,13 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             // clear all line backgrounds
             ta.clearLineBgColors();
             // load appropriate line backgrounds for tab
-            for (Map.Entry<LineID, Color> e : lineColors.entrySet()) {
+            for (Map.Entry<LineID, List<Color>> e : lineColors.entrySet()) {
                 LineID l = e.getKey();
-                Color c = e.getValue();
-                if (l.fileName.equals(code.getFileName())) {
-                    ta.setLineBgColor(l.lineNo - 1, c);
+                List<Color> colors = e.getValue();
+                if (colors.size() > 0) {
+                    if (l.fileName.equals(code.getFileName())) {
+                        ta.setLineBgColor(l.lineNo - 1, colors.get(colors.size()-1));
+                    }
                 }
             }
         }

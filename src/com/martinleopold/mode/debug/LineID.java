@@ -106,14 +106,14 @@ public class LineID implements DocumentListener {
                 // update the view (line background colors in edior)
                 if (editor != null) {
                     editor.clearLineBgColor(new LineID(fileName, lineNo)); // clear old line background
-                    editor.setLineBgColor(new LineID(fileName, newLineNo), BGCOLOR); // set new line background
+                    editor.setLineBgColor(new LineID(fileName, newLineNo), bgColor); // set new line background
                 }
                 lineNo = newLineNo;
             }
         }
     }
-    public static final Color BGCOLOR = new Color(255, 170, 170); // the background color for highlighting lines
     protected DebugEditor editor; // the view, used for highlighting lines by setting a background color
+    protected Color bgColor; // the background color for highlighting lines
 
     /**
      * Set a view for visually representing this line using a colored
@@ -121,9 +121,10 @@ public class LineID implements DocumentListener {
      *
      * @param editor the {@link DebugEditor} to use as view
      */
-    public void setView(DebugEditor editor) {
+    public void setView(DebugEditor editor, Color bgColor) {
         this.editor = editor;
-        editor.setLineBgColor(this, BGCOLOR);
+        this.bgColor = bgColor;
+        editor.setLineBgColor(this, bgColor);
     }
 
     /**
