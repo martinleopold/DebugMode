@@ -1,16 +1,12 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.martinleopold.mode.debug;
 
 import java.io.*;
+import org.eclipse.jdt.core.compiler.CompilationProgress;
+import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import processing.app.Base;
 import processing.app.SketchException;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
-import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
-import org.eclipse.jdt.core.compiler.CompilationProgress;
 
 /**
  *

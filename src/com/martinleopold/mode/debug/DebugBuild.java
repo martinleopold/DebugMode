@@ -28,6 +28,7 @@ public class DebugBuild extends JavaBuild {
      * @return
      * @throws SketchException
      */
+    @Override
     public String build(File srcFolder, File binFolder, boolean sizeWarning) throws SketchException {
         this.srcFolder = srcFolder;
         this.binFolder = binFolder;

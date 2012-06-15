@@ -1,17 +1,8 @@
 package com.martinleopold.mode.debug;
 
 import com.sun.jdi.VirtualMachine;
-import com.sun.jdi.connect.Connector;
-import com.sun.jdi.connect.IllegalConnectorArgumentsException;
-import com.sun.jdi.connect.LaunchingConnector;
-import com.sun.jdi.connect.VMStartException;
-import com.sun.jdi.event.Event;
-import com.sun.jdi.event.EventQueue;
-import com.sun.jdi.event.EventSet;
-import java.io.IOException;
-import java.util.Map;
-import processing.app.*;
-import processing.core.PApplet;
+import processing.app.RunnerListener;
+import processing.app.SketchException;
 import processing.mode.java.JavaBuild;
 
 /**

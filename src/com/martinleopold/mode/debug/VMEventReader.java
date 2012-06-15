@@ -1,7 +1,6 @@
 package com.martinleopold.mode.debug;
 
 import com.sun.jdi.VMDisconnectedException;
-import com.sun.jdi.event.Event;
 import com.sun.jdi.event.EventQueue;
 import com.sun.jdi.event.EventSet;
 

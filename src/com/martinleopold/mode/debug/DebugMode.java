@@ -1,10 +1,9 @@
 package com.martinleopold.mode.debug;
 
 import java.io.File;
-import processing.app.*;
-import processing.mode.java.JavaBuild;
+import processing.app.Base;
+import processing.app.EditorState;
 import processing.mode.java.JavaMode;
-import processing.mode.java.runner.Runner;
 
 /**
  * Debug Mode for Processing.

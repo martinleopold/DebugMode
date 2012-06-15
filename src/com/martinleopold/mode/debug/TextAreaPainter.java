@@ -1,13 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.martinleopold.mode.debug;
 
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
-import processing.app.syntax.JEditTextArea;
 import processing.app.syntax.TextAreaDefaults;
 import processing.app.syntax.TokenMarker;
 
