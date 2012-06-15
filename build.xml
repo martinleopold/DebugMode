@@ -99,6 +99,9 @@
                                match="@@version@@" replace="${build.number}" />
         <replaceregexp file="${bundle}/mode.properties" flags="g"
                                match="@@pretty-version@@" replace="${release}" />
+
+        <!-- include hacked pde.jar in dist folder -->
+        <copy file="${processing.classes}/pde.jar" todir="${dist}" />
     </target>
 
     <!-- - - - - - - - - - - - - - - - - - - - - - -
