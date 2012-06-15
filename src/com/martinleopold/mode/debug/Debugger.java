@@ -438,7 +438,7 @@ public class Debugger implements VMEventListener {
             } else {
                 StackFrame sf = t.frame(0);
                 List<LocalVariable> locals = sf.visibleVariables();
-                if (locals.size() == 0) {
+                if (locals.isEmpty()) {
                     System.out.println("no local variables");
                     return;
                 }
