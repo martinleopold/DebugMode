@@ -77,7 +77,12 @@
         <mkdir dir="${bundle}" />
         <mkdir dir="${bundle}/mode" />
 
-        <jar jarfile="${bundle}/mode/${lib.name}.jar" basedir="build"/>
+        <jar jarfile="${bundle}/mode/${lib.name}.jar" basedir="build">
+            <manifest>
+                <attribute name="Implementation-Title" value="${lib.name}" />
+                <attribute name="Implementation-Version" value="${release}.${build.number}" />
+            </manifest>
+        </jar>
 		<!--zip destfile="${dist}/mode/${lib.name}.jar" excludes="**/*.MF">
 		    <zipgroupfileset dir="lib" includes="*.jar" />
 		</zip-->

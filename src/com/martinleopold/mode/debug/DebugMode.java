@@ -18,6 +18,9 @@ public class DebugMode extends JavaMode {
 
     public DebugMode(Base base, File folder) {
         super(base, folder);
+        // output version from manifest file
+        Package p = DebugMode.class.getPackage();
+        System.out.println(p.getImplementationTitle() + " (v" + p.getImplementationVersion() + ")");
     }
 
     /**
