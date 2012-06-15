@@ -3,6 +3,8 @@ package com.martinleopold.mode.debug;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JMenu;
@@ -29,30 +31,33 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     //protected Sketch sketch;
     //private JMenu fileMenu;
     //protected EditorToolbar toolbar;
-    JMenu debugMenu;
+    protected JMenu debugMenu;
     // debugger control
-    JMenuItem debugMenuItem;
-    JMenuItem continueMenuItem;
-    JMenuItem stopMenuItem;
+    protected JMenuItem debugMenuItem;
+    protected JMenuItem continueMenuItem;
+    protected JMenuItem stopMenuItem;
     // breakpoints
-    JMenuItem setBreakpointMenuItem;
-    JMenuItem removeBreakpointMenuItem;
-    JMenuItem listBreakpointsMenuItem;
+    protected JMenuItem setBreakpointMenuItem;
+    protected JMenuItem removeBreakpointMenuItem;
+    protected JMenuItem listBreakpointsMenuItem;
     // stepping
-    JMenuItem stepOverMenuItem;
-    JMenuItem stepIntoMenuItem;
-    JMenuItem stepOutMenuItem;
+    protected JMenuItem stepOverMenuItem;
+    protected JMenuItem stepIntoMenuItem;
+    protected JMenuItem stepOutMenuItem;
     // info
-    JMenuItem printStackTraceMenuItem;
-    JMenuItem printLocalsMenuItem;
-    JMenuItem printThisMenuItem;
-    JMenuItem printSourceMenuItem;
-    DebugMode dmode;
-    Debugger dbg;
-    VariableInspector vi;
-    TextArea ta;
+    protected JMenuItem printStackTraceMenuItem;
+    protected JMenuItem printLocalsMenuItem;
+    protected JMenuItem printThisMenuItem;
+    protected JMenuItem printSourceMenuItem;
+    // variable inspector
+    protected JMenuItem toggleVariableInspectorMenuItem;
 
-    DebugEditor(Base base, String path, EditorState state, Mode mode) {
+    protected DebugMode dmode;
+    protected Debugger dbg;
+    protected VariableInspector vi;
+    protected TextArea ta;
+
+    public DebugEditor(Base base, String path, EditorState state, Mode mode) {
         super(base, path, state, mode);
 
         // add debug menu to editor frame
@@ -65,10 +70,23 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
         // variable inspector window
         vi = new VariableInspector();
-        vi.setVisible(true);
 
         // access to customized (i.e. subclassed) text area
         ta = (TextArea) textarea;
+
+        // set action on frame close
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                onWindowClosing(e);
+            }
+        });
+    }
+
+    protected void onWindowClosing(WindowEvent e) {
+        System.out.println("closing window");
+        // remove var.inspector
+        vi.dispose();
     }
 
     /**
@@ -77,7 +95,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      *
      * @return The debug menu
      */
-    JMenu buildDebugMenu() {
+    protected JMenu buildDebugMenu() {
         debugMenu = new JMenu("Debug");
 
         debugMenuItem = new JMenuItem("Debug");
@@ -110,6 +128,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         printSourceMenuItem = new JMenuItem("Print Source Location");
         printSourceMenuItem.addActionListener(this);
 
+        toggleVariableInspectorMenuItem = new JMenuItem("Show/Hide Variable Inspector");
+        toggleVariableInspectorMenuItem.addActionListener(this);
+
         debugMenu.add(debugMenuItem);
         debugMenu.add(continueMenuItem);
         debugMenu.add(stopMenuItem);
@@ -126,6 +147,8 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         debugMenu.add(printLocalsMenuItem);
         debugMenu.add(printThisMenuItem);
         debugMenu.add(printSourceMenuItem);
+        debugMenu.addSeparator();
+        debugMenu.add(toggleVariableInspectorMenuItem);
         return debugMenu;
     }
 
@@ -181,6 +204,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         } else if (source == listBreakpointsMenuItem) {
             System.out.println("# clicked list breakpoints menu item");
             dbg.listBreakpoints();
+        } else if (source == toggleVariableInspectorMenuItem) {
+            System.out.println("# clicked show/hide variable inspector menu item");
+            toggleVariableInspector();
         }
     }
 
@@ -215,6 +241,22 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public VariableInspector variableInspector() {
         return vi;
+    }
+
+    public void showVariableInspector() {
+        vi.setVisible(true);
+    }
+
+    public void showVariableInspector(boolean visible) {
+        vi.setVisible(visible);
+    }
+
+    public void hideVariableInspector() {
+        vi.setVisible(true);
+    }
+
+    public void toggleVariableInspector() {
+        vi.setVisible(!vi.isVisible());
     }
 
     // @override does not work here...

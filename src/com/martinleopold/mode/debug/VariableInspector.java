@@ -34,8 +34,6 @@ public class VariableInspector extends javax.swing.JFrame {
         rootNode = new DefaultMutableTreeNode();
         jTree1 = new javax.swing.JTree(rootNode);
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
-
         jScrollPane1.setViewportView(jTree1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
