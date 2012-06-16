@@ -13,13 +13,11 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.text.Document;
-import processing.app.Base;
-import processing.app.EditorState;
-import processing.app.Mode;
-import processing.app.SketchCode;
+import processing.app.*;
 import processing.app.syntax.JEditTextArea;
 import processing.app.syntax.PdeTextAreaDefaults;
 import processing.mode.java.JavaEditor;
+import processing.mode.java.JavaToolbar;
 
 /**
  * Main View Class. Handles the editor window incl. toolbar and menu. Has access
@@ -31,7 +29,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
     public static final Color BREAKPOINT_COLOR = new Color(255, 170, 170); // the background color for highlighting elines
     public static final Color CURRENT_LINE_COLOR = new Color(255, 255, 0); // the background color for highlighting lines
-
     // important fields from superclass
     //protected Sketch sketch;
     //private JMenu fileMenu;
@@ -56,7 +53,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     protected JMenuItem printSourceMenuItem;
     // variable inspector
     protected JMenuItem toggleVariableInspectorMenuItem;
-
     protected DebugMode dmode;
     protected Debugger dbg;
     protected VariableInspector vi;
@@ -81,6 +77,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
         // set action on frame close
         addWindowListener(new WindowAdapter() {
+
             @Override
             public void windowClosing(WindowEvent e) {
                 onWindowClosing(e);
@@ -215,14 +212,18 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         }
     }
 
-    @Override
-    public void handleRun() {
-        dbg.continueDebug();
-    }
+//    @Override
+//    public void handleRun() {
+//        dbg.continueDebug();
+//    }
 
     @Override
     public void handleStop() {
-        dbg.stopDebug();
+        if (dbg.isConnected()) {
+            dbg.stopDebug();
+        } else {
+            super.handleStop();
+        }
     }
 
     /**
@@ -260,6 +261,15 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         return vi;
     }
 
+    /**
+     * Access to the debugger.
+     *
+     * @return the debugger controller object
+     */
+    public Debugger dbg() {
+        return dbg;
+    }
+
     public void showVariableInspector() {
         vi.setVisible(true);
     }
@@ -276,21 +286,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         vi.setVisible(!vi.isVisible());
     }
 
-    // @override does not work here...
+    // TODO @override does not work here...
     //@Override
     protected JEditTextArea createTextArea() {
         //System.out.println("overriding creation of text area");
         return new TextArea(new PdeTextAreaDefaults(mode));
-    }
-    //protected Map<LineID, Color> lineColors = new HashMap(); // line background colors for all tabs
-
-    protected class LineColor {
-        public LineID line;
-        public Color color;
-        LineColor(LineID line, Color color) {
-            this.line = line;
-            this.color = color;
-        }
     }
     protected Map<LineID, List<Color>> lineColors = new HashMap();
 
@@ -322,9 +322,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         // remove last and restore previous color
         List<Color> colors = lineColors.get(l);
         if (colors != null) {
-            if (colors.size() > 0) colors.remove(colors.size() - 1);
             if (colors.size() > 0) {
-                ta.setLineBgColor(l.lineNo - 1, colors.get(colors.size()-1));
+                colors.remove(colors.size() - 1);
+            }
+            if (colors.size() > 0) {
+                ta.setLineBgColor(l.lineNo - 1, colors.get(colors.size() - 1));
             } else {
                 // no more colors for this line
                 ta.clearLineBgColor(l.lineNo - 1);
@@ -353,7 +355,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
                 List<Color> colors = e.getValue();
                 if (colors.size() > 0) {
                     if (l.fileName.equals(code.getFileName())) {
-                        ta.setLineBgColor(l.lineNo - 1, colors.get(colors.size()-1));
+                        ta.setLineBgColor(l.lineNo - 1, colors.get(colors.size() - 1));
                     }
                 }
             }
@@ -365,5 +367,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public Document currentDocument() {
         return ta.getDocument();
+    }
+
+    // Override toolbar factory
+    @Override
+    public EditorToolbar createToolbar() {
+        return new DebugToolbar(this, base);
     }
 }

@@ -6,7 +6,6 @@ import com.sun.jdi.request.BreakpointRequest;
 import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
-import java.awt.Color;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -250,6 +249,18 @@ public class Debugger implements VMEventListener {
     }
 
     /**
+     * Toggle the breakpoint on the current line.
+     */
+    public void toggleBreakpoint() {
+        LineID line = getCurrentLineID();
+        if (!breakpoints.contains(line)) {
+            setBreakpoint();
+        } else {
+            removeBreakpoint();
+        }
+    }
+
+    /**
      * Print a list of currently set breakpoints.
      */
     public void listBreakpoints() {
@@ -343,23 +354,20 @@ public class Debugger implements VMEventListener {
                 //printType(rt);
                 mainClass = rt;
 
-                /*
-                 * System.out.println("setting breakpoint on setup()"); Location
-                 * setupLocation = rt.methodsByName("setup").get(0).location();
-                 * BreakpointRequest setupBp =
-                 * runtime.vm().eventRequestManager().createBreakpointRequest(setupLocation);
-                 * setupBp.enable();
-                 *
-                 */
+                if (breakpoints.isEmpty()) {
+                    System.out.println("using auto brekapoints (no manual breakpoints set)");
+                    System.out.println("setting breakpoint on setup()");
+                    Location setupLocation = rt.methodsByName("setup").get(0).location();
+                    BreakpointRequest setupBp =
+                            runtime.vm().eventRequestManager().createBreakpointRequest(setupLocation);
+                    setupBp.enable();
 
-                /*
-                 * System.out.println("setting breakpoint on draw()"); Location
-                 * drawLocation = rt.methodsByName("draw").get(0).location();
-                 * BreakpointRequest drawBp =
-                 * runtime.vm().eventRequestManager().createBreakpointRequest(drawLocation);
-                 * drawBp.enable();
-                 *
-                 */
+                    System.out.println("setting breakpoint on draw()");
+                    Location drawLocation = rt.methodsByName("draw").get(0).location();
+                    BreakpointRequest drawBp =
+                            runtime.vm().eventRequestManager().createBreakpointRequest(drawLocation);
+                    drawBp.enable();
+                }
 
                 System.out.println("setting breakpoints:");
                 if (breakpoints.isEmpty()) {
