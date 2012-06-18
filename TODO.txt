@@ -1,0 +1,268 @@
+TODO
+
+FEATURES:
+* Breakpoints
+* Stepping
+	* Over
+	* Into
+	* Out
+	* Continue
+* Variable Inspector
+	* Show inherited
+* GUI
+	* Buttons for stepping
+	* Variable Inspector (Expandable List)
+	* Menu
+		* Debug / Continue
+		* Stepping (Over, Into, Out)
+		* Set Breakpoint / Remove Breakpoint
+* PDE Integration
+	* En/Disable Breakpoints
+	* Highlight breakpointed lines
+	* Highlight current line
+* Extended
+	* List of breakpoints (En/Disable, Jump to code)
+	* Call Stack
+	* Mid-draw() canvas update
+	* Variable Tooltips in Editor
+
+
+DEV ENVIRONMENT:
+x p5-svn build automation
+x template mode
+	x provide more methods to override
+x create repo
+
+
+FLORIAN TODO:
+x get Processing SVN version and compile and run that
+x get to know the internal process of running a sketch (collect code and libraries, precompile, compile, run, ..)
+x set up a repo for us
+x set up a contributed mode skeleton and make that compile against and show up in the SVN version as mode
+x replace runner with the debugger runner
+x add interface elements to the editor window as needed (line numbers, setting breakpoints, ...)
+x sketch and add additional interfaces (windows) as needed
+
+
+PROTOTYPE 1 (v0.1):
+x ui
+	x menu commands
+	x console output
+x features
+	x set/unset/list breakpoint(s)
+	x start/stop/continue debug
+	x step over/in/out
+	x stack trace
+	x locals
+	x dump this
+	x list source
+
+
+PROTOTYPE 2 (v0.2):
+x bp tracking
+x line highlight
+	x use on:
+		x current line (stepping)
+		x bp'd lines
+x toolbar
+	x new buttons
+		x debug, stop, cont, step, toggle bp, toggle var insp.
+x var inspector
+	x show/hide window
+	x sections
+		x local vars
+		x this
+	x refresh on bp, step event
+	x collapsible nested list
+		x fixed depth
+
+
+PROTOTYPE 3:
+* important missing features
+	* var inspector: stack trace
+	? var inspector: modes
+	? line annotation
+* iteration
+	* stability
+		! thread safety w/event thread
+			* events come in asynchronously
+			* fast stepping causes exception
+			* VMDisconnectedEvent seems to be unreliable. likely synchronization problem.
+		* other noted issues
+	* refactoring
+		* LineID
+		* rid Debugger of view-related functions, especially line highlighting
+	* var.inspector
+		! lazy loading of object types
+		* handling special objects
+			* arrays
+			* p5 types…
+		? p5 mode
+	* breakpoints
+		! setting/modifying at runtime
+		! clear bps on file open, new
+	/ code documentation
+	/ loose dependence on hacked core
+
+
+IMPLEMENTATION:
+x Class Design (MVC)
+	x Model: Backend, JDI
+	x View: Editor
+	x Controller
+* Build
+	* Preprocessor
+		* Investigate Sketch Assembly, Inverse Process?
+		* Line Number Mapping (Sketch <-> Java)
+	* Build with Debugging Info (-g flag)
+* Launch / Run debuggee VM
+	* in/err forwarding to console
+	* Know when finished
+		* change UI state (buttons, menu)
+	* Event thread Synchronization
+	* VM States
+		* started+mainclassloaded
+		* paused
+	* Commands
+		* Start
+		* Continue
+		* Stop
+	* Other kill conditions
+		* editor close
+		* p5 close
+	* Multiple Editors
+* Breakpoints
+	* Line Management (deletion, insertion)
+	! Compile time vs. Runtime (paused) setting
+	? enable, disable
+	* context sensitive
+                * disallow
+                        * commented lines
+                        * empty lines
+		* method declarations
+                        * need to be handled separately
+* Stepping
+	* only allow when paused
+	x over/in/out
+* State Inquiry
+	* Only when paused
+	* Locals
+	* this (inherited)
+	* Stack trace
+	* common datatype
+		* nested/recursive
+		* lazy loading support
+        ? threads
+* User Interface
+	x Interaction design
+		x toggle breakpoints
+		* how to highlight breakpointed lines
+		* how to highlight current line
+                * which toolbar buttons are necessary
+                ? right click menu
+	* console
+		x clear
+		? use colors
+	* toolbar
+		x new buttons
+	* menu
+		* order
+                * condense items (e.g. one toggle instead of on and off items)
+                * context sensitive items
+                    * change names depending on state
+                    * enable/disbale depending on state
+	* switch to tab (by name or idx)
+	* editor
+		x line background color
+		* line annotation (paint symbols in left margin area)
+		x breakpoint tracking
+		x current line highlight
+	* variable inspector
+		* design
+			x collapsing list
+			x new window vs column
+			? toolbar
+			* processing vs. advanced modes
+		! lazy loading (otherwise way too much to load, due to circular refs)
+		* array support
+		? loop detection
+
+
+ISSUES:
+* on debug quit running sketch
+* on run quit debug
+* on editor quit, stop spawned vms
+1.6.2012
+x clear log area when starting debug
+* kill running prog when stopping or quitting
+* only saved sketch is run in debugger?
+5.6.2012
+x line breakpoints need to monitor line insertions/deletions
+! thread safety: events come in asynchronously
+13.6.2012
+* transform LineID to Breakpoint, possibly Breakpoint as subclass of LineID
+* line highlight on first line doesn't move down
+! clear bps on file open, new
+15.6.2012
+* line highlight interference with other line coloring methods
+	* current line highlight
+	* selecting
+* we need a call stack window! (to know where we are)
+* var inspector
+	* icons
+	* grey out when info not current (i.e. vm not suspended)
+* line highlighting
+	* DebugEditor should provide the functions for setting the current line, not Debugger
+	* LineID is a design mess, need to restructure
+! VMDisconnectedEvent seems to be unreliable. likely synchronization problem.
+* use resources/theme/theme.txt for highlight colors (current, breakpoint)
+16.6.2012
+! fast stepping exception: Only one step request allowed per thread
+* toggling var insp. focuses var insp. window
+
+
+QUESTIONS:
+* p5 alpha errors
+	* file menu takes a long time to open the first time
+	* <Error>: CGContextGetCTM: invalid context 0x0
+x translate: sketch line numbers --> after preprocessing
+x line background color
+x how to extend p5 classes when all i want is change one member to a subclass
+
+
+REQUESTS:
+* JavaBuild/Compiler : allow custom compiler flags, especially -g (generate debug info)
+* switch to tab by name: Sketch.java: make public: protected void setCurrentCode(String findName)
+* Editor: method to clear console. without subclassing (console is protected)
+* Editor: method to get caret line, without using getTextArea().getCaretLine() (for future releases that won't use JEditTextArea)
+* JEditTextArea: allow setting TextAreaPainter. (e.g. using a factory method)
+* JEditTextArea: make ComponentHandler, MouseHandler, DragHandler protected
+! Editor.java: allow setting TextArea without overwriting class and copying/modifying constructor. copying the constructor is not easy due to protected/private fields..
+    --> factory method
+
+
+OBSERVATIONS:
+11.6.2012
++ notice the janus head
+	+ design iterations
+	+ & implementation grind
+14.6.2012
++ extensive todo and log ftw
++ public repo is kinda rewarding
++ dev methodology
+	+ quick prototypes
+	+ roughly implement critical features
+		+ quickly see if/how they work together
+		+ good api design
+		+ better have all hi-priority features 50% done than some random ones at 100%
+	+ iteratively flesh out and refine
+	+ top down view on design
+
+
+SYMBOLS:
+* … todo item
+x … done item
++ … simple enumeration (no todo)
+/ … deferred todo
+? … not sure about doing this
+! … important todo
