@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="debug-mode" default="install" basedir="./">
+<project name="DebugMode" default="install" basedir="./">
     <description>Debugger for the PDE, Processing >2.0a6</description>
 
     <!-- name of your mode package (will be used as dir name) -->
@@ -29,6 +29,7 @@
     <property name="bin" 		value="bin" />
     <property name="dist" 		value="dist" />
     <property name="doc" 		value="doc" />
+    <property name="debug"              value="off" /> <!-- generate debug info when building -->
 
     <path id="library-classpath">
         <fileset dir="${processing.classes}" >
@@ -61,8 +62,8 @@
         -->
 
         <mkdir dir="${build}" />
-
-        <javac srcdir="${src}" destdir="${build}" source="${java.target.version}" includeantruntime="false">
+        <!-- <echo message="debug: ${debug}" /> -->
+        <javac srcdir="${src}" destdir="${build}" source="${java.target.version}" includeantruntime="false" debug="${debug}">
             <classpath>
                 <path refid="library-classpath"/>
             </classpath>
@@ -116,12 +117,20 @@
         </copy>
     </target>
 
+    <target name="install-debug" depends="clean">
+        <!-- depends on clean to force recompile (with debug info) -->
+        <antcall target="install">
+            <param name="debug" value="true" />
+        </antcall>
+    </target>
+
     <!-- - - - - - - - - - - - - - - - - - - - - - -
         CLEAN
     - - - - - - - - - - - - - - - - - - - - - - - -->
     <target name="clean" >
         <delete dir="${build}" />
         <delete dir="${dist}" />
+        <delete dir="${doc}" />
     </target>
 
     <!-- - - - - - - - - - - - - - - - - - - - - - -
