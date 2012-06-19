@@ -101,7 +101,7 @@ PROTOTYPE 3:
 	* breakpoints
 		! setting/modifying at runtime
 		! clear bps on file open, new
-	/ code documentation
+	x more code documentation
 	/ loose dependence on hacked core
 
 
