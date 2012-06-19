@@ -489,7 +489,12 @@ public class Debugger implements VMEventListener {
             if (t.frameCount() == 0) {
                 System.out.println("call stack empty");
             } else {
-                StackFrame sf = t.frame(0);
+                // stack trace
+                DefaultMutableTreeNode callStackNode = new DefaultMutableTreeNode("Call stack");
+                for (DefaultMutableTreeNode node : getStackTrace(t)) {
+                    callStackNode.add(node);
+                }
+                rootNode.add(callStackNode);
 
                 // local variables
                 DefaultMutableTreeNode localVarsNode = new DefaultMutableTreeNode("Locals");
@@ -511,6 +516,7 @@ public class Debugger implements VMEventListener {
                 model.nodeStructureChanged(rootNode);
                 // expand top level nodes
                 // needs to happen after nodeStructureChanged
+                tree.expandPath(new TreePath(new Object[]{rootNode, callStackNode}));
                 tree.expandPath(new TreePath(new Object[]{rootNode, localVarsNode}));
                 tree.expandPath(new TreePath(new Object[]{rootNode, thisNode}));
 
@@ -620,6 +626,36 @@ public class Debugger implements VMEventListener {
             }
         }
         return var;
+    }
+
+    /**
+     * Get the current call stack trace usable for insertion into a {@link JTree}.
+     *
+     * @param t the suspended thread to retrieve the call stack from
+     * @return call stack as list of {@link DefaultMutableTreeNode}s
+     */
+    protected List<DefaultMutableTreeNode> getStackTrace(ThreadReference t) {
+        List<DefaultMutableTreeNode> stack = new ArrayList();
+        try {
+            int i = 0;
+            for (StackFrame f : t.frames()) {
+                Location l = f.location();
+                int lineNo = l.lineNumber();
+                try {
+                    // line number translation
+                    LineID sketchLine = lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
+                    if (sketchLine != null) {
+                        lineNo = sketchLine.lineNo;
+                    }
+                } catch (AbsentInformationException ex) {
+                    Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                stack.add(new DefaultMutableTreeNode(l.declaringType().name() + "." + l.method().name() + ":" + lineNo));
+            }
+        } catch (IncompatibleThreadStateException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return stack;
     }
 
     /**

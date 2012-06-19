@@ -219,7 +219,7 @@ x line breakpoints need to monitor line insertions/deletions
 16.6.2012
 ! fast stepping exception: Only one step request allowed per thread
 * toggling var insp. focuses var insp. window
-
+* nullpointerexception when stepping into println (dbg_test.foo())
 
 QUESTIONS:
 * p5 alpha errors

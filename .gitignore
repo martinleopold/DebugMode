@@ -4,3 +4,4 @@
 ######################
 .DS_Store*
 Thumbs.db
+/src/com/martinleopold/mode/debug/EditorX.java
