@@ -385,7 +385,7 @@ public class Debugger implements VMEventListener {
 
                 printSourceLocation(lastThread);
                 //selectSourceLocation(be.location());
-                highlightSourceLocation(be.location());
+                highlightLine(be.location());
                 updateVariableInspector(lastThread);
             } else if (e instanceof StepEvent) {
                 StepEvent se = (StepEvent) e;
@@ -393,7 +393,7 @@ public class Debugger implements VMEventListener {
 
                 printSourceLocation(lastThread);
                 //selectSourceLocation(se.location());
-                highlightSourceLocation(se.location());
+                highlightLine(se.location());
                 updateVariableInspector(lastThread);
 
                 // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
@@ -522,6 +522,14 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    /**
+     * Compile a list of current locals usable for insertion into a {@link JTree}.
+     * Recursively resolves object references.
+     *
+     * @param t the suspended thread to get locals for
+     * @param depth how deep to resolve nested object references
+     * @return the list of current locals
+     */
     protected List<VariableNode> getLocals(ThreadReference t, int depth) {
         //System.out.println("getting locals");
         List<VariableNode> vars = new ArrayList();
@@ -556,6 +564,14 @@ public class Debugger implements VMEventListener {
         return vars;
     }
 
+    /**
+     * Compile a list of fields in the current this object usable for insertion
+     * into a {@link JTree}. Recursively resolves object references.
+     *
+     * @param t the suspended thread to get locals for
+     * @param depth how deep to resolve nested object references
+     * @return the list of fields in the current this object
+     */
     protected List<VariableNode> getThisFields(ThreadReference t, int depth) {
         //System.out.println("getting this");
         List<VariableNode> vars = new ArrayList();
@@ -575,7 +591,17 @@ public class Debugger implements VMEventListener {
         return vars;
     }
 
-    // recursively resolve a field using an object reference as environment
+    /**
+     * Recursively resolve a field for use in a {@link JTree}. Uses an object
+     * reference as environment. Used by {@link getLocals()} and {@link getThisFields()}.
+     *
+     * @param field the field to resolve
+     * @param obj the object reference used as environment (must contain the
+     * field to resolve)
+     * @param depth the current depth (in the recursive call)
+     * @param maxDepth the depth to stop recursion at
+     * @return the resolved field
+     */
     protected VariableNode getFieldRecursive(Field field, ObjectReference obj, int depth, int maxDepth) {
         // resolve the field to a value using the provided object reference
         Value val = obj.getValue(field);
@@ -751,9 +777,15 @@ public class Debugger implements VMEventListener {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    protected LineID highlightedLine; // the current source line, when suspended
+    protected LineID highlightedLine; // the highlighted line. usually the current source line when suspended
 
-    protected void highlightSourceLocation(Location l) {
+    /**
+     * Highlight a source line in the editor. Used for highlighting the current
+     * line when suspended.
+     *
+     * @param l the location to highlight.
+     */
+    protected void highlightLine(Location l) {
         try {
             // clear currently highlighted line
             clearHighlight();
@@ -786,6 +818,9 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    /**
+     * Clear the highlight set with {@link highlightLine()}.
+     */
     protected void clearHighlight() {
         // clear line highlight
         if (highlightedLine != null) {

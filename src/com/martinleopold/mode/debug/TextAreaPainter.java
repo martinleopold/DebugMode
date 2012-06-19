@@ -6,26 +6,42 @@ import processing.app.syntax.TextAreaDefaults;
 import processing.app.syntax.TokenMarker;
 
 /**
+ * Customized line painter. Adds support for background colors.
  *
  * @author mlg
  */
 public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
 
-    // we need the subclassed textarea
-    protected TextArea ta;
+    protected TextArea ta; // we need the subclassed textarea
+
     public TextAreaPainter(TextArea textArea, TextAreaDefaults defaults) {
         super(textArea, defaults);
         ta = (TextArea) textArea;
     }
 
+    /**
+     * Paint a line.
+     *
+     * @param gfx the graphics context
+     * @param tokenMarker
+     * @param line 0-based line number
+     * @param x
+     */
     @Override
     protected void paintLine(Graphics gfx, TokenMarker tokenMarker,
             int line, int x) {
-        paintLineColor(gfx, line, x);
+        paintLineBgColor(gfx, line, x);
         super.paintLine(gfx, tokenMarker, line, x);
     }
 
-    protected void paintLineColor(Graphics gfx, int line, int x) {
+    /**
+     * Paint the background color of a line.
+     *
+     * @param gfx the graphics context
+     * @param line 0-based line number
+     * @param x
+     */
+    protected void paintLineBgColor(Graphics gfx, int line, int x) {
         //System.out.println("1");
         int y = ta.lineToY(line);
         //System.out.println("2");
@@ -46,6 +62,6 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
         //System.out.println("5");
         gfx.setColor(col);
         //System.out.println("6");
-        gfx.fillRect(0,y,getWidth(),height);
+        gfx.fillRect(0, y, getWidth(), height);
     }
 }

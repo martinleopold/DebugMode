@@ -17,7 +17,6 @@ import processing.app.*;
 import processing.app.syntax.JEditTextArea;
 import processing.app.syntax.PdeTextAreaDefaults;
 import processing.mode.java.JavaEditor;
-import processing.mode.java.JavaToolbar;
 
 /**
  * Main View Class. Handles the editor window incl. toolbar and menu. Has access
@@ -85,6 +84,12 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         });
     }
 
+    /**
+     * Event handler called when closing the editor window. Kills the variable
+     * inspector window.
+     *
+     * @param e the event object
+     */
     protected void onWindowClosing(WindowEvent e) {
         System.out.println("closing window");
         // remove var.inspector
@@ -216,7 +221,10 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 //    public void handleRun() {
 //        dbg.continueDebug();
 //    }
-
+    /**
+     * Event handler called when hitting the stop button. Stops a running debug
+     * session or performs standard stop action if not currently debugging.
+     */
     @Override
     public void handleStop() {
         if (dbg.isConnected()) {
@@ -234,20 +242,35 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     }
 
     /**
-     * Clear current selection.
+     * Clear current text selection.
      */
     public void clearSelection() {
         setSelection(getCaretOffset(), getCaretOffset());
     }
 
+    /**
+     * Select a line in the current tab.
+     *
+     * @param lineIdx 0-based line number
+     */
     public void selectLine(int lineIdx) {
         setSelection(getLineStartOffset(lineIdx), getLineStopOffset(lineIdx));
     }
 
+    /**
+     * Set the cursor to the start of a line.
+     *
+     * @param lineIdx 0-based line number
+     */
     public void cursorToLineStart(int lineIdx) {
         setSelection(getLineStartOffset(lineIdx), getLineStartOffset(lineIdx));
     }
 
+    /**
+     * Set the cursor to the end of a line.
+     *
+     * @param lineIdx 0-based line number
+     */
     public void cursorToLineEnd(int lineIdx) {
         setSelection(getLineStopOffset(lineIdx), getLineStopOffset(lineIdx));
     }
@@ -255,14 +278,14 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     /**
      * Access variable inspector window.
      *
-     * @return
+     * @return the variable inspector object
      */
     public VariableInspector variableInspector() {
         return vi;
     }
 
     /**
-     * Access to the debugger.
+     * Access the debugger.
      *
      * @return the debugger controller object
      */
@@ -270,29 +293,48 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         return dbg;
     }
 
+    /**
+     * Show the variable inspector window.
+     */
     public void showVariableInspector() {
         vi.setVisible(true);
     }
 
+    /**
+     * Set visibility of the variable inspector window.
+     *
+     * @param visible true to set the variable inspector visible, false for
+     * invisible.
+     */
     public void showVariableInspector(boolean visible) {
         vi.setVisible(visible);
     }
 
+    /**
+     * Hide the variable inspector window.
+     */
     public void hideVariableInspector() {
         vi.setVisible(true);
     }
 
+    /**
+     * Toggle visibility of the variable inspector window.
+     */
     public void toggleVariableInspector() {
         vi.setVisible(!vi.isVisible());
     }
 
-    // TODO @override does not work here...
-    //@Override
+    /**
+     * Text area factory method. Instantiates the customized TextArea.
+     *
+     * @return the customized text area object
+     */
+    @Override
     protected JEditTextArea createTextArea() {
         //System.out.println("overriding creation of text area");
         return new TextArea(new PdeTextAreaDefaults(mode));
     }
-    protected Map<LineID, List<Color>> lineColors = new HashMap();
+    protected Map<LineID, List<Color>> lineColors = new HashMap(); // holds background colors for lines
 
     /**
      * Set background color of a sketch line.
@@ -330,13 +372,14 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             } else {
                 // no more colors for this line
                 ta.clearLineBgColor(l.lineNo - 1);
-                colors.remove(l);
+                lineColors.remove(l); // remove the whole map entry, since the list is empty anyway
             }
         }
     }
 
     /**
-     * Called when switching between tabs.
+     * Event handler called when switching between tabs. Loads all line
+     * background colors set for the tab.
      *
      * @param code tab to switch to
      */
@@ -364,12 +407,19 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
     /**
      * Access the currently edited document.
+     *
+     * @return the document object
      */
     public Document currentDocument() {
         return ta.getDocument();
     }
 
-    // Override toolbar factory
+    /**
+     * Factory method for the editor toolbar. Instantiates the customized
+     * toolbar.
+     *
+     * @return the toolbar
+     */
     @Override
     public EditorToolbar createToolbar() {
         return new DebugToolbar(this, base);

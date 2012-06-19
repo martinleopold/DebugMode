@@ -10,7 +10,7 @@ import processing.app.SketchException;
 import processing.mode.java.JavaBuild;
 
 /**
- *
+ * Copied from processing.mode.java.JavaBuild, just changed compiler.
  * @author mlg
  */
 public class DebugBuild extends JavaBuild {

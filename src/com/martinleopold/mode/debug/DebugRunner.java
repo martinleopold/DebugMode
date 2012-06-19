@@ -6,95 +6,88 @@ import processing.app.SketchException;
 import processing.mode.java.JavaBuild;
 
 /**
- * Runs a JavaBuild.
- * Launches the build in a new Debuggee VM.
+ * Runs a JavaBuild. Launches the build in a new debuggee VM.
+ *
  * @author mlg
  */
 public class DebugRunner extends processing.mode.java.runner.Runner {
 
     // important inherited fields
     // protected VirtualMachine vm;
-
     public DebugRunner(JavaBuild build, RunnerListener listener) throws SketchException {
         super(build, listener);
     }
 
     /**
-     * first try
-     * edited from processing/mode/java/runner/Runner.java
-     * outlined is blocking execution of target vm
+     * Launch the virtual machine.
+     * First try edited from processing.mode.java.runner.Runner. Outlined is
+     * blocking execution of target VM.
+     *
      * @param presenting
      */
-    @Override
-    // blocks until finished (but doesn't have to)
-    public void launch(boolean presenting) {
-        //this.presenting = presenting;
-
-        String[] machineParamList = getMachineParams();
-        String[] sketchParamList = getSketchParams();
-
-        System.out.println("launching VM");
-        // will return null on failure
-        vm = launchVirtualMachine(machineParamList, sketchParamList);
-
-        System.out.println("VM launched");
-
-        if (vm != null) {
-            // this redirects streams (out, err) and resumes vm
-            //generateTrace(null);
-
-            // create listener thread that handles VM events
-            //System.out.println("starting event listener");
-            //VMEventReader eventThread = new VMEventReader(vm.eventQueue());
-            //eventThread.start();
-
-            /*
-            // start vm execution
-            System.out.println("VM resume");
-            vm.resume();
-            // block till vm death (when event thread dies)
-            try {
-                eventThread.join();
-            } catch (InterruptedException e) {
-                // don't interrupt
-            }
-
-            // cleanup
-            System.out.println("VM done");
-            */
-        }
-    }
+//    @Override
+//    // blocks until finished (but doesn't have to)
+//    public void launch(boolean presenting) {
+//        //this.presenting = presenting;
+//
+//        String[] machineParamList = getMachineParams();
+//        String[] sketchParamList = getSketchParams();
+//
+//        System.out.println("launching VM");
+//        // will return null on failure
+//        vm = launchVirtualMachine(machineParamList, sketchParamList);
+//
+//        System.out.println("VM launched");
+//
+//        if (vm != null) {
+//            // this redirects streams (out, err) and resumes vm
+//            //generateTrace(null);
+//            // create listener thread that handles VM events
+//            //System.out.println("starting event listener");
+//            //VMEventReader eventThread = new VMEventReader(vm.eventQueue());
+//            //eventThread.start();
+//
+//            /*
+//             * // start vm execution System.out.println("VM resume");
+//             * vm.resume(); // block till vm death (when event thread dies) try
+//             * { eventThread.join(); } catch (InterruptedException e) { // don't
+//             * interrupt }
+//             *
+//             * // cleanup System.out.println("VM done");
+//             */
+//        }
+//    }
 
     /**
-     * simple non-blocking launch
-     * VM starts suspended
-     * @return debugge vm or null on failure
+     * Launch the virtual machine. Simple non-blocking launch. VM starts
+     * suspended.
+     *
+     * @return debugge VM or null on failure
      */
     public VirtualMachine launch() {
         String[] machineParamList = getMachineParams();
         String[] sketchParamList = getSketchParams();
         /*
-        System.out.println("vm launch sketch params:");
-        for (int i=0; i<sketchParamList.length; i++) {
-            System.out.println(sketchParamList[i]);
-        }
-        System.out.println("vm launch machine params:");
-        for (int i=0; i<machineParamList.length; i++) {
-            System.out.println(machineParamList[i]);
-        }
-        * */
+         * System.out.println("vm launch sketch params:"); for (int i=0;
+         * i<sketchParamList.length; i++) {
+         * System.out.println(sketchParamList[i]); } System.out.println("vm
+         * launch machine params:"); for (int i=0; i<machineParamList.length;
+         * i++) { System.out.println(machineParamList[i]); }
+        *
+         */
         vm = launchVirtualMachine(machineParamList, sketchParamList); // will return null on failure
         return vm;
     }
 
     /**
-     * additional access to virtual machine (maybe not needed)
-     * @return debugge vm or null if not running
+     * Additional access to the virtual machine. TODO: may not be needed
+     *
+     * @return debugge VM or null if not running
      */
     public VirtualMachine vm() {
         return vm;
     }
-
+    
     /**
      * no changes needed for now, should be able to use inherited method
      */

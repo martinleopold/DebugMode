@@ -10,6 +10,7 @@ import processing.app.syntax.JEditTextArea;
 import processing.app.syntax.TextAreaDefaults;
 
 /**
+ * Customized text area. Adds support for line background colors.
  *
  * @author mlg
  */
@@ -44,23 +45,32 @@ public class TextArea extends JEditTextArea {
 
         add(CENTER, painter);
     }
-    protected Map<Integer, Color> lineColors = new HashMap();
+    protected Map<Integer, Color> lineColors = new HashMap(); // contains line background colors
 
     /**
+     * Set the background color of a line.
      *
      * @param lineIdx 0-based line number
-     * @param col
+     * @param col the background color to set
      */
     public void setLineBgColor(int lineIdx, Color col) {
         lineColors.put(lineIdx, col);
         painter.invalidateLine(lineIdx);
     }
 
+    /**
+     * Clear the background color of a line.
+     *
+     * @param lineIdx 0-based line number
+     */
     public void clearLineBgColor(int lineIdx) {
         lineColors.remove(lineIdx);
         painter.invalidateLine(lineIdx);
     }
 
+    /**
+     * Clear all line background colors.
+     */
     public void clearLineBgColors() {
         for (int lineIdx : lineColors.keySet()) {
             painter.invalidateLine(lineIdx);
@@ -69,9 +79,10 @@ public class TextArea extends JEditTextArea {
     }
 
     /**
+     * Get a lines background color.
      *
-     * @param idx
-     * @return null if no color saved for the specified line
+     * @param lineIdx 0-based line number
+     * @return the color or null if no color was set for the specified line
      */
     public Color getLineBgColor(int lineIdx) {
         return lineColors.get(lineIdx);

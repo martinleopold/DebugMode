@@ -7,6 +7,7 @@ import processing.app.Editor;
 import processing.mode.java.JavaToolbar;
 
 /**
+ * Custom toolbar for the editor window.
  *
  * @author mlg
  */
@@ -30,6 +31,9 @@ public class DebugToolbar extends JavaToolbar {
         super(editor, base);
     }
 
+    /**
+     * Initialize buttons. Loads images and adds the buttons to the toolbar.
+     */
     @Override
     public void init() {
         Image[][] images = loadImages();
@@ -38,7 +42,15 @@ public class DebugToolbar extends JavaToolbar {
         }
     }
 
-    static public String getTitle(int index, boolean shift) {
+    /**
+     * Get the title for a toolbar button. Displayed in the toolbar when
+     * hovering over a button.
+     *
+     * @param index index of the toolbar button
+     * @param shift true if shift is pressed
+     * @return the title
+     */
+    public static String getTitle(int index, boolean shift) {
         switch (index) {
             case RUN:
                 return JavaToolbar.getTitle(JavaToolbar.RUN, shift);
@@ -71,6 +83,12 @@ public class DebugToolbar extends JavaToolbar {
         return null;
     }
 
+    /**
+     * Event handler called when a toolbar button is clicked.
+     *
+     * @param e the mouse event
+     * @param sel index of the toolbar button clicked
+     */
     @Override
     public void handlePressed(MouseEvent e, int sel) {
         boolean shift = e.isShiftDown();

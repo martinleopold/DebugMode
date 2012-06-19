@@ -90,7 +90,7 @@ PROTOTYPE 3:
 			* VMDisconnectedEvent seems to be unreliable. likely synchronization problem.
 		* other noted issues
 	* refactoring
-		* LineID
+		* LineID is a design mess
 		* rid Debugger of view-related functions, especially line highlighting
 	* var.inspector
 		! lazy loading of object types

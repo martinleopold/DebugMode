@@ -9,14 +9,14 @@ import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 
 /**
- *
+ * Copied from processing.mode.java.Compiler, just added -g switch to
+ * generate debugging info.
  * @author mlg
  */
 public class Compiler extends processing.mode.java.Compiler {
 
     /**
-     * Copied from processing.mode.java.Compiler, just added -g switch to
-     * generate debugging info. Compile with ECJ. See http://j.mp/8paifz for
+     * Compile with ECJ. See http://j.mp/8paifz for
      * documentation.
      *
      * @param sketch Sketch object to be compiled, used for placing exceptions

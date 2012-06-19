@@ -7,6 +7,8 @@ import processing.app.Sketch;
 import processing.app.SketchCode;
 
 /**
+ * Utility class for mapping line numbers between "sketch space" (i.e. like in
+ * the editor) and "java space" (i.e. after preprocessing).
  *
  * @author mlg
  */
@@ -15,9 +17,11 @@ public class LineMapping {
     static void addLineNumbers(SketchCode tab) {
         String[] lines = tab.getProgram().split("\n", -1); // -1 includes empty strings
         String newProgram = "";
-        int i=1;
+        int i = 1;
         for (String line : lines) {
-            if (i>1) newProgram += "\n";
+            if (i > 1) {
+                newProgram += "\n";
+            }
             newProgram += line + " // " + tab.getFileName() + ":" + i;
             i++;
         }
@@ -33,9 +37,11 @@ public class LineMapping {
     static void removeLineNumbers(SketchCode tab) {
         String[] lines = tab.getProgram().split("\n", -1);
         String newProgram = "";
-        int i=1;
+        int i = 1;
         for (String line : lines) {
-            if (i>1) newProgram += "\n";
+            if (i > 1) {
+                newProgram += "\n";
+            }
             newProgram += line.substring(0, line.lastIndexOf(" // "));
             i++;
         }
@@ -72,7 +78,7 @@ public class LineMapping {
                 // find annotation in current line. //tabname:lineno
                 int idx = line.lastIndexOf(" // "); // index of last comment
                 if (idx > -1) {
-                    line = line.substring(idx+4); // only keep comment
+                    line = line.substring(idx + 4); // only keep comment
                     // check the pattern
                     if (line.matches(".*:[0-9]*")) {
                         String[] parts = line.split(":");
