@@ -73,7 +73,7 @@
     <!-- - - - - - - - - - - - - - - - - - - - - - -
         PACKAGE
     - - - - - - - - - - - - - - - - - - - - - - - -->
-    <target name="package" depends="build, doc">
+    <target name="package" depends="build, javadoc">
         <delete dir="${dist}" />
         <property name="bundle" value="${dist}/${lib.name}"/>
         <mkdir dir="${bundle}" />
@@ -143,7 +143,7 @@
     <!-- - - - - - - - - - - - - - - - - - - - - - -
         DOC
     - - - - - - - - - - - - - - - - - - - - - - - -->
-    <target name="doc" depends="">
+    <target name="javadoc" depends="">
         <javadoc sourcepath="${src}" destdir="${doc}">
             <classpath>
                 <path refid="library-classpath"/>

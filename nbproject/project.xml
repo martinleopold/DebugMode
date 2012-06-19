@@ -37,13 +37,18 @@
                     <target>run</target>
                 </action>
                 <action name="javadoc">
-                    <target>doc</target>
+                    <target>javadoc</target>
                 </action>
                 <action name="debug">
                     <script>nbproject/ide-file-targets.xml</script>
                     <target>debug-nb</target>
                 </action>
             </ide-actions>
+            <export>
+                <type>folder</type>
+                <location>build</location>
+                <build-target>install</build-target>
+            </export>
             <view>
                 <items>
                     <source-folder style="packages">

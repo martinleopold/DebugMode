@@ -98,7 +98,7 @@ public class VariableInspector extends javax.swing.JFrame {
     /**
      * Access the JTree.
      *
-     * @return
+     * @return the {@link JTree} object
      */
     public JTree getTree() {
         return jTree1;
@@ -107,7 +107,7 @@ public class VariableInspector extends javax.swing.JFrame {
     /**
      * Access the root node of the JTree.
      *
-     * @return
+     * @return the root node
      */
     public DefaultMutableTreeNode getRootNode() {
         return rootNode;

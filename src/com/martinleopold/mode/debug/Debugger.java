@@ -277,7 +277,7 @@ public class Debugger implements VMEventListener {
     /**
      * Retrieve line of sketch where the cursor currently resides.
      *
-     * @return
+     * @return the current {@link LineID}
      */
     protected LineID getCurrentLineID() {
         Sketch s = editor.getSketch();
@@ -593,7 +593,7 @@ public class Debugger implements VMEventListener {
 
     /**
      * Recursively resolve a field for use in a {@link JTree}. Uses an object
-     * reference as environment. Used by {@link getLocals()} and {@link getThisFields()}.
+     * reference as environment. Used by {@link #getLocals} and {@link #getThisFields}.
      *
      * @param field the field to resolve
      * @param obj the object reference used as environment (must contain the
@@ -689,7 +689,7 @@ public class Debugger implements VMEventListener {
      *
      * @param filePath
      * @param lineNo
-     * @return
+     * @return the requested source line
      */
     protected String getSourceLine(String filePath, int lineNo, int radius) {
         if (lineNo == -1) {
@@ -819,7 +819,7 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Clear the highlight set with {@link highlightLine()}.
+     * Clear the highlight set with {@link #highlightLine}.
      */
     protected void clearHighlight() {
         // clear line highlight

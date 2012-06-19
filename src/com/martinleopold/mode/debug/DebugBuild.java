@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.martinleopold.mode.debug;
 
 import java.io.File;
@@ -11,6 +7,7 @@ import processing.mode.java.JavaBuild;
 
 /**
  * Copied from processing.mode.java.JavaBuild, just changed compiler.
+ *
  * @author mlg
  */
 public class DebugBuild extends JavaBuild {
@@ -20,12 +17,13 @@ public class DebugBuild extends JavaBuild {
     }
 
     /**
-     * Preprocess and compile sketch.
-     * Copied from processing.mode.java.JavaBuild, just changed compiler.
+     * Preprocess and compile sketch. Copied from
+     * processing.mode.java.JavaBuild, just changed compiler.
+     *
      * @param srcFolder
      * @param binFolder
      * @param sizeWarning
-     * @return
+     * @return main class name or null on compile failure
      * @throws SketchException
      */
     @Override

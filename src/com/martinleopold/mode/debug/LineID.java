@@ -13,8 +13,8 @@ import javax.swing.text.Position;
 /**
  * Describes an ID for a code line. Comprised of a file name and a (1-based)
  * line number. Allows tracking the line when editing by attaching to a
- * Document.<p>TODO: split the tracking and highlighting features into a subclass
- * "LineBreakpoint"
+ * Document.<p>TODO: split the tracking and highlighting features into a
+ * subclass "LineBreakpoint"
  *
  * @author mlg
  */
@@ -34,7 +34,8 @@ public class LineID implements DocumentListener {
     }
 
     /**
-     * Test whether this {@link LineID} is equal to another object. Two {@link LineID}'s are equal when both their fileName and lineNo are equal.
+     * Test whether this {@link LineID} is equal to another object. Two {@link LineID}'s
+     * are equal when both their fileName and lineNo are equal.
      *
      * @param obj the object to test for equality
      * @return {@code true} if equal
@@ -65,8 +66,8 @@ public class LineID implements DocumentListener {
     protected Position pos; // the Position acquired during line number tracking
 
     /**
-     * Attach a {@link Document} to enable line number tracking when editing. The
-     * position to track is before the first non-whitespace character on the
+     * Attach a {@link Document} to enable line number tracking when editing.
+     * The position to track is before the first non-whitespace character on the
      * line. Edits happening before that position will cause the line number to
      * update accordingly.
      *
@@ -143,8 +144,8 @@ public class LineID implements DocumentListener {
     }
 
     /**
-     * Called when the {@link Document} registered using {@link enableTracking()} is edited.
-     * This happens when text is inserted or removed.
+     * Called when the {@link Document} registered using {@link #enableTracking}
+     * is edited. This happens when text is inserted or removed.
      *
      * @param de
      */
@@ -177,7 +178,8 @@ public class LineID implements DocumentListener {
     }
 
     /**
-     * {@link DocumentListener} callback. Called when attributes are changed. Not used.
+     * {@link DocumentListener} callback. Called when attributes are changed.
+     * Not used.
      *
      * @param de
      */
