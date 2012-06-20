@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2012 Martin Leopold <m@martinleopold.com>
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
 package com.martinleopold.mode.debug;
 
 import java.util.ArrayList;
@@ -12,7 +29,7 @@ import javax.swing.tree.TreeNode;
  * optionally a value. Can have sub-variables (as is the case for objects, and
  * arrays).
  *
- * @author mlg
+ * @author Martin Leopold <m@martinleopold.com>
  */
 public class VariableNode implements MutableTreeNode {
 
@@ -25,7 +42,7 @@ public class VariableNode implements MutableTreeNode {
     public VariableNode(String name) {
         this.name = name;
         this.type = null;
-        this.value= null;
+        this.value = null;
     }
 
     public VariableNode(String name, String type) {
@@ -49,7 +66,7 @@ public class VariableNode implements MutableTreeNode {
 
     @Override
     public TreeNode getChildAt(int i) {
-       return children.get(i);
+        return children.get(i);
     }
 
     @Override
@@ -85,8 +102,12 @@ public class VariableNode implements MutableTreeNode {
     @Override
     public String toString() {
         String str = name;
-        if (type != null) str += " (" + type + ")";
-        if (value != null) str += ": " + value;
+        if (type != null) {
+            str += " (" + type + ")";
+        }
+        if (value != null) {
+            str += ": " + value;
+        }
         return str;
     }
 

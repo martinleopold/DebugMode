@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2012 Martin Leopold <m@martinleopold.com>
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
 package com.martinleopold.mode.debug;
 
 import com.sun.jdi.VirtualMachine;
@@ -8,7 +25,7 @@ import processing.mode.java.JavaBuild;
 /**
  * Runs a JavaBuild. Launches the build in a new debuggee VM.
  *
- * @author mlg
+ * @author Martin Leopold <m@martinleopold.com>
  */
 public class DebugRunner extends processing.mode.java.runner.Runner {
 
@@ -19,9 +36,9 @@ public class DebugRunner extends processing.mode.java.runner.Runner {
     }
 
     /**
-     * Launch the virtual machine.
-     * First try edited from processing.mode.java.runner.Runner. Outlined is
-     * blocking execution of target VM.
+     * Launch the virtual machine. First try edited from
+     * processing.mode.java.runner.Runner. Outlined is blocking execution of
+     * target VM.
      *
      * @param presenting
      */
@@ -57,7 +74,6 @@ public class DebugRunner extends processing.mode.java.runner.Runner {
 //             */
 //        }
 //    }
-
     /**
      * Launch the virtual machine. Simple non-blocking launch. VM starts
      * suspended.
@@ -73,7 +89,7 @@ public class DebugRunner extends processing.mode.java.runner.Runner {
          * System.out.println(sketchParamList[i]); } System.out.println("vm
          * launch machine params:"); for (int i=0; i<machineParamList.length;
          * i++) { System.out.println(machineParamList[i]); }
-        *
+         *
          */
         vm = launchVirtualMachine(machineParamList, sketchParamList); // will return null on failure
         return vm;
@@ -87,7 +103,6 @@ public class DebugRunner extends processing.mode.java.runner.Runner {
     public VirtualMachine vm() {
         return vm;
     }
-    
     /**
      * no changes needed for now, should be able to use inherited method
      */

@@ -8,7 +8,6 @@
         <general-data xmlns="http://www.netbeans.org/ns/freeform-project/2">
             <!-- Do not use Project Properties customizer when editing this file manually. -->
             <name>DebugMode</name>
-            <properties/>
             <folders>
                 <source-folder>
                     <label>skel-mode</label>
@@ -36,12 +35,12 @@
                 <action name="run">
                     <target>run</target>
                 </action>
-                <action name="javadoc">
-                    <target>javadoc</target>
-                </action>
                 <action name="debug">
                     <script>nbproject/ide-file-targets.xml</script>
                     <target>debug-nb</target>
+                </action>
+                <action name="javadoc">
+                    <target>javadoc</target>
                 </action>
             </ide-actions>
             <export>
@@ -71,6 +70,7 @@
             <subprojects>
                 <project>/Users/mlg/Documents/NetBeansProjects/p5-svn</project>
             </subprojects>
+            <project-license>gpl20</project-license>
         </general-data>
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/3">
             <compilation-unit>
