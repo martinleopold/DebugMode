@@ -244,7 +244,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     @Override
     public void handleStop() {
-        if (dbg.isConnected()) {
+        if (dbg.isStarted()) {
             dbg.stopDebug();
         } else {
             super.handleStop();

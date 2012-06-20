@@ -46,8 +46,9 @@ public class Debugger implements VMEventListener {
     protected DebugEditor editor; // editor window, acting as main view
     protected DebugRunner runtime; // the runtime, contains debuggee VM
     protected boolean started = false; // debuggee vm has started, VMStartEvent received, main class loaded
+    protected boolean paused = false; // currently paused at breakpoint or step
     //ThreadReference initialThread; // initial thread of debuggee vm
-    protected ThreadReference lastThread; // thread the last breakpoint or step occured in
+    protected ThreadReference currentThread; // thread the last breakpoint or step occured in
     protected String mainClassName; // name of the main class that's currently being debugged
     protected ReferenceType mainClass;
     protected String srcPath; // path to the src folder of the current build
@@ -68,7 +69,7 @@ public class Debugger implements VMEventListener {
      * Start a debugging session. Builds the sketch and launches a VM to run it.
      * VM starts suspended. Should produce a VMStartEvent.
      */
-    public void startDebug() {
+    public synchronized void startDebug() {
         stopDebug(); // stop any running sessions
 
         // clear console
@@ -136,7 +137,7 @@ public class Debugger implements VMEventListener {
      * End debugging session. Stops and disconnects VM. Should produce
      * VMDisconnectEvent.
      */
-    public void stopDebug() {
+    public synchronized void stopDebug() {
         if (runtime != null) {
             System.out.println("closing runtime");
             runtime.close();
@@ -151,28 +152,31 @@ public class Debugger implements VMEventListener {
     /**
      * Resume paused debugging session. Resumes VM.
      */
-    public void continueDebug() {
+    public synchronized void continueDebug() {
         //editor.clearSelection();
         clearHighlight();
-        if (isConnected()) {
-            runtime.vm().resume();
-        } else {
+        if (!isStarted()) {
             startDebug();
+        } else if (isPaused()) {
+            runtime.vm().resume();
+            paused = false;
         }
     }
 
     /**
      * Step through source code lines.
      *
-     * @param stepDepth the step depth ({@link StepRequest}{@code .STEP_OVER}, {@link StepRequest}{@code .STEP_INTO}
-     * or {@link StepRequest}{@code .STEP_OUT})
+     * @param stepDepth the step depth ({@link StepRequest}{@code .STEP_OVER},
+     * {@link StepRequest}{@code .STEP_INTO} or
+     * {@link StepRequest}{@code .STEP_OUT})
      */
     protected void step(int stepDepth) {
-        if (isConnected()) {
+        if (isPaused()) {
             StepRequest sr =
-                    runtime.vm().eventRequestManager().createStepRequest(lastThread, StepRequest.STEP_LINE, stepDepth);
+                    runtime.vm().eventRequestManager().createStepRequest(currentThread, StepRequest.STEP_LINE, stepDepth);
             sr.addCountFilter(1); // valid for one step only
             sr.enable();
+            paused = false;
             runtime.vm().resume();
         }
     }
@@ -180,39 +184,39 @@ public class Debugger implements VMEventListener {
     /**
      * Step over current statement.s
      */
-    public void stepOver() {
+    public synchronized void stepOver() {
         step(StepRequest.STEP_OVER);
     }
 
     /**
      * Step into current statement.
      */
-    public void stepInto() {
+    public synchronized void stepInto() {
         step(StepRequest.STEP_INTO);
     }
 
     /**
      * Step out of current function.
      */
-    public void stepOut() {
+    public synchronized void stepOut() {
         step(StepRequest.STEP_OUT);
     }
 
     /**
      * Print the current stack trace.
      */
-    public void printStackTrace() {
-        if (isConnected()) {
-            printStackTrace(lastThread);
+    public synchronized void printStackTrace() {
+        if (isStarted()) {
+            printStackTrace(currentThread);
         }
     }
 
     /**
      * Print local variables. Outputs type, name and value of each variable.
      */
-    public void printLocals() {
-        if (isConnected()) {
-            printLocalVariables(lastThread);
+    public synchronized void printLocals() {
+        if (isStarted()) {
+            printLocalVariables(currentThread);
         }
     }
 
@@ -220,25 +224,25 @@ public class Debugger implements VMEventListener {
      * Print fields of current {@code this}-object. Outputs type, name and value
      * of each field.
      */
-    public void printThis() {
-        if (isConnected()) {
-            printThis(lastThread);
+    public synchronized void printThis() {
+        if (isStarted()) {
+            printThis(currentThread);
         }
     }
 
     /**
      * Print a source code snippet of the current location.
      */
-    public void printSource() {
-        if (isConnected()) {
-            printSourceLocation(lastThread);
+    public synchronized void printSource() {
+        if (isStarted()) {
+            printSourceLocation(currentThread);
         }
     }
 
     /**
      * Set a breakpoint on the current line.
      */
-    public void setBreakpoint() {
+    public synchronized void setBreakpoint() {
         LineID line = getCurrentLineID();
         line.enableTracking(editor.currentDocument());
         line.setView(editor, DebugEditor.BREAKPOINT_COLOR);
@@ -252,7 +256,7 @@ public class Debugger implements VMEventListener {
     /**
      * Remove a breakpoint from the current line (if set).
      */
-    public void removeBreakpoint() {
+    public synchronized void removeBreakpoint() {
         LineID line = getCurrentLineID();
         line.disableTracking();
         editor.clearLineBgColor(line);
@@ -268,7 +272,7 @@ public class Debugger implements VMEventListener {
     /**
      * Toggle the breakpoint on the current line.
      */
-    public void toggleBreakpoint() {
+    public synchronized void toggleBreakpoint() {
         LineID line = getCurrentLineID();
         if (!breakpoints.contains(line)) {
             setBreakpoint();
@@ -280,7 +284,7 @@ public class Debugger implements VMEventListener {
     /**
      * Print a list of currently set breakpoints.
      */
-    public void listBreakpoints() {
+    public synchronized void listBreakpoints() {
         if (breakpoints.isEmpty()) {
             System.out.println("no breakpoints");
         } else {
@@ -317,10 +321,9 @@ public class Debugger implements VMEventListener {
      * @param es Incoming set of events from VM
      */
     @Override
-    public void vmEvent(EventSet es) {
+    public synchronized void vmEvent(EventSet es) {
         for (Event e : es) {
             System.out.println("*** VM Event: " + e.toString());
-
             if (e instanceof VMStartEvent) {
                 //initialThread = ((VMStartEvent) e).thread();
                 ThreadReference t = ((VMStartEvent) e).thread();
@@ -394,45 +397,64 @@ public class Debugger implements VMEventListener {
                     setBreakpoint(sketchLine);
                 }
                 started = true;
+                paused = false;
                 runtime.vm().resume();
             } else if (e instanceof BreakpointEvent) {
                 BreakpointEvent be = (BreakpointEvent) e;
-                lastThread = be.thread(); // save this thread
+                currentThread = be.thread(); // save this thread
                 BreakpointRequest br = (BreakpointRequest) be.request();
 
-                printSourceLocation(lastThread);
+                printSourceLocation(currentThread);
                 //selectSourceLocation(be.location());
                 highlightLine(be.location());
-                updateVariableInspector(lastThread);
+                updateVariableInspector(currentThread);
+
+                paused = true;
             } else if (e instanceof StepEvent) {
                 StepEvent se = (StepEvent) e;
-                lastThread = se.thread();
+                currentThread = se.thread();
 
-                printSourceLocation(lastThread);
+                printSourceLocation(currentThread);
                 //selectSourceLocation(se.location());
                 highlightLine(se.location());
-                updateVariableInspector(lastThread);
+                updateVariableInspector(currentThread);
 
                 // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
                 EventRequestManager mgr = runtime.vm().eventRequestManager();
                 mgr.deleteEventRequest(se.request());
+
+                paused = true;
             } else if (e instanceof VMDisconnectEvent) {
                 started = false;
                 // clear line highlight
                 clearHighlight();
             } else if (e instanceof VMDeathEvent) {
+                started = false;
+                //clearHighlight();
             }
         }
     }
 
     /**
-     * Checks whether the debugger is connected to a debuggee VM. i.e. a
-     * debugging session is running. VMStartEvent has been received.
+     * Check whether a debugging session is running. i.e. the debugger is
+     * connected to a debuggee VM, VMStartEvent has been received and main class
+     * is loaded.
      *
-     * @return true if connected to debuggee VM
+     * @return true if the debugger is started.
      */
-    public boolean isConnected() {
+    public synchronized boolean isStarted() {
         return started && runtime != null && runtime.vm() != null;
+    }
+
+    /**
+     * Check whether the debugger is paused. i.e. it is currently suspended at a
+     * breakpoint or step
+     *
+     * @return true if the debugger is paused, false otherwise or if not started
+     * ({@link #isStarted()})
+     */
+    public synchronized boolean isPaused() {
+        return isStarted() && paused && currentThread != null && currentThread.isSuspended();
     }
 
     /**
@@ -546,8 +568,8 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Compile a list of current locals usable for insertion into a {@link JTree}.
-     * Recursively resolves object references.
+     * Compile a list of current locals usable for insertion into a
+     * {@link JTree}. Recursively resolves object references.
      *
      * @param t the suspended thread to get locals for
      * @param depth how deep to resolve nested object references
@@ -602,10 +624,15 @@ public class Debugger implements VMEventListener {
             if (t.frameCount() > 0) {
                 StackFrame sf = t.frame(0);
                 ObjectReference thisObj = sf.thisObject();
-                //System.out.println("type: " + thisObj.referenceType().name());
-                for (Field f : thisObj.referenceType().visibleFields()) {
-                    //System.out.println("recursively adding field: " + f.name());
-                    vars.add(getFieldRecursive(f, thisObj, 0, depth));
+                if (thisObj != null) { // will be null in native or static methods
+                    //System.out.println("type: " + thisObj.referenceType().name());
+                    for (Field f : thisObj.referenceType().visibleFields()) {
+                        if (f == null) {
+                            System.out.println("field is null!");
+                        }
+                        //System.out.println("recursively adding field: " + f.name());
+                        vars.add(getFieldRecursive(f, thisObj, 0, depth));
+                    }
                 }
             }
         } catch (IncompatibleThreadStateException ex) {
@@ -616,7 +643,8 @@ public class Debugger implements VMEventListener {
 
     /**
      * Recursively resolve a field for use in a {@link JTree}. Uses an object
-     * reference as environment. Used by {@link #getLocals} and {@link #getThisFields}.
+     * reference as environment. Used by {@link #getLocals} and
+     * {@link #getThisFields}.
      *
      * @param field the field to resolve
      * @param obj the object reference used as environment (must contain the
@@ -646,7 +674,8 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Get the current call stack trace usable for insertion into a {@link JTree}.
+     * Get the current call stack trace usable for insertion into a
+     * {@link JTree}.
      *
      * @param t the suspended thread to retrieve the call stack from
      * @return call stack as list of {@link DefaultMutableTreeNode}s
@@ -691,10 +720,14 @@ public class Debugger implements VMEventListener {
             } else {
                 StackFrame sf = t.frame(0);
                 ObjectReference thisObject = sf.thisObject();
-                ReferenceType type = thisObject.referenceType();
-                System.out.println("fields in this (" + type.name() + "):");
-                for (Field f : type.visibleFields()) {
-                    System.out.println(f.typeName() + " " + f.name() + " = " + thisObject.getValue(f));
+                if (this != null) {
+                    ReferenceType type = thisObject.referenceType();
+                    System.out.println("fields in this (" + type.name() + "):");
+                    for (Field f : type.visibleFields()) {
+                        System.out.println(f.typeName() + " " + f.name() + " = " + thisObject.getValue(f));
+                    }
+                } else {
+                    System.out.println("can't get this (in native or static method)");
                 }
             }
         } catch (IncompatibleThreadStateException ex) {

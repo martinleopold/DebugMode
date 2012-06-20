@@ -41,6 +41,7 @@ public class VMEventReader extends Thread {
      * @param listener the listener to forward events to.
      */
     public VMEventReader(EventQueue eventQueue, VMEventListener listener) {
+        super("VM Event Thread");
         this.eventQueue = eventQueue;
         this.listener = listener;
     }

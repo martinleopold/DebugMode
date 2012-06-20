@@ -84,11 +84,8 @@ PROTOTYPE 3:
 	? line annotation
 * iteration
 	* stability
-		! thread safety w/event thread
-			* events come in asynchronously
-			* fast stepping causes exception
-			* VMDisconnectedEvent seems to be unreliable. likely synchronization problem.
-		* other noted issues
+		x thread safety w/event thread
+		* issues that cause exceptions
 	* refactoring
 		* LineID is a design mess
 		* rid Debugger of view-related functions, especially line highlighting
@@ -209,17 +206,25 @@ x line breakpoints need to monitor line insertions/deletions
 	* selecting
 * we need a call stack window! (to know where we are)
 * var inspector
-	* icons
+	* tree icons
 	* grey out when info not current (i.e. vm not suspended)
 * line highlighting
 	* DebugEditor should provide the functions for setting the current line, not Debugger
 	* LineID is a design mess, need to restructure
-! VMDisconnectedEvent seems to be unreliable. likely synchronization problem.
+/ VMDisconnectedEvent seems to be unreliable. likely synchronization problem.
 * use resources/theme/theme.txt for highlight colors (current, breakpoint)
 16.6.2012
-! fast stepping exception: Only one step request allowed per thread
+x fast stepping exception: Only one step request allowed per thread
 * toggling var insp. focuses var insp. window
-* nullpointerexception when stepping into println (dbg_test.foo())
+19.6.2012
+x NullPointerException when stepping into println (dbg_test.foo()) --> thisObject() was null (native or static mehthod)
+20.6.2012
+* sketch output window shows up after several draw() cycles, canvas updated even later
+x fast continue: com.sun.jdi.IncompatibleThreadStateException
+x fast continue: sometimes restarts debugger
+* debug button lights up, until moused over
+! stepping from draw() ouside of visible code util draw() is hit again: com.sun.jdi.request.DuplicateRequestException
+* in stacktrace indicate if in native or static method
 
 QUESTIONS:
 * p5 alpha errors
