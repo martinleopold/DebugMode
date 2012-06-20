@@ -55,6 +55,7 @@ public class Debugger implements VMEventListener {
     protected DebugBuild build; // todo: might not need to be global
     protected Map<LineID, LineID> lineMap; // maps source lines from "sketch-space" to "java-space" and vice-versa
     protected List<LineID> breakpoints = new ArrayList(); // list of breakpoints in "sketch-space"
+    protected StepRequest stepRequest; //
 
     /**
      * Construct a Debugger object.
@@ -172,10 +173,11 @@ public class Debugger implements VMEventListener {
      */
     protected void step(int stepDepth) {
         if (isPaused()) {
-            StepRequest sr =
+            // use global to mark that there is a step request pending
+            stepRequest =
                     runtime.vm().eventRequestManager().createStepRequest(currentThread, StepRequest.STEP_LINE, stepDepth);
-            sr.addCountFilter(1); // valid for one step only
-            sr.enable();
+            stepRequest.addCountFilter(1); // valid for one step only
+            stepRequest.enable();
             paused = false;
             runtime.vm().resume();
         }
@@ -409,6 +411,12 @@ public class Debugger implements VMEventListener {
                 highlightLine(be.location());
                 updateVariableInspector(currentThread);
 
+                // hit a breakpoint during a step, need to cancel the step.
+                if (stepRequest != null) {
+                    runtime.vm().eventRequestManager().deleteEventRequest(stepRequest);
+                    stepRequest = null;
+                }
+
                 paused = true;
             } else if (e instanceof StepEvent) {
                 StepEvent se = (StepEvent) e;
@@ -422,7 +430,7 @@ public class Debugger implements VMEventListener {
                 // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
                 EventRequestManager mgr = runtime.vm().eventRequestManager();
                 mgr.deleteEventRequest(se.request());
-
+                stepRequest = null; // mark that there is no step request pending
                 paused = true;
             } else if (e instanceof VMDisconnectEvent) {
                 started = false;

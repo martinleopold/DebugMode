@@ -79,7 +79,7 @@ x var inspector
 
 PROTOTYPE 3:
 * important missing features
-	* var inspector: stack trace
+	x var inspector: stack trace
 	? var inspector: modes
 	? line annotation
 * iteration
@@ -116,10 +116,10 @@ x Class Design (MVC)
 	* in/err forwarding to console
 	* Know when finished
 		* change UI state (buttons, menu)
-	* Event thread Synchronization
-	* VM States
-		* started+mainclassloaded
-		* paused
+	x Event thread Synchronization
+	x VM States
+		x started+mainclassloaded
+		x paused
 	* Commands
 		* Start
 		* Continue
@@ -195,7 +195,7 @@ x clear log area when starting debug
 * only saved sketch is run in debugger?
 5.6.2012
 x line breakpoints need to monitor line insertions/deletions
-! thread safety: events come in asynchronously
+x thread safety: events come in asynchronously
 13.6.2012
 * transform LineID to Breakpoint, possibly Breakpoint as subclass of LineID
 * line highlight on first line doesn't move down
@@ -223,8 +223,11 @@ x NullPointerException when stepping into println (dbg_test.foo()) --> thisObjec
 x fast continue: com.sun.jdi.IncompatibleThreadStateException
 x fast continue: sometimes restarts debugger
 * debug button lights up, until moused over
-! stepping from draw() ouside of visible code util draw() is hit again: com.sun.jdi.request.DuplicateRequestException
+x stepping from draw() ouside of visible code util draw() is hit again: com.sun.jdi.request.DuplicateRequestException
+x hitting a breakpoint during a step + stepping again: DuplicateRequestException
+-> policy: when breakpoint hit during step: cancel step, cause we stopped anyway (only finer grained)
 * in stacktrace indicate if in native or static method
+
 
 QUESTIONS:
 * p5 alpha errors
