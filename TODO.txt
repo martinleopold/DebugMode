@@ -86,17 +86,18 @@ PROTOTYPE 3:
 	* stability
 		x thread safety w/event thread
 		* issues that cause exceptions
+		* issues from feedback
 	* refactoring
 		* LineID is a design mess
 		* rid Debugger of view-related functions, especially line highlighting
 	* var.inspector
-		! lazy loading of object types
+		! lazy loading of nested object refs.
 		* handling special objects
 			* arrays
 			* p5 types…
 		? p5 mode
 	* breakpoints
-		! setting/modifying at runtime
+		x setting/modifying at runtime
 		! clear bps on file open, new
 	x more code documentation
 	/ loose dependence on hacked core
@@ -227,6 +228,7 @@ x stepping from draw() ouside of visible code util draw() is hit again: com.sun.
 x hitting a breakpoint during a step + stepping again: DuplicateRequestException
 -> policy: when breakpoint hit during step: cancel step, cause we stopped anyway (only finer grained)
 * in stacktrace indicate if in native or static method
+* add/rem a bp on the current line: messes up line highlight colors (-> color stacking system!)
 
 
 QUESTIONS:

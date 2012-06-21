@@ -25,6 +25,7 @@ import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -55,7 +56,8 @@ public class Debugger implements VMEventListener {
     protected DebugBuild build; // todo: might not need to be global
     protected Map<LineID, LineID> lineMap; // maps source lines from "sketch-space" to "java-space" and vice-versa
     protected List<LineID> breakpoints = new ArrayList(); // list of breakpoints in "sketch-space"
-    protected StepRequest stepRequest; //
+    protected Map<LineID, BreakpointRequest> breakpointRequests = new HashMap(); // list of breakpoints in "sketch-space"
+    protected StepRequest requestedStep; // the step request we are currently in, or null if not in a step
 
     /**
      * Construct a Debugger object.
@@ -174,17 +176,17 @@ public class Debugger implements VMEventListener {
     protected void step(int stepDepth) {
         if (isPaused()) {
             // use global to mark that there is a step request pending
-            stepRequest =
+            requestedStep =
                     runtime.vm().eventRequestManager().createStepRequest(currentThread, StepRequest.STEP_LINE, stepDepth);
-            stepRequest.addCountFilter(1); // valid for one step only
-            stepRequest.enable();
+            requestedStep.addCountFilter(1); // valid for one step only
+            requestedStep.enable();
             paused = false;
             runtime.vm().resume();
         }
     }
 
     /**
-     * Step over current statement.s
+     * Step over current statement.
      */
     public synchronized void stepOver() {
         step(StepRequest.STEP_OVER);
@@ -245,27 +247,43 @@ public class Debugger implements VMEventListener {
      * Set a breakpoint on the current line.
      */
     public synchronized void setBreakpoint() {
+        // do nothing if we are kinda busy
+        if (isStarted() && !isPaused()) {
+            return;
+        }
         LineID line = getCurrentLineID();
         line.enableTracking(editor.currentDocument());
         line.setView(editor, DebugEditor.BREAKPOINT_COLOR);
         breakpoints.add(line);
+        if (isPaused()) { // in a paused debug session
+            // immediately activate the breakpoint
+            setBreakpoint(line);
+        }
         //editor.setLineBgColor(line, new Color(255, 170, 170));
-        System.out.println("setting breakpoint on line " + line);
+        System.out.println("set breakpoint on line " + line);
         System.out.println("note: breakpoints on method declarations will not work, use first line of method instead");
-        System.out.println("note: changes take effect after (re)starting the debug session");
+        //System.out.println("note: changes take effect after (re)starting the debug session");
     }
 
     /**
      * Remove a breakpoint from the current line (if set).
      */
     public synchronized void removeBreakpoint() {
+        // do nothing if we are kinda busy
+        if (isStarted() && !isPaused()) {
+            return;
+        }
         LineID line = getCurrentLineID();
         line.disableTracking();
         editor.clearLineBgColor(line);
         if (breakpoints.contains(line)) {
+            if (isPaused()) {
+                // immediately remove the breakpoint
+                removeBreakpoint(line);
+            }
             breakpoints.remove(line);
             System.out.println("removed breakpoint " + line);
-            System.out.println("note: changes take effect after (re)starting the debug session");
+            //System.out.println("note: changes take effect after (re)starting the debug session");
         } else {
             System.out.println("no breakpoint on line " + line);
         }
@@ -308,6 +326,7 @@ public class Debugger implements VMEventListener {
         int lineNo = editor.getTextArea().getCaretLine() + 1;
 
         // check if there already is a breakpoint on the current line
+        // TODO: this is bad, fix it.
         LineID newID = new LineID(tab, lineNo);
         if (breakpoints.contains(newID)) {
             return breakpoints.get(breakpoints.indexOf(newID));
@@ -389,14 +408,11 @@ public class Debugger implements VMEventListener {
                     BreakpointRequest drawBp =
                             runtime.vm().eventRequestManager().createBreakpointRequest(drawLocation);
                     drawBp.enable();
-                }
-
-                System.out.println("setting breakpoints:");
-                if (breakpoints.isEmpty()) {
-                    System.out.println("no breakpoints set");
-                }
-                for (LineID sketchLine : breakpoints) {
-                    setBreakpoint(sketchLine);
+                } else {
+                    System.out.println("setting breakpoints:");
+                    for (LineID sketchLine : breakpoints) {
+                        setBreakpoint(sketchLine);
+                    }
                 }
                 started = true;
                 paused = false;
@@ -412,9 +428,9 @@ public class Debugger implements VMEventListener {
                 updateVariableInspector(currentThread);
 
                 // hit a breakpoint during a step, need to cancel the step.
-                if (stepRequest != null) {
-                    runtime.vm().eventRequestManager().deleteEventRequest(stepRequest);
-                    stepRequest = null;
+                if (requestedStep != null) {
+                    runtime.vm().eventRequestManager().deleteEventRequest(requestedStep);
+                    requestedStep = null;
                 }
 
                 paused = true;
@@ -430,7 +446,7 @@ public class Debugger implements VMEventListener {
                 // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
                 EventRequestManager mgr = runtime.vm().eventRequestManager();
                 mgr.deleteEventRequest(se.request());
-                stepRequest = null; // mark that there is no step request pending
+                requestedStep = null; // mark that there is no step request pending
                 paused = true;
             } else if (e instanceof VMDisconnectEvent) {
                 started = false;
@@ -927,7 +943,7 @@ public class Debugger implements VMEventListener {
     /**
      * Set a breakpoint on a sketch line.
      *
-     * @param sketchLine specifies the line to set a breakpoint on
+     * @param sketchLine specifies the line to set the breakpoint on
      */
     protected void setBreakpoint(LineID sketchLine) {
         // find line in java space
@@ -942,13 +958,27 @@ public class Debugger implements VMEventListener {
                 System.out.println("no location found for line " + sketchLine + " -> " + javaLine);
                 return;
             }
-            for (Location l : locations) {
-                BreakpointRequest bpr = runtime.vm().eventRequestManager().createBreakpointRequest(l);
-                bpr.enable();
-                System.out.println(sketchLine + " -> " + javaLine);
-            }
+            // use first found location
+            BreakpointRequest bpr = runtime.vm().eventRequestManager().createBreakpointRequest(locations.get(0));
+            bpr.enable();
+            breakpointRequests.put(sketchLine, bpr);
+            System.out.println(sketchLine + " -> " + javaLine);
         } catch (AbsentInformationException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * Remove a breakpoint from a sketch line. Deletes the breakpoint request
+     * from the event request manager.
+     *
+     * @param sketchLine identifies the line to remove the breakpoint from
+     */
+    protected void removeBreakpoint(LineID sketchLine) {
+        if (breakpointRequests.containsKey(sketchLine)) {
+            BreakpointRequest bpr = breakpointRequests.get(sketchLine);
+            runtime.vm().eventRequestManager().deleteEventRequest(bpr);
+            breakpointRequests.remove(sketchLine);
         }
     }
 }
