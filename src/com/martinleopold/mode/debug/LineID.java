@@ -26,11 +26,11 @@ package com.martinleopold.mode.debug;
 public class LineID {
 
     public String fileName; // the filename
-    public int lineNo; // the line number, 0-based
+    public int lineIdx; // the line number, 0-based
 
     public LineID(String fileName, int lineNo) {
         this.fileName = fileName;
-        this.lineNo = lineNo;
+        this.lineIdx = lineNo;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class LineID {
         if ((this.fileName == null) ? (other.fileName != null) : !this.fileName.equals(other.fileName)) {
             return false;
         }
-        if (this.lineNo != other.lineNo) {
+        if (this.lineIdx != other.lineIdx) {
             return false;
         }
         return true;
@@ -72,7 +72,7 @@ public class LineID {
      */
     @Override
     public String toString() {
-        return fileName + ":" + (lineNo + 1);
+        return fileName + ":" + (lineIdx + 1);
     }
 
     /**
@@ -82,6 +82,6 @@ public class LineID {
      */
     @Override
     public LineID clone() {
-        return new LineID(fileName, lineNo);
+        return new LineID(fileName, lineIdx);
     }
 }

@@ -35,18 +35,23 @@ import processing.mode.java.JavaEditor;
 
 /**
  * Main View Class. Handles the editor window incl. toolbar and menu. Has access
- * to the Sketch.
+ * to the Sketch. Provides line highlighting (for breakpoints and the debuggers
+ * current line).
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
 public class DebugEditor extends JavaEditor implements ActionListener {
-
-    public static final Color BREAKPOINT_COLOR = new Color(255, 170, 170); // the background color for highlighting elines
-    public static final Color CURRENT_LINE_COLOR = new Color(255, 255, 0); // the background color for highlighting lines
     // important fields from superclass
     //protected Sketch sketch;
     //private JMenu fileMenu;
     //protected EditorToolbar toolbar;
+
+    // highlighting
+    public static final Color BREAKPOINT_COLOR = new Color(255, 170, 170); // the background color for highlighting elines
+    public static final Color CURRENT_LINE_COLOR = new Color(255, 255, 0); // the background color for highlighting lines
+    protected List<LineHighlight> breakpointedLines = new ArrayList(); // breakpointed lines
+    protected LineHighlight currentLine; // line the debugger is currently suspended at
+    // menus
     protected JMenu debugMenu;
     // debugger control
     protected JMenuItem debugMenuItem;
@@ -290,12 +295,19 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     }
 
     /**
-     * Access variable inspector window.
+     * Switch to a tab.
      *
-     * @return the variable inspector object
+     * @param tabFileName the file name identifying the tab. (as in
+     * {@link SketchCode#getFileName()})
      */
-    public VariableInspector variableInspector() {
-        return vi;
+    public void switchToTab(String tabFileName) {
+        Sketch s = getSketch();
+        for (int i = 0; i < s.getCodeCount(); i++) {
+            if (tabFileName.equals(s.getCode(i).getFileName())) {
+                s.setCurrentCode(i);
+                break;
+            }
+        }
     }
 
     /**
@@ -305,6 +317,15 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public Debugger dbg() {
         return dbg;
+    }
+
+    /**
+     * Access variable inspector window.
+     *
+     * @return the variable inspector object
+     */
+    public VariableInspector variableInspector() {
+        return vi;
     }
 
     /**
@@ -348,33 +369,29 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         //System.out.println("overriding creation of text area");
         return new TextArea(new PdeTextAreaDefaults(mode));
     }
-    /**
-     * TODO: new domain specific highlighting API
-     *
-     */
-    protected List<HighlightedLine> breakpointedLines = new ArrayList(); // breakpointed lines
-    protected HighlightedLine currentLine; // line the debugger is currently suspended at
 
     /**
-     * Set the line the debugger is currently suspended at. Will override the
-     * breakpoint color, if set.
+     * Set the line to highlight as currently suspended at. Will override the
+     * breakpoint color, if set. Switches to the appropriate tab.
      *
-     * @param lineNo
+     * @param line the line to highlight as current suspended line
      */
     public void setCurrentLine(LineID line) {
         clearCurrentLine();
-        if (line != null) {
-            currentLine = new HighlightedLine(line, CURRENT_LINE_COLOR, this);
-        }
+        switchToTab(line.fileName);
+        currentLine = new LineHighlight(line.lineIdx, CURRENT_LINE_COLOR, this);
     }
 
+    /**
+     * Clear the highlight for the debuggers current line.
+     */
     public void clearCurrentLine() {
         if (currentLine != null) {
             clearLine(currentLine);
-            currentLine.close();
+            currentLine.dispose();
 
-            // TODO: revert to breakpoint color if any is set
-            for (HighlightedLine hl : breakpointedLines) {
+            // revert to breakpoint color if any is set on this line
+            for (LineHighlight hl : breakpointedLines) {
                 if (hl.getID().equals(currentLine.getID())) {
                     paintLine(hl);
                     break;
@@ -384,18 +401,32 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         }
     }
 
-    public void addBreakpointedLine(LineID line) {
-        HighlightedLine hl = new HighlightedLine(line, BREAKPOINT_COLOR, this);
+    /**
+     * Add highlight for a breakpointed line. Needs to be on the current tab.
+     *
+     * @param lineIdx the line index on the current tab to highlight as
+     * breakpointed
+     */
+    public void addBreakpointedLine(int lineIdx) {
+        LineHighlight hl = new LineHighlight(lineIdx, BREAKPOINT_COLOR, this);
         breakpointedLines.add(hl);
-        // TODO; repaint current line if it's on this line
-        if (currentLine != null) {
+        // repaint current line if it's on this line
+        if (currentLine != null && currentLine.getID().equals(getLineIDInCurrentTab(lineIdx))) {
             paintLine(currentLine);
         }
     }
 
-    public void removeBreakpointedLine(LineID line) {
-        HighlightedLine foundLine = null;
-        for (HighlightedLine hl : breakpointedLines) {
+    /**
+     * Remove a highlight for a breakpointed line. Needs to be on the current
+     * tab.
+     *
+     * @param lineIdx the line index on the current tab to remove a breakpoint
+     * highlight from
+     */
+    public void removeBreakpointedLine(int lineIdx) {
+        LineID line = getLineIDInCurrentTab(lineIdx);
+        LineHighlight foundLine = null;
+        for (LineHighlight hl : breakpointedLines) {
             if (hl.getID().equals(line)) {
                 foundLine = hl;
                 break;
@@ -404,39 +435,56 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         if (foundLine != null) {
             clearLine(foundLine);
             breakpointedLines.remove(foundLine);
-            // TODO; repaint current line if it's on this line
-            if (currentLine != null) {
+            // repaint current line if it's on this line
+            if (currentLine != null && currentLine.getID().equals(line)) {
                 paintLine(currentLine);
             }
         }
     }
 
-//    public void lineNumberChanged(HighlightedLine line, int oldLineNo) {
-//        ta.clearLineBgColor(oldLineNo);
-//        ta.setLineBgColor(line.getID().lineNo, line.getColor());
-//    }
-//    protected LineID getLineIDInCurrentTab(int lineNo) {
-//        return new LineID(getSketch().getCurrentCode().getFileName(), lineNo);
-//    }
+    /**
+     * Retrieve a {@link LineID} object for a line on the current tab.
+     *
+     * @param lineIdx the line index on the current tab
+     * @return the {@link LineID} object representing a line index on the
+     * current tab
+     */
+    public LineID getLineIDInCurrentTab(int lineIdx) {
+        return new LineID(getSketch().getCurrentCode().getFileName(), lineIdx);
+    }
+
+    /**
+     * Check whether a {@link LineID} is on the current tab.
+     *
+     * @param line the {@link LineID}
+     * @return true, if the {@link LineID} is on the current tab.
+     */
     protected boolean isInCurrentTab(LineID line) {
         return line.fileName.equals(getSketch().getCurrentCode().getFileName());
     }
 
-    public void clearLine(HighlightedLine line) {
-        if (isInCurrentTab(line.getID())) {
-            ta.clearLineBgColor(line.getID().lineNo);
-        }
-    }
-
-    public void paintLine(HighlightedLine line) {
-        if (isInCurrentTab(line.getID())) {
-            ta.setLineBgColor(line.getID().lineNo, line.getColor());
-        }
-    }
-
-    /*
-     * ------------------------------------------------------------------
+    /**
+     * (Re-)paint a line highlight. Needs to be on the current tab (obviously).
+     *
+     * @param line the {@link LineHighlight} to paint
      */
+    public void paintLine(LineHighlight line) {
+        if (isInCurrentTab(line.getID())) {
+            ta.setLineBgColor(line.getID().lineIdx, line.getColor());
+        }
+    }
+
+    /**
+     * Clear a line highlight. Needs to be on the current tab (obviously).
+     *
+     * @param line the {@link LineHighlight} to clear
+     */
+    public void clearLine(LineHighlight line) {
+        if (isInCurrentTab(line.getID())) {
+            ta.clearLineBgColor(line.getID().lineIdx);
+        }
+    }
+
     /**
      * Event handler called when switching between tabs. Loads all line
      * background colors set for the tab.
@@ -454,7 +502,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             ta.clearLineBgColors();
             // load appropriate line backgrounds for tab
             // first paint breakpoints
-            for (HighlightedLine hl : breakpointedLines) {
+            for (LineHighlight hl : breakpointedLines) {
                 if (hl.getID().fileName.equals(code.getFileName())) {
                     paintLine(hl);
                 }

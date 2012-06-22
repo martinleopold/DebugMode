@@ -28,12 +28,12 @@ import javax.swing.text.Element;
 import javax.swing.text.Position;
 
 /**
- * Model for a highlighted source code line. Will also track the line when
- * editing the attached {@link Document}.
+ * Model/Controller for a highlighted source code line. Will also track the line
+ * when editing the attached {@link Document}.
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
-public class HighlightedLine implements DocumentListener {
+public class LineHighlight implements DocumentListener {
 
     protected LineID lineID; // the line id (filename + line#)
     protected DebugEditor editor; // the view, used for highlighting lines by setting a background color
@@ -42,17 +42,14 @@ public class HighlightedLine implements DocumentListener {
     protected Position pos; // the Position acquired during line number tracking
 
     /**
-     * Construct a {@link HighlightedLine}. Uses the current document (i.e. the
-     * current tab) for tracking. TODO: don't use the current document but get
-     * the right one depending on the file
+     * Create a {@link LineHighlight} on the current tab.
      *
-     * @param fileName
-     * @param lineNo
-     * @param bgColor
-     * @param editor
+     * @param lineIdx the line index on the current tab to highlight
+     * @param bgColor the background color used for highlighting
+     * @param editor the {@link DebugEditor}
      */
-    public HighlightedLine(LineID lineID, Color bgColor, DebugEditor editor) {
-        this.lineID = lineID;
+    public LineHighlight(int lineIdx, Color bgColor, DebugEditor editor) {
+        this.lineID = editor.getLineIDInCurrentTab(lineIdx);
         this.bgColor = bgColor;
         this.editor = editor;
         enableTracking(editor.currentDocument());
@@ -60,7 +57,7 @@ public class HighlightedLine implements DocumentListener {
     }
 
     /**
-     * Retrieve the line id of this {@link HighlightedLine}.
+     * Retrieve the line id of this {@link LineHighlight}.
      *
      * @return the line id
      */
@@ -70,6 +67,11 @@ public class HighlightedLine implements DocumentListener {
         return lineID.clone();
     }
 
+    /**
+     * Retrieve the color for highlighting this line.
+     *
+     * @return the highlight color.
+     */
     public Color getColor() {
         return bgColor;
     }
@@ -83,9 +85,12 @@ public class HighlightedLine implements DocumentListener {
      * @param doc the {@link Document} to use for line number tracking
      */
     protected void enableTracking(Document doc) {
+        if (doc == null) {
+            System.out.println("doc = NULL !");
+        }
         try {
             // TODO: check if line exists
-            Element line = doc.getDefaultRootElement().getElement(lineID.lineNo);
+            Element line = doc.getDefaultRootElement().getElement(lineID.lineIdx);
             String lineText = doc.getText(line.getStartOffset(), line.getEndOffset() - line.getStartOffset());
             // set tracking position at (=before) first non-white space character on line
             pos = doc.createPosition(line.getStartOffset() + nonWhiteSpaceOffset(lineText));
@@ -99,26 +104,34 @@ public class HighlightedLine implements DocumentListener {
         }
     }
 
-    public void close() {
+    /**
+     * Notify this {@link LineHighlight} that it is no longer in use. Will
+     * stop position tracking. Call this when this {@link LineHighlight} is no
+     * longer needed.
+     */
+    public void dispose() {
         if (doc != null) {
             doc.removeDocumentListener(this);
             doc = null;
         }
     }
 
+    /**
+     * Update the tracked position. Will repaint the highlight if line number
+     * has changed.
+     */
     protected void updatePosition() {
         if (doc != null && pos != null) {
             // track position
             int offset = pos.getOffset();
-
             int newLineNo = doc.getDefaultRootElement().getElementIndex(offset); // offset to lineNo
 
-            if (lineID.lineNo != newLineNo) {
+            if (lineID.lineIdx != newLineNo) {
                 // notify the view (so it can change line background colors)
                 //editor.lineNumberChanged(this, oldLineNo);
 
                 editor.clearLine(this);
-                lineID.lineNo = newLineNo;
+                lineID.lineIdx = newLineNo;
                 editor.paintLine(this);
             }
         }

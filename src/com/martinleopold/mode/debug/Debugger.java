@@ -254,7 +254,8 @@ public class Debugger implements VMEventListener {
             return;
         }
         LineID line = getCurrentLineID();
-        editor.addBreakpointedLine(line);
+        editor.addBreakpointedLine(line.lineIdx);
+        breakpoints.add(line); // add to bp list
         if (isPaused()) { // in a paused debug session
             // immediately activate the breakpoint
             setBreakpoint(line);
@@ -274,7 +275,7 @@ public class Debugger implements VMEventListener {
             return;
         }
         LineID line = getCurrentLineID();
-        editor.removeBreakpointedLine(line);
+        editor.removeBreakpointedLine(line.lineIdx);
         if (breakpoints.contains(line)) {
             if (isPaused()) {
                 // immediately remove the breakpoint
@@ -703,7 +704,7 @@ public class Debugger implements VMEventListener {
                     // line number translation
                     LineID sketchLine = lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
                     if (sketchLine != null) {
-                        lineNo = sketchLine.lineNo;
+                        lineNo = sketchLine.lineIdx + 1;
                     }
                 } catch (AbsentInformationException ex) {
                     Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
@@ -856,7 +857,7 @@ public class Debugger implements VMEventListener {
             LineID sketchLine = lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
             editor.clearSelection();
             if (sketchLine != null) {
-                int lineIdx = sketchLine.lineNo - 1; // 0-based line number
+                int lineIdx = sketchLine.lineIdx; // 0-based line number
                 String tab = sketchLine.fileName;
                 System.out.println("sketch line: " + sketchLine);
 
@@ -878,7 +879,7 @@ public class Debugger implements VMEventListener {
 
     protected LineID locationToLineID(Location l) {
         try {
-            return lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
+            return lineMap.get(new LineID(l.sourceName(), l.lineNumber() - 1));
         } catch (AbsentInformationException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
             return null;
@@ -898,7 +899,7 @@ public class Debugger implements VMEventListener {
             return;
         }
         try {
-            List<Location> locations = mainClass.locationsOfLine(javaLine.lineNo);
+            List<Location> locations = mainClass.locationsOfLine(javaLine.lineIdx + 1);
             if (locations.isEmpty()) {
                 System.out.println("no location found for line " + sketchLine + " -> " + javaLine);
                 return;
