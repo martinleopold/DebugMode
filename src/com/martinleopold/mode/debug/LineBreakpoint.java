@@ -24,26 +24,29 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 /**
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
-public class LineBreakpoint  {
+public class LineBreakpoint {
+
     protected Debugger dbg;
-    protected DebugEditor editor;
-    LineID line;
-    BreakpointRequest bpr;
+    protected LineID line;
+    protected BreakpointRequest bpr;
 
     public LineBreakpoint(LineID line, Debugger dbg) {
         this.line = line;
         this.dbg = dbg;
 
-        dbg.editor().addBreakpointedLine(line.lineIdx);
-        if (dbg.isPaused()) { // in a paused debug session
-            // immediately activate the breakpoint
-            attach();
-        }
+        set();
+    }
+
+    public LineID lineID() {
+        return line.clone();
+    }
+
+    public boolean isOnLine(LineID testLine) {
+        return line.equals(testLine);
     }
 
     public void attach() {
@@ -68,18 +71,37 @@ public class LineBreakpoint  {
         }
     }
 
-    public void detach() {
+    protected void detach() {
         if (bpr != null) {
             dbg.vm().eventRequestManager().deleteEventRequest(bpr);
             bpr = null;
         }
     }
 
-    public void enable() {
+    protected void set() {
+        dbg.editor().addBreakpointedLine(line.lineIdx);
+        if (dbg.isPaused()) { // in a paused debug session
+            // immediately activate the breakpoint
+            attach();
+        }
+    }
 
+    public void remove() {
+        dbg.editor().removeBreakpointedLine(line.lineIdx);
+        if (dbg.isPaused()) {
+            // immediately remove the breakpoint
+            detach();
+        }
+    }
+
+    public void enable() {
     }
 
     public void disable() {
+    }
 
+    @Override
+    public String toString() {
+        return line.toString();
     }
 }

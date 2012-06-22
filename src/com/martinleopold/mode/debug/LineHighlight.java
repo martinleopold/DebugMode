@@ -76,6 +76,10 @@ public class LineHighlight implements DocumentListener {
         return bgColor;
     }
 
+    public boolean isOnLine(LineID testLine) {
+        return lineID.equals(testLine);
+    }
+
     /**
      * Attach a {@link Document} to enable line number tracking when editing.
      * The position to track is before the first non-whitespace character on the
