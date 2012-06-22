@@ -57,6 +57,8 @@ public class Debugger implements VMEventListener {
     protected Map<LineID, LineID> lineMap; // maps source lines from "sketch-space" to "java-space" and vice-versa
     protected List<LineID> breakpoints = new ArrayList(); // list of breakpoints in "sketch-space"
     protected Map<LineID, BreakpointRequest> breakpointRequests = new HashMap(); // list of breakpoints in "sketch-space"
+    //protected List<LineBreakpoint> breakpoints = new ArrayList();
+
     protected StepRequest requestedStep; // the step request we are currently in, or null if not in a step
 
     /**
@@ -66,6 +68,26 @@ public class Debugger implements VMEventListener {
      */
     public Debugger(DebugEditor editor) {
         this.editor = editor;
+    }
+
+    public VirtualMachine vm() {
+        if (runtime != null) {
+            return runtime.vm();
+        } else {
+            return null;
+        }
+    }
+
+    public ReferenceType mainClass() {
+        return mainClass;
+    }
+
+    public Map<LineID, LineID> lineMapping() {
+        return lineMap;
+    }
+
+    public DebugEditor editor() {
+        return editor;
     }
 
     /**
