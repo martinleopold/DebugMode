@@ -23,9 +23,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -93,7 +91,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
         // set action on frame close
         addWindowListener(new WindowAdapter() {
-
             @Override
             public void windowClosing(WindowEvent e) {
                 onWindowClosing(e);
@@ -351,49 +348,95 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         //System.out.println("overriding creation of text area");
         return new TextArea(new PdeTextAreaDefaults(mode));
     }
-    protected Map<LineID, List<Color>> lineColors = new HashMap(); // holds background colors for lines
+    /**
+     * TODO: new domain specific highlighting API
+     *
+     */
+    protected List<HighlightedLine> breakpointedLines = new ArrayList(); // breakpointed lines
+    protected HighlightedLine currentLine; // line the debugger is currently suspended at
 
     /**
-     * Set background color of a sketch line.
+     * Set the line the debugger is currently suspended at. Will override the
+     * breakpoint color, if set.
      *
-     * @param l identifies sketch line to colorize
-     * @param c the color
+     * @param lineNo
      */
-    public void setLineBgColor(LineID l, Color c) {
-        // push, overwriting the color for this line
-        List<Color> colors = lineColors.get(l);
-        if (colors == null) {
-            colors = new ArrayList();
-            colors.add(c);
-            lineColors.put(l, colors);
-        } else {
-            colors.add(c);
-        }
-        ta.setLineBgColor(l.lineNo - 1, c);
-    }
-
-    /**
-     * Clear background color of a sketch line.
-     *
-     * @param l identifies sketch line to clear
-     */
-    public void clearLineBgColor(LineID l) {
-        // remove last and restore previous color
-        List<Color> colors = lineColors.get(l);
-        if (colors != null) {
-            if (colors.size() > 0) {
-                colors.remove(colors.size() - 1);
-            }
-            if (colors.size() > 0) {
-                ta.setLineBgColor(l.lineNo - 1, colors.get(colors.size() - 1));
-            } else {
-                // no more colors for this line
-                ta.clearLineBgColor(l.lineNo - 1);
-                lineColors.remove(l); // remove the whole map entry, since the list is empty anyway
-            }
+    public void setCurrentLine(LineID line) {
+        clearCurrentLine();
+        if (line != null) {
+            currentLine = new HighlightedLine(line, CURRENT_LINE_COLOR, this);
         }
     }
 
+    public void clearCurrentLine() {
+        if (currentLine != null) {
+            clearLine(currentLine);
+            currentLine.close();
+
+            // TODO: revert to breakpoint color if any is set
+            for (HighlightedLine hl : breakpointedLines) {
+                if (hl.getID().equals(currentLine.getID())) {
+                    paintLine(hl);
+                    break;
+                }
+            }
+            currentLine = null;
+        }
+    }
+
+    public void addBreakpointedLine(LineID line) {
+        HighlightedLine hl = new HighlightedLine(line, BREAKPOINT_COLOR, this);
+        breakpointedLines.add(hl);
+        // TODO; repaint current line if it's on this line
+        if (currentLine != null) {
+            paintLine(currentLine);
+        }
+    }
+
+    public void removeBreakpointedLine(LineID line) {
+        HighlightedLine foundLine = null;
+        for (HighlightedLine hl : breakpointedLines) {
+            if (hl.getID().equals(line)) {
+                foundLine = hl;
+                break;
+            }
+        }
+        if (foundLine != null) {
+            clearLine(foundLine);
+            breakpointedLines.remove(foundLine);
+            // TODO; repaint current line if it's on this line
+            if (currentLine != null) {
+                paintLine(currentLine);
+            }
+        }
+    }
+
+//    public void lineNumberChanged(HighlightedLine line, int oldLineNo) {
+//        ta.clearLineBgColor(oldLineNo);
+//        ta.setLineBgColor(line.getID().lineNo, line.getColor());
+//    }
+//    protected LineID getLineIDInCurrentTab(int lineNo) {
+//        return new LineID(getSketch().getCurrentCode().getFileName(), lineNo);
+//    }
+    protected boolean isInCurrentTab(LineID line) {
+        return line.fileName.equals(getSketch().getCurrentCode().getFileName());
+    }
+
+    public void clearLine(HighlightedLine line) {
+        if (isInCurrentTab(line.getID())) {
+            ta.clearLineBgColor(line.getID().lineNo);
+        }
+    }
+
+    public void paintLine(HighlightedLine line) {
+        if (isInCurrentTab(line.getID())) {
+            ta.setLineBgColor(line.getID().lineNo, line.getColor());
+        }
+    }
+
+    /*
+     * ------------------------------------------------------------------
+     */
     /**
      * Event handler called when switching between tabs. Loads all line
      * background colors set for the tab.
@@ -410,13 +453,16 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             // clear all line backgrounds
             ta.clearLineBgColors();
             // load appropriate line backgrounds for tab
-            for (Map.Entry<LineID, List<Color>> e : lineColors.entrySet()) {
-                LineID l = e.getKey();
-                List<Color> colors = e.getValue();
-                if (colors.size() > 0) {
-                    if (l.fileName.equals(code.getFileName())) {
-                        ta.setLineBgColor(l.lineNo - 1, colors.get(colors.size() - 1));
-                    }
+            // first paint breakpoints
+            for (HighlightedLine hl : breakpointedLines) {
+                if (hl.getID().fileName.equals(code.getFileName())) {
+                    paintLine(hl);
+                }
+            }
+            // now paint current line (if any)
+            if (currentLine != null) {
+                if (currentLine.getID().fileName.equals(code.getFileName())) {
+                    paintLine(currentLine);
                 }
             }
         }

@@ -147,7 +147,8 @@ public class Debugger implements VMEventListener {
             runtime = null;
             build = null;
             // need to clear highlight here because, VMDisconnectedEvent seems to be unreliable. TODO: likely synchronization problem
-            clearHighlight();
+            //clearHighlight();
+            editor.clearCurrentLine();
         }
         started = false;
     }
@@ -157,7 +158,8 @@ public class Debugger implements VMEventListener {
      */
     public synchronized void continueDebug() {
         //editor.clearSelection();
-        clearHighlight();
+        //clearHighlight();
+        editor.clearCurrentLine();
         if (!isStarted()) {
             startDebug();
         } else if (isPaused()) {
@@ -252,9 +254,7 @@ public class Debugger implements VMEventListener {
             return;
         }
         LineID line = getCurrentLineID();
-        line.enableTracking(editor.currentDocument());
-        line.setView(editor, DebugEditor.BREAKPOINT_COLOR);
-        breakpoints.add(line);
+        editor.addBreakpointedLine(line);
         if (isPaused()) { // in a paused debug session
             // immediately activate the breakpoint
             setBreakpoint(line);
@@ -274,8 +274,7 @@ public class Debugger implements VMEventListener {
             return;
         }
         LineID line = getCurrentLineID();
-        line.disableTracking();
-        editor.clearLineBgColor(line);
+        editor.removeBreakpointedLine(line);
         if (breakpoints.contains(line)) {
             if (isPaused()) {
                 // immediately remove the breakpoint
@@ -316,23 +315,15 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Retrieve line of sketch where the cursor currently resides.
+     * Retrieve line of sketch where the cursor currently resides. TODO: maybe
+     * move to editor?
      *
      * @return the current {@link LineID}
      */
     protected LineID getCurrentLineID() {
-        Sketch s = editor.getSketch();
-        String tab = s.getCurrentCode().getFileName();
-        int lineNo = editor.getTextArea().getCaretLine() + 1;
-
-        // check if there already is a breakpoint on the current line
-        // TODO: this is bad, fix it.
-        LineID newID = new LineID(tab, lineNo);
-        if (breakpoints.contains(newID)) {
-            return breakpoints.get(breakpoints.indexOf(newID));
-        } else {
-            return newID;
-        }
+        String tab = editor.getSketch().getCurrentCode().getFileName();
+        int lineNo = editor.getTextArea().getCaretLine();
+        return new LineID(tab, lineNo);
     }
 
     /**
@@ -423,8 +414,7 @@ public class Debugger implements VMEventListener {
                 BreakpointRequest br = (BreakpointRequest) be.request();
 
                 printSourceLocation(currentThread);
-                //selectSourceLocation(be.location());
-                highlightLine(be.location());
+                editor.setCurrentLine(locationToLineID(be.location()));
                 updateVariableInspector(currentThread);
 
                 // hit a breakpoint during a step, need to cancel the step.
@@ -439,8 +429,7 @@ public class Debugger implements VMEventListener {
                 currentThread = se.thread();
 
                 printSourceLocation(currentThread);
-                //selectSourceLocation(se.location());
-                highlightLine(se.location());
+                editor.setCurrentLine(locationToLineID(se.location()));
                 updateVariableInspector(currentThread);
 
                 // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
@@ -451,10 +440,9 @@ public class Debugger implements VMEventListener {
             } else if (e instanceof VMDisconnectEvent) {
                 started = false;
                 // clear line highlight
-                clearHighlight();
+                editor.clearCurrentLine();
             } else if (e instanceof VMDeathEvent) {
                 started = false;
-                //clearHighlight();
             }
         }
     }
@@ -887,56 +875,13 @@ public class Debugger implements VMEventListener {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    protected LineID highlightedLine; // the highlighted line. usually the current source line when suspended
 
-    /**
-     * Highlight a source line in the editor. Used for highlighting the current
-     * line when suspended.
-     *
-     * @param l the location to highlight.
-     */
-    protected void highlightLine(Location l) {
+    protected LineID locationToLineID(Location l) {
         try {
-            // clear currently highlighted line
-            clearHighlight();
-
-            // translate java line to sketch line
-            LineID sketchLine = lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
-
-            if (sketchLine != null) {
-                int lineIdx = sketchLine.lineNo - 1; // 0-based line number
-                String tab = sketchLine.fileName;
-                System.out.println("sketch line: " + sketchLine);
-
-                // switch to tab
-                Sketch s = editor.getSketch();
-                for (int i = 0; i < s.getCodeCount(); i++) {
-                    if (tab.equals(s.getCode(i).getFileName())) {
-                        s.setCurrentCode(i);
-                        break;
-                    }
-                }
-                // select line
-                highlightedLine = sketchLine;
-                highlightedLine.enableTracking(editor.currentDocument());
-                highlightedLine.setView(editor, DebugEditor.CURRENT_LINE_COLOR);
-                // "scroll" to line
-                editor.cursorToLineStart(lineIdx);
-            }
+            return lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
         } catch (AbsentInformationException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    /**
-     * Clear the highlight set with {@link #highlightLine}.
-     */
-    protected void clearHighlight() {
-        // clear line highlight
-        if (highlightedLine != null) {
-            highlightedLine.disableTracking();
-            editor.clearLineBgColor(highlightedLine);
-            highlightedLine = null;
+            return null;
         }
     }
 
