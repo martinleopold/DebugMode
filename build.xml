@@ -53,7 +53,7 @@
     - - - - - - - - - - - - - - - - - - - - - - - -->
     <target name="build">
         <propertyfile file="build.number" /> <!-- create the build.number file if it doesn't exist -->
-        <buildnumber file="build.number" />
+        <buildnumber file="build.number" /> <!-- increment build number -->
 
         <!-- insert build nos. in source code -->
         <!--
@@ -150,5 +150,9 @@
                 <path refid="library-classpath"/>
             </classpath>
         </javadoc>
+        <property name="docfile" value="DebugMode-docs.zip" />
+        <zip destfile="${docfile}" basedir="${doc}" />
+        <delete dir="${doc}" />
+        <move file="${docfile}" todir="${doc}" />
     </target>
 </project>
