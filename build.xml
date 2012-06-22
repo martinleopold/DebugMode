@@ -144,6 +144,7 @@
         DOC
     - - - - - - - - - - - - - - - - - - - - - - - -->
     <target name="javadoc" depends="">
+        <delete dir="${doc}" />
         <javadoc sourcepath="${src}" destdir="${doc}">
             <classpath>
                 <path refid="library-classpath"/>
