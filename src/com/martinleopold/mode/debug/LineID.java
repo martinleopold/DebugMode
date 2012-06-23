@@ -17,21 +17,55 @@
  */
 package com.martinleopold.mode.debug;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.Element;
+import javax.swing.text.Position;
+
 /**
  * Describes an ID for a code line. Comprised of a file name and a (0-based)
  * line number.
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
-public class LineID {
+public class LineID implements DocumentListener {
+
+    protected static List<LineID> trackedLines = new ArrayList();
 
     public String fileName; // the filename
     public int lineIdx; // the line number, 0-based
+    protected Document doc; // the Document to use for line number tracking
+    protected Position pos; // the Position acquired during line number tracking
 
-    public LineID(String fileName, int lineNo) {
+    private LineID(String fileName, int lineIdx) {
         this.fileName = fileName;
-        this.lineIdx = lineNo;
+        this.lineIdx = lineIdx;
     }
+
+    /**
+     * Factory
+     * @param fileName
+     * @param lineIdx
+     * @return
+     */
+    public static LineID create(String fileName, int lineIdx) {
+        // check if this was already created
+        LineID line = new LineID(fileName, lineIdx);
+        if (trackedLines.contains(line)) {
+            return trackedLines.get(trackedLines.indexOf(line));
+        }
+        return line;
+    }
+
+//    public LineID(LineID line) {
+//        this(line.fileName, line.lineIdx);
+//    }
 
     @Override
     public int hashCode() {
@@ -75,13 +109,135 @@ public class LineID {
         return fileName + ":" + (lineIdx + 1);
     }
 
-    /**
-     * Retrieve a copy of this line ID.
+//    /**
+//     * Retrieve a copy of this line ID.
+//     *
+//     * @return the copy
+//     */
+//    @Override
+//    public LineID clone() {
+//        return new LineID(fileName, lineIdx);
+//    }
+
+        /**
+     * Attach a {@link Document} to enable line number tracking when editing.
+     * The position to track is before the first non-whitespace character on the
+     * line. Edits happening before that position will cause the line number to
+     * update accordingly.
      *
-     * @return the copy
+     * @param doc the {@link Document} to use for line number tracking
+     */
+    public void startTracking(Document doc) {
+        if (doc == null) {
+            System.out.println("doc = NULL !");
+        }
+        try {
+            // TODO: check if line exists
+            Element line = doc.getDefaultRootElement().getElement(lineIdx);
+            String lineText = doc.getText(line.getStartOffset(), line.getEndOffset() - line.getStartOffset());
+            // set tracking position at (=before) first non-white space character on line
+            pos = doc.createPosition(line.getStartOffset() + nonWhiteSpaceOffset(lineText));
+            this.doc = doc;
+            doc.addDocumentListener(this);
+            //System.out.println("creating position @ " + pos.getOffset());
+            trackedLines.add(this);
+        } catch (BadLocationException ex) {
+            Logger.getLogger(LineID.class.getName()).log(Level.SEVERE, null, ex);
+            pos = null;
+            this.doc = null;
+        }
+    }
+
+    /**
+     * Notify this {@link LineHighlight} that it is no longer in use. Will
+     * stop position tracking. Call this when this {@link LineHighlight} is no
+     * longer needed.
+     */
+    public void stopTracking() {
+        if (doc != null) {
+            doc.removeDocumentListener(this);
+            doc = null;
+        }
+        trackedLines.remove(this);
+    }
+
+    /**
+     * Update the tracked position. Will repaint the highlight if line number
+     * has changed.
+     */
+    protected void updatePosition() {
+        if (doc != null && pos != null) {
+            // track position
+            int offset = pos.getOffset();
+            int oldLineIdx = lineIdx;
+            lineIdx = doc.getDefaultRootElement().getElementIndex(offset); // offset to lineNo
+            if (lineIdx != oldLineIdx) {
+                lineChanged(oldLineIdx, lineIdx);
+            }
+        }
+    }
+
+    protected void lineChanged(int oldLineIdx, int newLineIdx) {
+        // nop, can be overwritten in subclasses
+    }
+
+    /**
+     * Calculate the offset of the first non-whitespace character in a string.
+     *
+     * @param str the string to examine
+     * @return offset of first non-whitespace character in str
+     */
+    protected static int nonWhiteSpaceOffset(String str) {
+        for (int i = 0; i < str.length(); i++) {
+            if (!Character.isWhitespace(str.charAt(i))) {
+                return i;
+            }
+        }
+        return str.length();
+    }
+
+    /**
+     * Called when the {@link Document} registered using {@link #enableTracking}
+     * is edited. This happens when text is inserted or removed.
+     *
+     * @param de
+     */
+    protected void editEvent(DocumentEvent de) {
+        //System.out.println("document edit @ " + de.getOffset());
+        if (de.getOffset() <= pos.getOffset()) {
+            updatePosition();
+            //System.out.println("updating, new line no: " + lineNo);
+        }
+    }
+
+    /**
+     * {@link DocumentListener} callback. Called when text is inserted.
+     *
+     * @param de
      */
     @Override
-    public LineID clone() {
-        return new LineID(fileName, lineIdx);
+    public void insertUpdate(DocumentEvent de) {
+        editEvent(de);
+    }
+
+    /**
+     * {@link DocumentListener} callback. Called when text is removed.
+     *
+     * @param de
+     */
+    @Override
+    public void removeUpdate(DocumentEvent de) {
+        editEvent(de);
+    }
+
+    /**
+     * {@link DocumentListener} callback. Called when attributes are changed.
+     * Not used.
+     *
+     * @param de
+     */
+    @Override
+    public void changedUpdate(DocumentEvent de) {
+        // not needed.
     }
 }
