@@ -98,6 +98,9 @@ public class Debugger implements VMEventListener {
         // clear console
         editor.clearConsole();
 
+        // load edits into sketch obj, etc...
+        editor.prepareRun();
+
         try {
             Sketch sketch = editor.getSketch();
             build = new DebugBuild(sketch);
