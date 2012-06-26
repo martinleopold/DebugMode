@@ -18,17 +18,16 @@
 package com.martinleopold.mode.debug;
 
 import java.awt.Color;
-import javax.swing.text.Document;
 
 /**
- * Model/Controller for a highlighted source code line. Will also track the line
- * when editing the attached {@link Document}.
+ * Model/Controller for a highlighted source code line.
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
-public class LineHighlight extends LineID {
+public class LineHighlight implements LineListener {
     protected DebugEditor editor; // the view, used for highlighting lines by setting a background color
     protected Color bgColor; // the background color for highlighting lines
+    protected LineID lineID;
 
 
     /**
@@ -38,31 +37,23 @@ public class LineHighlight extends LineID {
      * @param bgColor the background color used for highlighting
      * @param editor the {@link DebugEditor}
      */
-    protected LineHighlight(int lineIdx, Color bgColor, DebugEditor editor) {
-        super(editor.getSketch().getCurrentCode().getFileName(), lineIdx);
+    public LineHighlight(int lineIdx, Color bgColor, DebugEditor editor) {
+        lineID = editor.getLineIDInCurrentTab(lineIdx);
         this.bgColor = bgColor;
         this.editor = editor;
-        startTracking(editor.currentDocument());
+        lineID.addListener(this);
+        lineID.startTracking(editor.currentDocument()); // todo: overwrite a previous doc?
         editor.paintLine(this);
     }
 
-    public static LineHighlight create(int lineIdx, Color bgColor, DebugEditor editor) {
-        LineID spr = LineID.create(editor.getSketch().getCurrentCode().getFileName(), lineIdx);
-
-        this.bgColor = bgColor;
-        this.editor = editor;
+    /**
+     * Retrieve the line id of this {@link LineHighlight}.
+     *
+     * @return the line id
+     */
+    public LineID lineID() {
+        return lineID;
     }
-
-//    /**
-//     * Retrieve the line id of this {@link LineHighlight}.
-//     *
-//     * @return the line id
-//     */
-//    public LineID getID() {
-//        // return a copy, so the line id can't be modified from outside
-//        // still, the copy will pass an equals() comparison with the original
-//        return lineID.clone();
-//    }
 
     /**
      * Retrieve the color for highlighting this line.
@@ -74,14 +65,19 @@ public class LineHighlight extends LineID {
     }
 
     public boolean isOnLine(LineID testLine) {
-        return equals(testLine);
+        return lineID.equals(testLine);
     }
 
     @Override
-    protected void lineChanged(int oldIdx, int newIdx) {
-        lineIdx = oldIdx;
-        editor.clearLine(this);
-        lineIdx = newIdx;
+    public void lineChanged(LineID line, int oldLineIdx, int newLineIdx) {
+        //lineID.lineIdx() = oldLineIdx;
+        editor.clearLine(LineID.create(line.fileName(), oldLineIdx));
+        //lineID.lineIdx() = newLineIdx;
         editor.paintLine(this);
+    }
+
+    // notify this linehighlight that it is no linger used.
+    public void dispose() {
+        lineID.removeListener(this);
     }
 }

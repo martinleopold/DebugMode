@@ -378,8 +378,8 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public void setCurrentLine(LineID line) {
         clearCurrentLine();
-        switchToTab(line.fileName);
-        currentLine = new LineHighlight(line.lineIdx, CURRENT_LINE_COLOR, this);
+        switchToTab(line.fileName());
+        currentLine = new LineHighlight(line.lineIdx(), CURRENT_LINE_COLOR, this);
     }
 
     /**
@@ -388,11 +388,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     public void clearCurrentLine() {
         if (currentLine != null) {
             clearLine(currentLine);
-            currentLine.stopTracking();
+            currentLine.dispose();
 
             // revert to breakpoint color if any is set on this line
             for (LineHighlight hl : breakpointedLines) {
-                if (hl.equals(currentLine)) {
+                if (hl.lineID().equals(currentLine.lineID())) {
                     paintLine(hl);
                     break;
                 }
@@ -411,7 +411,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         LineHighlight hl = new LineHighlight(lineIdx, BREAKPOINT_COLOR, this);
         breakpointedLines.add(hl);
         // repaint current line if it's on this line
-        if (currentLine != null && currentLine.equals(getLineIDInCurrentTab(lineIdx))) {
+        if (currentLine != null && currentLine.lineID().equals(getLineIDInCurrentTab(lineIdx))) {
             paintLine(currentLine);
         }
     }
@@ -427,7 +427,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         LineID line = getLineIDInCurrentTab(lineIdx);
         LineHighlight foundLine = null;
         for (LineHighlight hl : breakpointedLines) {
-            if (hl.equals(line)) {
+            if (hl.lineID.equals(line)) {
                 foundLine = hl;
                 break;
             }
@@ -435,8 +435,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         if (foundLine != null) {
             clearLine(foundLine);
             breakpointedLines.remove(foundLine);
+            foundLine.dispose();
             // repaint current line if it's on this line
-            if (currentLine != null && currentLine.equals(line)) {
+            if (currentLine != null && currentLine.lineID().equals(line)) {
                 paintLine(currentLine);
             }
         }
@@ -450,7 +451,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      * current tab
      */
     public LineID getLineIDInCurrentTab(int lineIdx) {
-        return new LineID(getSketch().getCurrentCode().getFileName(), lineIdx);
+        return LineID.create(getSketch().getCurrentCode().getFileName(), lineIdx);
     }
 
     /**
@@ -460,28 +461,34 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      * @return true, if the {@link LineID} is on the current tab.
      */
     protected boolean isInCurrentTab(LineID line) {
-        return line.fileName.equals(getSketch().getCurrentCode().getFileName());
+        return line.fileName().equals(getSketch().getCurrentCode().getFileName());
     }
 
     /**
      * (Re-)paint a line highlight. Needs to be on the current tab (obviously).
      *
-     * @param line the {@link LineHighlight} to paint
+     * @param hl the {@link LineHighlight} to paint
      */
-    public void paintLine(LineHighlight line) {
-        if (isInCurrentTab(line)) {
-            ta.setLineBgColor(line.lineIdx, line.getColor());
+    public void paintLine(LineHighlight hl) {
+        if (isInCurrentTab(hl.lineID())) {
+            ta.setLineBgColor(hl.lineID().lineIdx(), hl.getColor());
         }
     }
 
     /**
      * Clear a line highlight. Needs to be on the current tab (obviously).
      *
-     * @param line the {@link LineHighlight} to clear
+     * @param hl the {@link LineHighlight} to clear
      */
-    public void clearLine(LineHighlight line) {
+    public void clearLine(LineHighlight hl) {
+        if (isInCurrentTab(hl.lineID())) {
+            ta.clearLineBgColor(hl.lineID().lineIdx());
+        }
+    }
+
+    public void clearLine(LineID line) {
         if (isInCurrentTab(line)) {
-            ta.clearLineBgColor(line.lineIdx);
+            ta.clearLineBgColor(line.lineIdx());
         }
     }
 
@@ -503,13 +510,13 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             // load appropriate line backgrounds for tab
             // first paint breakpoints
             for (LineHighlight hl : breakpointedLines) {
-                if (hl.fileName.equals(code.getFileName())) {
+                if (isInCurrentTab(hl.lineID())) {
                     paintLine(hl);
                 }
             }
             // now paint current line (if any)
             if (currentLine != null) {
-                if (currentLine.fileName.equals(code.getFileName())) {
+                if (isInCurrentTab(currentLine.lineID())) {
                     paintLine(currentLine);
                 }
             }

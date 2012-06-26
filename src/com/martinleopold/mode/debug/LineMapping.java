@@ -99,8 +99,8 @@ public class LineMapping {
                     // check the pattern
                     if (line.matches(".*:[0-9]*")) {
                         String[] parts = line.split(":");
-                        LineID sketchLine = new LineID(parts[0], Integer.parseInt(parts[1]));
-                        LineID javaLine = new LineID(f.getName(), i);
+                        LineID sketchLine = LineID.create(parts[0], Integer.parseInt(parts[1]));
+                        LineID javaLine = LineID.create(f.getName(), i);
                         // enter bi-directional mapping
                         map.put(sketchLine, javaLine);
                         map.put(javaLine, sketchLine);

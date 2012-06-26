@@ -101,7 +101,8 @@ PROTOTYPE 3:
 		! clear bps on file open, new
 	x more code documentation
 	/ loose dependence on hacked core
-
+	! make debugging work on unsaved sketch
+	! dynamic line translation (when editing sketch)
 
 IMPLEMENTATION:
 x Class Design (MVC)

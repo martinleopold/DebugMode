@@ -34,15 +34,16 @@ public class LineBreakpoint {
     protected LineID line;
     protected BreakpointRequest bpr;
 
-    public LineBreakpoint(LineID line, Debugger dbg) {
-        this.line = line;
+    // allow line breakpoints only on lineIdx of current tab, since it needs to track the doc
+    public LineBreakpoint(int lineIdx, Debugger dbg) {
+        this.line = dbg.editor().getLineIDInCurrentTab(lineIdx);
+        line.startTracking(dbg.editor().currentDocument());
         this.dbg = dbg;
-
         set();
     }
 
     public LineID lineID() {
-        return line.clone();
+        return line;
     }
 
     public boolean isOnLine(LineID testLine) {
@@ -57,7 +58,7 @@ public class LineBreakpoint {
             return;
         }
         try {
-            List<Location> locations = dbg.mainClass().locationsOfLine(javaLine.lineIdx + 1);
+            List<Location> locations = dbg.mainClass().locationsOfLine(javaLine.lineIdx() + 1);
             if (locations.isEmpty()) {
                 System.out.println("no location found for line " + line + " -> " + javaLine);
                 return;
@@ -79,7 +80,7 @@ public class LineBreakpoint {
     }
 
     protected void set() {
-        dbg.editor().addBreakpointedLine(line.lineIdx);
+        dbg.editor().addBreakpointedLine(line.lineIdx());
         if (dbg.isPaused()) { // in a paused debug session
             // immediately activate the breakpoint
             attach();
@@ -87,7 +88,7 @@ public class LineBreakpoint {
     }
 
     public void remove() {
-        dbg.editor().removeBreakpointedLine(line.lineIdx);
+        dbg.editor().removeBreakpointedLine(line.lineIdx());
         if (dbg.isPaused()) {
             // immediately remove the breakpoint
             detach();

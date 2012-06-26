@@ -17,8 +17,8 @@
  */
 package com.martinleopold.mode.debug;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.event.DocumentEvent;
@@ -36,10 +36,17 @@ import javax.swing.text.Position;
  */
 public class LineID implements DocumentListener {
 
-    protected static List<LineID> trackedLines = new ArrayList();
+    protected static Set<LineID> trackedLines = new HashSet();
+    protected String fileName; // the filename
+    protected int lineIdx; // the line number, 0-based
 
-    public String fileName; // the filename
-    public int lineIdx; // the line number, 0-based
+    public String fileName() {
+        return fileName;
+    }
+
+    public synchronized int lineIdx() {
+        return lineIdx;
+    }
     protected Document doc; // the Document to use for line number tracking
     protected Position pos; // the Position acquired during line number tracking
 
@@ -50,6 +57,7 @@ public class LineID implements DocumentListener {
 
     /**
      * Factory
+     *
      * @param fileName
      * @param lineIdx
      * @return
@@ -58,15 +66,27 @@ public class LineID implements DocumentListener {
         // check if this was already created
         LineID line = new LineID(fileName, lineIdx);
         if (trackedLines.contains(line)) {
-            return trackedLines.get(trackedLines.indexOf(line));
+            for (LineID checkLine : trackedLines) {
+                if (checkLine.equals(line)) {
+                    return checkLine;
+                }
+            }
         }
         return line;
     }
 
+//    protected static LineID getTracked(LineID line) {
+//        for (LineID checkLine : trackedLines) {
+//            if (checkLine.equals(line)) {
+//                return checkLine;
+//            }
+//        }
+//        return null;
+//    }
+
 //    public LineID(LineID line) {
 //        this(line.fileName, line.lineIdx);
 //    }
-
     @Override
     public int hashCode() {
         return toString().hashCode();
@@ -118,8 +138,7 @@ public class LineID implements DocumentListener {
 //    public LineID clone() {
 //        return new LineID(fileName, lineIdx);
 //    }
-
-        /**
+    /**
      * Attach a {@link Document} to enable line number tracking when editing.
      * The position to track is before the first non-whitespace character on the
      * line. Edits happening before that position will cause the line number to
@@ -127,13 +146,15 @@ public class LineID implements DocumentListener {
      *
      * @param doc the {@link Document} to use for line number tracking
      */
-    public void startTracking(Document doc) {
-        if (doc == null) {
-            System.out.println("doc = NULL !");
-        }
+    // multiple startTracking calls will replace the tracked document.
+    // whoever wants a tracked line should track it... and add itself as listener if necessary. (LineHighlight, Breakpoint.)
+
+    public synchronized void startTracking(Document doc) {
+        if (doc == null) return; // null arg
+        if (doc == this.doc) return; // already tracking that doc
         try {
-            // TODO: check if line exists
             Element line = doc.getDefaultRootElement().getElement(lineIdx);
+            if (line == null) return; // line doesn't exist
             String lineText = doc.getText(line.getStartOffset(), line.getEndOffset() - line.getStartOffset());
             // set tracking position at (=before) first non-white space character on line
             pos = doc.createPosition(line.getStartOffset() + nonWhiteSpaceOffset(lineText));
@@ -149,11 +170,11 @@ public class LineID implements DocumentListener {
     }
 
     /**
-     * Notify this {@link LineHighlight} that it is no longer in use. Will
-     * stop position tracking. Call this when this {@link LineHighlight} is no
-     * longer needed.
+     * Notify this {@link LineHighlight} that it is no longer in use. Will stop
+     * position tracking. Call this when this {@link LineHighlight} is no longer
+     * needed.
      */
-    public void stopTracking() {
+    private synchronized void stopTracking() {
         if (doc != null) {
             doc.removeDocumentListener(this);
             doc = null;
@@ -161,24 +182,43 @@ public class LineID implements DocumentListener {
         trackedLines.remove(this);
     }
 
+    @Override
+    public void finalize() throws Throwable {
+        super.finalize();
+        stopTracking();
+    }
+
     /**
      * Update the tracked position. Will repaint the highlight if line number
      * has changed.
      */
-    protected void updatePosition() {
+    protected synchronized void updatePosition() {
         if (doc != null && pos != null) {
             // track position
             int offset = pos.getOffset();
             int oldLineIdx = lineIdx;
             lineIdx = doc.getDefaultRootElement().getElementIndex(offset); // offset to lineNo
             if (lineIdx != oldLineIdx) {
-                lineChanged(oldLineIdx, lineIdx);
+                for(LineListener l : listeners) {
+                    if (l != null) {
+                        l.lineChanged(this, oldLineIdx, lineIdx);
+                    } else {
+                        listeners.remove(l); // remove null listener
+                    }
+                }
             }
         }
     }
 
-    protected void lineChanged(int oldLineIdx, int newLineIdx) {
-        // nop, can be overwritten in subclasses
+    protected Set<LineListener> listeners = new HashSet();
+
+    // add listener to be notified when the line number changes.
+    public void addListener(LineListener l) {
+        listeners.add(l);
+    }
+
+    public void removeListener(LineListener l) {
+        listeners.remove(l);
     }
 
     /**

@@ -274,7 +274,7 @@ public class Debugger implements VMEventListener {
             return;
         }
         LineID line = getCurrentLineID();
-        breakpoints.add(new LineBreakpoint(line, this));
+        breakpoints.add(new LineBreakpoint(line.lineIdx, this));
         System.out.println("set breakpoint on line " + line);
         System.out.println("note: breakpoints on method declarations will not work, use first line of method instead");
         //System.out.println("note: changes take effect after (re)starting the debug session");
@@ -335,15 +335,15 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Retrieve line of sketch where the cursor currently resides. TODO: maybe
-     * move to editor?
+     * Retrieve line of sketch where the cursor currently resides.
      *
      * @return the current {@link LineID}
      */
+    //TODO: maybe move to editor?
     protected LineID getCurrentLineID() {
         String tab = editor.getSketch().getCurrentCode().getFileName();
         int lineNo = editor.getTextArea().getCaretLine();
-        return new LineID(tab, lineNo);
+        return LineID.create(tab, lineNo);
     }
 
     /**
@@ -688,9 +688,9 @@ public class Debugger implements VMEventListener {
                 int lineNo = l.lineNumber();
                 try {
                     // line number translation
-                    LineID sketchLine = lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
+                    LineID sketchLine = lineMap.get(LineID.create(l.sourceName(), l.lineNumber()));
                     if (sketchLine != null) {
-                        lineNo = sketchLine.lineIdx + 1;
+                        lineNo = sketchLine.lineIdx() + 1;
                     }
                 } catch (AbsentInformationException ex) {
                     Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
@@ -840,11 +840,11 @@ public class Debugger implements VMEventListener {
      */
     protected void selectSourceLocation(Location l) {
         try {
-            LineID sketchLine = lineMap.get(new LineID(l.sourceName(), l.lineNumber()));
+            LineID sketchLine = lineMap.get(LineID.create(l.sourceName(), l.lineNumber()));
             editor.clearSelection();
             if (sketchLine != null) {
-                int lineIdx = sketchLine.lineIdx; // 0-based line number
-                String tab = sketchLine.fileName;
+                int lineIdx = sketchLine.lineIdx(); // 0-based line number
+                String tab = sketchLine.fileName();
                 System.out.println("sketch line: " + sketchLine);
 
                 // switch to tab
@@ -865,7 +865,7 @@ public class Debugger implements VMEventListener {
 
     protected LineID locationToLineID(Location l) {
         try {
-            return lineMap.get(new LineID(l.sourceName(), l.lineNumber() - 1));
+            return lineMap.get(LineID.create(l.sourceName(), l.lineNumber() - 1));
         } catch (AbsentInformationException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
             return null;
