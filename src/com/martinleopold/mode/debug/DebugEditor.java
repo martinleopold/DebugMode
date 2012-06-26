@@ -113,6 +113,8 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         System.out.println("closing window");
         // remove var.inspector
         vi.dispose();
+        // quit running debug session
+        dbg.stopDebug();
     }
 
     /**

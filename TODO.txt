@@ -87,8 +87,8 @@ PROTOTYPE 3:
 		x thread safety w/event thread
 		* issues that cause exceptions
 		* issues from feedback
-	* refactoring
-		* LineID is a design mess
+	x refactoring
+		x LineID is a design mess
 		* rid Debugger of view-related functions, especially line highlighting
 	* var.inspector
 		! lazy loading of nested object refs.
@@ -103,6 +103,7 @@ PROTOTYPE 3:
 	/ loose dependence on hacked core
 	! make debugging work on unsaved sketch
 	! dynamic line translation (when editing sketch)
+	x kill debuggee vm on sketch close, p5 quit.
 
 IMPLEMENTATION:
 x Class Design (MVC)
