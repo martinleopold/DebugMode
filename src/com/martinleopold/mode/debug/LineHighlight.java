@@ -25,10 +25,10 @@ import java.awt.Color;
  * @author Martin Leopold <m@martinleopold.com>
  */
 public class LineHighlight implements LineListener {
+
     protected DebugEditor editor; // the view, used for highlighting lines by setting a background color
     protected Color bgColor; // the background color for highlighting lines
     protected LineID lineID;
-
 
     /**
      * Create a {@link LineHighlight} on the current tab.
@@ -43,7 +43,7 @@ public class LineHighlight implements LineListener {
         this.editor = editor;
         lineID.addListener(this);
         lineID.startTracking(editor.currentDocument()); // todo: overwrite a previous doc?
-        editor.paintLine(this);
+        paint();
     }
 
     /**
@@ -70,14 +70,35 @@ public class LineHighlight implements LineListener {
 
     @Override
     public void lineChanged(LineID line, int oldLineIdx, int newLineIdx) {
-        //lineID.lineIdx() = oldLineIdx;
-        editor.clearLine(LineID.create(line.fileName(), oldLineIdx));
-        //lineID.lineIdx() = newLineIdx;
-        editor.paintLine(this);
+        // clear old line
+        if (editor.isInCurrentTab(LineID.create(line.fileName(), oldLineIdx))) {
+            editor.textArea().clearLineBgColor(oldLineIdx);
+        }
+        // paint new line
+        paint();
     }
 
     // notify this linehighlight that it is no linger used.
     public void dispose() {
         lineID.removeListener(this);
+    }
+
+    /**
+     * (Re-)paint this line highlight. Needs to be on the current tab
+     * (obviously).
+     */
+    public void paint() {
+        if (editor.isInCurrentTab(lineID)) {
+            editor.textArea().setLineBgColor(lineID.lineIdx(), bgColor);
+        }
+    }
+
+    /**
+     * Clear this line highlight. Needs to be on the current tab (obviously).
+     */
+    public void clear() {
+        if (editor.isInCurrentTab(lineID)) {
+            editor.textArea().clearLineBgColor(lineID.lineIdx());
+        }
     }
 }

@@ -60,7 +60,7 @@ public class LineID implements DocumentListener {
      *
      * @param fileName
      * @param lineIdx
-     * @return
+     * @return the line id
      */
     public static LineID create(String fileName, int lineIdx) {
         // check if this was already created
@@ -237,7 +237,7 @@ public class LineID implements DocumentListener {
     }
 
     /**
-     * Called when the {@link Document} registered using {@link #enableTracking}
+     * Called when the {@link Document} registered using {@link #startTracking}
      * is edited. This happens when text is inserted or removed.
      *
      * @param de
