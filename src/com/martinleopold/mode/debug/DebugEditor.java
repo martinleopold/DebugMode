@@ -257,9 +257,13 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
     @Override
     protected boolean handleOpenInternal(String path) {
+        //System.out.println("handleOpen");
         boolean didOpen = super.handleOpenInternal(path);
-        if (didOpen) {
-            // TODO
+        if (didOpen && dbg != null) {
+            // should already been stopped (open calls handleStop)
+            System.out.println("did open");
+            dbg.clearBreakpoints();
+            clearBreakpointedLines(); // force clear breakpoint highlights
         }
         return didOpen;
     }
@@ -448,6 +452,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public void removeBreakpointedLine(int lineIdx) {
         LineID line = getLineIDInCurrentTab(lineIdx);
+        System.out.println("line id: " + line.fileName() + " " + line.lineIdx());
         LineHighlight foundLine = null;
         for (LineHighlight hl : breakpointedLines) {
             if (hl.lineID.equals(line)) {
@@ -463,6 +468,22 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             if (currentLine != null && currentLine.lineID().equals(line)) {
                 currentLine.paint();
             }
+        }
+    }
+
+    // TODO: doc
+    public void clearBreakpointedLines() {
+        for (LineHighlight hl : breakpointedLines) {
+            hl.clear();
+            hl.dispose();
+        }
+        breakpointedLines.clear(); // remove all breakpoints
+        // fix highlights not being removed when tab names have changed due to opening a new sketch in same editor
+        ta.clearLineBgColors(); // force clear all highlights
+
+        // repaint current line
+        if (currentLine != null) {
+            currentLine.paint();
         }
     }
 

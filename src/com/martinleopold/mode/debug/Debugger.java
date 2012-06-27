@@ -298,7 +298,7 @@ public class Debugger implements VMEventListener {
      */
     public synchronized void removeBreakpoint() {
         // do nothing if we are kinda busy
-        if (isStarted() && !isPaused()) {
+        if (isBusy()) {
             return;
         }
 
@@ -314,7 +314,17 @@ public class Debugger implements VMEventListener {
      * Remove all breakpoints.
      */
     public synchronized void clearBreakpoints() {
-        // TODO
+        System.out.println("clear ");
+        //TODO: handle busy-ness correctly
+        if (isBusy()) {
+            System.out.println("busy");
+            return;
+        }
+
+        for (LineBreakpoint bp : breakpoints) {
+            bp.remove();
+        }
+        breakpoints.clear();
     }
 
     /**
@@ -469,6 +479,10 @@ public class Debugger implements VMEventListener {
      */
     public synchronized boolean isPaused() {
         return isStarted() && paused && currentThread != null && currentThread.isSuspended();
+    }
+
+    public synchronized boolean isBusy() {
+        return isStarted() && !isPaused();
     }
 
     /**
