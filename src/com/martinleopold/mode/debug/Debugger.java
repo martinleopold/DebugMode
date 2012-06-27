@@ -25,6 +25,7 @@ import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -53,9 +54,7 @@ public class Debugger implements VMEventListener {
     protected ReferenceType mainClass;
     protected String srcPath; // path to the src folder of the current build
     protected DebugBuild build; // todo: might not need to be global
-    protected Map<LineID, LineID> lineMap; // maps source lines from "sketch-space" to "java-space" and vice-versa
-    //protected List<LineID> breakpoints = new ArrayList(); // list of breakpoints in "sketch-space"
-    //protected Map<LineID, BreakpointRequest> breakpointRequests = new HashMap(); // list of breakpoints in "sketch-space"
+    protected Map<LineID, LineID> lineMap = new HashMap(); // maps source lines from "sketch-space" to "java-space" and vice-versa
     protected List<LineBreakpoint> breakpoints = new ArrayList();
     protected StepRequest requestedStep; // the step request we are currently in, or null if not in a step
 
@@ -68,6 +67,11 @@ public class Debugger implements VMEventListener {
         this.editor = editor;
     }
 
+    /**
+     * Access the VM.
+     *
+     * @return the virtual machine object or null if not available.
+     */
     public VirtualMachine vm() {
         if (runtime != null) {
             return runtime.vm();
@@ -76,6 +80,7 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    // TODO: fix this
     public ReferenceType mainClass() {
         return mainClass;
     }
@@ -84,6 +89,11 @@ public class Debugger implements VMEventListener {
         return lineMap;
     }
 
+    /**
+     * Access the editor associated with this debugger.
+     *
+     * @return the editor object
+     */
     public DebugEditor editor() {
         return editor;
     }
@@ -300,6 +310,20 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    /**
+     * Remove all breakpoints.
+     */
+    public synchronized void clearBreakpoints() {
+        // TODO
+    }
+
+    /**
+     * Get the breakpoint on a certain line, if set.
+     *
+     * @param line the line to get the breakpoint from
+     * @return the breakpoint, or null if no breakpoint is set on the specified
+     * line.
+     */
     protected LineBreakpoint breakpointOnLine(LineID line) {
         for (LineBreakpoint bp : breakpoints) {
             if (bp.isOnLine(line)) {
@@ -854,6 +878,12 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    /**
+     * Translate a java source location to a sketch line id.
+     *
+     * @param l the location to translate
+     * @return the corresponding line id, or null if not found
+     */
     protected LineID locationToLineID(Location l) {
         try {
             return lineMap.get(LineID.create(l.sourceName(), l.lineNumber() - 1));

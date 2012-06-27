@@ -255,6 +255,15 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         }
     }
 
+    @Override
+    protected boolean handleOpenInternal(String path) {
+        boolean didOpen = super.handleOpenInternal(path);
+        if (didOpen) {
+            // TODO
+        }
+        return didOpen;
+    }
+
     /**
      * Clear the console.
      */
@@ -321,6 +330,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         return dbg;
     }
 
+    /**
+     * Access the custom text area object.
+     *
+     * @return the text area object
+     */
     public TextArea textArea() {
         return ta;
     }

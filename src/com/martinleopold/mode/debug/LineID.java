@@ -39,16 +39,9 @@ public class LineID implements DocumentListener {
     protected static Set<LineID> trackedLines = new HashSet();
     protected String fileName; // the filename
     protected int lineIdx; // the line number, 0-based
-
-    public String fileName() {
-        return fileName;
-    }
-
-    public synchronized int lineIdx() {
-        return lineIdx;
-    }
     protected Document doc; // the Document to use for line number tracking
     protected Position pos; // the Position acquired during line number tracking
+    protected Set<LineListener> listeners = new HashSet(); // listeners for line number changes
 
     private LineID(String fileName, int lineIdx) {
         this.fileName = fileName;
@@ -56,10 +49,29 @@ public class LineID implements DocumentListener {
     }
 
     /**
-     * Factory
+     * Get the file name of this line.
      *
-     * @param fileName
-     * @param lineIdx
+     * @return the file name
+     */
+    public String fileName() {
+        return fileName;
+    }
+
+    /**
+     * Get the (0-based) line number of this line.
+     *
+     * @return the line index (i.e. line number, starting at 0)
+     */
+    public synchronized int lineIdx() {
+        return lineIdx;
+    }
+
+    /**
+     * Static Factory for creating {@link LineID}s. TODO: explain why this is
+     * there
+     *
+     * @param fileName the file name
+     * @param lineIdx the line index (i.e. line number, starting at 0)
      * @return the line id
      */
     public static LineID create(String fileName, int lineIdx) {
@@ -75,18 +87,6 @@ public class LineID implements DocumentListener {
         return line;
     }
 
-//    protected static LineID getTracked(LineID line) {
-//        for (LineID checkLine : trackedLines) {
-//            if (checkLine.equals(line)) {
-//                return checkLine;
-//            }
-//        }
-//        return null;
-//    }
-
-//    public LineID(LineID line) {
-//        this(line.fileName, line.lineIdx);
-//    }
     @Override
     public int hashCode() {
         return toString().hashCode();
@@ -148,13 +148,18 @@ public class LineID implements DocumentListener {
      */
     // multiple startTracking calls will replace the tracked document.
     // whoever wants a tracked line should track it... and add itself as listener if necessary. (LineHighlight, Breakpoint.)
-
     public synchronized void startTracking(Document doc) {
-        if (doc == null) return; // null arg
-        if (doc == this.doc) return; // already tracking that doc
+        if (doc == null) {
+            return; // null arg
+        }
+        if (doc == this.doc) {
+            return; // already tracking that doc
+        }
         try {
             Element line = doc.getDefaultRootElement().getElement(lineIdx);
-            if (line == null) return; // line doesn't exist
+            if (line == null) {
+                return; // line doesn't exist
+            }
             String lineText = doc.getText(line.getStartOffset(), line.getEndOffset() - line.getStartOffset());
             // set tracking position at (=before) first non-white space character on line
             pos = doc.createPosition(line.getStartOffset() + nonWhiteSpaceOffset(lineText));
@@ -174,7 +179,7 @@ public class LineID implements DocumentListener {
      * position tracking. Call this when this {@link LineHighlight} is no longer
      * needed.
      */
-    private synchronized void stopTracking() {
+    protected synchronized void stopTracking() {
         if (doc != null) {
             doc.removeDocumentListener(this);
             doc = null;
@@ -189,8 +194,8 @@ public class LineID implements DocumentListener {
     }
 
     /**
-     * Update the tracked position. Will repaint the highlight if line number
-     * has changed.
+     * Update the tracked position. Will notify listeners if line number has
+     * changed.
      */
     protected synchronized void updatePosition() {
         if (doc != null && pos != null) {
@@ -199,7 +204,7 @@ public class LineID implements DocumentListener {
             int oldLineIdx = lineIdx;
             lineIdx = doc.getDefaultRootElement().getElementIndex(offset); // offset to lineNo
             if (lineIdx != oldLineIdx) {
-                for(LineListener l : listeners) {
+                for (LineListener l : listeners) {
                     if (l != null) {
                         l.lineChanged(this, oldLineIdx, lineIdx);
                     } else {
@@ -210,13 +215,20 @@ public class LineID implements DocumentListener {
         }
     }
 
-    protected Set<LineListener> listeners = new HashSet();
-
-    // add listener to be notified when the line number changes.
+    /**
+     * Add listener to be notified when the line number changes.
+     *
+     * @param l the listener to add
+     */
     public void addListener(LineListener l) {
         listeners.add(l);
     }
 
+    /**
+     * Remove a listener for line number changes.
+     *
+     * @param l the listener to remove
+     */
     public void removeListener(LineListener l) {
         listeners.remove(l);
     }
