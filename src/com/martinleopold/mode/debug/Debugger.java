@@ -765,17 +765,17 @@ public class Debugger implements VMEventListener {
             int i = 0;
             for (StackFrame f : t.frames()) {
                 Location l = f.location();
-                int lineNo = l.lineNumber();
+                int lineIdx = l.lineNumber() - 1;
                 try {
                     // line number translation
-                    LineID sketchLine = lineMap.get(LineID.create(l.sourceName(), l.lineNumber()));
+                    LineID sketchLine = lineMap.get(LineID.create(l.sourceName(), lineIdx));
                     if (sketchLine != null) {
-                        lineNo = sketchLine.lineIdx() + 1;
+                        lineIdx = sketchLine.lineIdx();
                     }
                 } catch (AbsentInformationException ex) {
                     Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                stack.add(new DefaultMutableTreeNode(l.declaringType().name() + "." + l.method().name() + ":" + lineNo));
+                stack.add(new DefaultMutableTreeNode(l.declaringType().name() + "." + l.method().name() + ":" + (lineIdx+1)));
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);

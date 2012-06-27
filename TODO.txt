@@ -126,13 +126,15 @@ PROTOTYPE 3:
 		? p5 mode
 	* breakpoints
 		x setting/modifying at runtime
-		! clear bps on file open, new
-	x more code documentation
-	/ loose dependence on hacked core
-	x make debugging work on unsaved sketch
-	x kill debuggee vm on sketch close, p5 quit.
-	! dynamic line translation (when editing sketch)
-	! handle editing during debug session
+		x clear bps on file open, new
+x more code documentation
+/ loose dependence on hacked core
+x make debugging work on unsaved sketch
+x kill debuggee vm on sketch close, p5 quit.
+x fix late update of canvas
+! dynamic line translation (when editing sketch)
+! handle editing during debug session
+
 
 
 IMPLEMENTATION:
@@ -266,6 +268,7 @@ x add/rem a bp on the current line: messes up line highlight colors (-> color st
 	at processing.app.syntax.JEditTextArea.select(JEditTextArea.java:1193)
 	at processing.app.syntax.JEditTextArea$DragHandler.mouseDragged(JEditTextArea.java:2313)
 	at java.awt.AWTEventMulticaster.mouseDragged(AWTEventMulticaster.java:302)
+* disallow stepping into invisible code
 
 
 QUESTIONS:
