@@ -435,6 +435,10 @@ public class Debugger implements VMEventListener {
                     requestedStep = null;
                 }
 
+                // fix canvas update issue
+                // TODO: is this a good solution?
+                resumeOtherThreads(currentThread);
+
                 paused = true;
             } else if (e instanceof StepEvent) {
                 StepEvent se = (StepEvent) e;
@@ -506,39 +510,23 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    public synchronized void printThreads() {
-        if (!isPaused()) {
-            return;
+    // TODO: doc
+    protected void resumeOtherThreads(ThreadReference t) {
+        if (!isStarted()) return;
+        for (ThreadReference other : vm().allThreads()) {
+            if (!other.equals(t) && other.isSuspended()) {
+                other.resume();
+            }
         }
+    }
 
-//        for (ThreadReference t : vm().allThreads()) {
-//            if (t.name().equals("AWT-EventQueue-0") && t.isSuspended()) {
-//                System.out.println("resuming");
-//                t.resume();
-//            }
-//        }
-
+    // TODO: doc
+    public synchronized void printThreads() {
+        if (!isPaused()) return;
         System.out.println("threads:");
         for (ThreadReference t : vm().allThreads()) {
             printThread(t);
         }
-
-//        System.out.println("force repaint");
-//        List<ObjectReference> instances = mainClass.instances(1);
-//        ObjectReference p = instances.get(0);
-//       List<Method> methods = mainClass.methodsByName("repaint");
-//        try {
-//            p.invokeMethod(currentThread, methods.get(0), new ArrayList(), 0);
-//        } catch (InvalidTypeException ex) {
-//            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (ClassNotLoadedException ex) {
-//            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (IncompatibleThreadStateException ex) {
-//            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (InvocationException ex) {
-//            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-
    }
 
     protected void printThread(ThreadReference t) {
