@@ -384,7 +384,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public void setCurrentLine(LineID line) {
         clearCurrentLine();
-        if (line == null) return; // safety, e.g. when no line mapping is found and the null line is used.
+        if (line == null) {
+            return; // safety, e.g. when no line mapping is found and the null line is used.
+        }
         switchToTab(line.fileName());
         currentLine = new LineHighlight(line.lineIdx(), CURRENT_LINE_COLOR, this);
     }
@@ -394,14 +396,12 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public void clearCurrentLine() {
         if (currentLine != null) {
-            //clearLine(currentLine);
             currentLine.clear();
             currentLine.dispose();
 
             // revert to breakpoint color if any is set on this line
             for (LineHighlight hl : breakpointedLines) {
                 if (hl.lineID().equals(currentLine.lineID())) {
-                    //paintLine(hl);
                     hl.paint();
                     break;
                 }
@@ -421,7 +421,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         breakpointedLines.add(hl);
         // repaint current line if it's on this line
         if (currentLine != null && currentLine.lineID().equals(getLineIDInCurrentTab(lineIdx))) {
-            //paintLine(currentLine);
             currentLine.paint();
         }
     }
@@ -443,13 +442,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             }
         }
         if (foundLine != null) {
-            //clearLine(foundLine);
             foundLine.clear();
             breakpointedLines.remove(foundLine);
             foundLine.dispose();
             // repaint current line if it's on this line
             if (currentLine != null && currentLine.lineID().equals(line)) {
-                //paintLine(currentLine);
                 currentLine.paint();
             }
         }
@@ -464,6 +461,17 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public LineID getLineIDInCurrentTab(int lineIdx) {
         return LineID.create(getSketch().getCurrentCode().getFileName(), lineIdx);
+    }
+
+    /**
+     * Retrieve line of sketch where the cursor currently resides.
+     *
+     * @return the current {@link LineID}
+     */
+    protected LineID getCurrentLineID() {
+        String tab = getSketch().getCurrentCode().getFileName();
+        int lineNo = getTextArea().getCaretLine();
+        return LineID.create(tab, lineNo);
     }
 
     /**
@@ -495,14 +503,12 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             // first paint breakpoints
             for (LineHighlight hl : breakpointedLines) {
                 if (isInCurrentTab(hl.lineID())) {
-                    //paintLine(hl);
                     hl.paint();
                 }
             }
             // now paint current line (if any)
             if (currentLine != null) {
                 if (isInCurrentTab(currentLine.lineID())) {
-                    //paintLine(currentLine);
                     currentLine.paint();
                 }
             }

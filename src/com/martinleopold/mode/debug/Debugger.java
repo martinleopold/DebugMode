@@ -276,7 +276,7 @@ public class Debugger implements VMEventListener {
         if (isStarted() && !isPaused()) {
             return;
         }
-        LineID line = getCurrentLineID();
+        LineID line = editor.getCurrentLineID();
         breakpoints.add(new LineBreakpoint(line.lineIdx, this));
         System.out.println("set breakpoint on line " + line);
         System.out.println("note: breakpoints on method declarations will not work, use first line of method instead");
@@ -292,7 +292,7 @@ public class Debugger implements VMEventListener {
             return;
         }
 
-        LineBreakpoint bp = breakpointOnLine(getCurrentLineID());
+        LineBreakpoint bp = breakpointOnLine(editor.getCurrentLineID());
         if (bp != null) {
             bp.remove();
             breakpoints.remove(bp);
@@ -313,7 +313,7 @@ public class Debugger implements VMEventListener {
      * Toggle the breakpoint on the current line.
      */
     public synchronized void toggleBreakpoint() {
-        LineID line = getCurrentLineID();
+        LineID line = editor.getCurrentLineID();
 
         LineBreakpoint bp = breakpointOnLine(line);
         if (bp == null) {
@@ -335,18 +335,6 @@ public class Debugger implements VMEventListener {
                 System.out.println(bp);
             }
         }
-    }
-
-    /**
-     * Retrieve line of sketch where the cursor currently resides.
-     *
-     * @return the current {@link LineID}
-     */
-    //TODO: maybe move to editor?
-    protected LineID getCurrentLineID() {
-        String tab = editor.getSketch().getCurrentCode().getFileName();
-        int lineNo = editor.getTextArea().getCaretLine();
-        return LineID.create(tab, lineNo);
     }
 
     /**
@@ -874,45 +862,4 @@ public class Debugger implements VMEventListener {
             return null;
         }
     }
-//    /**
-//     * Set a breakpoint on a sketch line.
-//     *
-//     * @param sketchLine specifies the line to set the breakpoint on
-//     */
-//    protected void setBreakpoint(LineID sketchLine) {
-//        // find line in java space
-//        LineID javaLine = lineMap.get(sketchLine);
-//        if (javaLine == null) {
-//            System.out.println("Couldn't find line " + sketchLine + " in the java code");
-//            return;
-//        }
-//        try {
-//            List<Location> locations = mainClass.locationsOfLine(javaLine.lineIdx + 1);
-//            if (locations.isEmpty()) {
-//                System.out.println("no location found for line " + sketchLine + " -> " + javaLine);
-//                return;
-//            }
-//            // use first found location
-//            BreakpointRequest bpr = runtime.vm().eventRequestManager().createBreakpointRequest(locations.get(0));
-//            bpr.enable();
-//            breakpointRequests.put(sketchLine, bpr);
-//            System.out.println(sketchLine + " -> " + javaLine);
-//        } catch (AbsentInformationException ex) {
-//            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//    }
-//
-//    /**
-//     * Remove a breakpoint from a sketch line. Deletes the breakpoint request
-//     * from the event request manager.
-//     *
-//     * @param sketchLine identifies the line to remove the breakpoint from
-//     */
-//    protected void removeBreakpoint(LineID sketchLine) {
-//        if (breakpointRequests.containsKey(sketchLine)) {
-//            BreakpointRequest bpr = breakpointRequests.get(sketchLine);
-//            runtime.vm().eventRequestManager().deleteEventRequest(bpr);
-//            breakpointRequests.remove(sketchLine);
-//        }
-//    }
 }

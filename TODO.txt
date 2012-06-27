@@ -85,11 +85,11 @@ PROTOTYPE 3:
 * iteration
 	* stability
 		x thread safety w/event thread
-		* issues that cause exceptions
+		x issues that cause exceptions
 		* issues from feedback
 	x refactoring
 		x LineID is a design mess
-		* rid Debugger of view-related functions, especially line highlighting
+		x rid Debugger of view-related functions, especially line highlighting
 	* var.inspector
 		! lazy loading of nested object refs.
 		* handling special objects
@@ -101,9 +101,11 @@ PROTOTYPE 3:
 		! clear bps on file open, new
 	x more code documentation
 	/ loose dependence on hacked core
-	! make debugging work on unsaved sketch
-	! dynamic line translation (when editing sketch)
+	x make debugging work on unsaved sketch
 	x kill debuggee vm on sketch close, p5 quit.
+	! dynamic line translation (when editing sketch)
+	! handle editing during debug session
+
 
 IMPLEMENTATION:
 x Class Design (MVC)
@@ -230,7 +232,12 @@ x stepping from draw() ouside of visible code util draw() is hit again: com.sun.
 x hitting a breakpoint during a step + stepping again: DuplicateRequestException
 -> policy: when breakpoint hit during step: cancel step, cause we stopped anyway (only finer grained)
 * in stacktrace indicate if in native or static method
-* add/rem a bp on the current line: messes up line highlight colors (-> color stacking system!)
+x add/rem a bp on the current line: messes up line highlight colors (-> color stacking system!)
+! debugging w/2 editors open:
+	Exception in thread "AWT-EventQueue-0" java.lang.IllegalArgumentException: Bounds out of range: 32,47 [32]
+	at processing.app.syntax.JEditTextArea.select(JEditTextArea.java:1193)
+	at processing.app.syntax.JEditTextArea$DragHandler.mouseDragged(JEditTextArea.java:2313)
+	at java.awt.AWTEventMulticaster.mouseDragged(AWTEventMulticaster.java:302)
 
 
 QUESTIONS:
