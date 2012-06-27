@@ -506,6 +506,69 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    public synchronized void printThreads() {
+        if (!isPaused()) {
+            return;
+        }
+
+//        for (ThreadReference t : vm().allThreads()) {
+//            if (t.name().equals("AWT-EventQueue-0") && t.isSuspended()) {
+//                System.out.println("resuming");
+//                t.resume();
+//            }
+//        }
+
+        System.out.println("threads:");
+        for (ThreadReference t : vm().allThreads()) {
+            printThread(t);
+        }
+
+//        System.out.println("force repaint");
+//        List<ObjectReference> instances = mainClass.instances(1);
+//        ObjectReference p = instances.get(0);
+//       List<Method> methods = mainClass.methodsByName("repaint");
+//        try {
+//            p.invokeMethod(currentThread, methods.get(0), new ArrayList(), 0);
+//        } catch (InvalidTypeException ex) {
+//            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (ClassNotLoadedException ex) {
+//            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (IncompatibleThreadStateException ex) {
+//            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (InvocationException ex) {
+//            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+
+   }
+
+    protected void printThread(ThreadReference t) {
+        System.out.println(t.name());
+        System.out.println("   is suspended: " + t.isSuspended());
+        System.out.println("   is at breakpoint: " + t.isAtBreakpoint());
+        System.out.println("   status: " + threadStatusToString(t.status()));
+    }
+
+    protected String threadStatusToString(int status) {
+        switch (status) {
+            case ThreadReference.THREAD_STATUS_MONITOR:
+                return "THREAD_STATUS_MONITOR";
+            case ThreadReference.THREAD_STATUS_NOT_STARTED:
+                return "THREAD_STATUS_NOT_STARTED";
+            case ThreadReference.THREAD_STATUS_RUNNING:
+                return "THREAD_STATUS_RUNNING";
+            case ThreadReference.THREAD_STATUS_SLEEPING:
+                return "THREAD_STATUS_SLEEPING";
+            case ThreadReference.THREAD_STATUS_UNKNOWN:
+                return "THREAD_STATUS_UNKNOWN";
+            case ThreadReference.THREAD_STATUS_WAIT:
+                return "THREAD_STATUS_WAIT";
+            case ThreadReference.THREAD_STATUS_ZOMBIE:
+                return "THREAD_STATUS_ZOMBIE";
+            default:
+                return "";
+        }
+    }
+
     /**
      * Print local variables on a suspended thread. Takes the topmost stack
      * frame and lists all local variables and their values.

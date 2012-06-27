@@ -70,6 +70,8 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     protected JMenuItem printLocalsMenuItem;
     protected JMenuItem printThisMenuItem;
     protected JMenuItem printSourceMenuItem;
+    protected JMenuItem printThreads;
+
     // variable inspector
     protected JMenuItem toggleVariableInspectorMenuItem;
     protected DebugMode dmode;
@@ -155,6 +157,8 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         printThisMenuItem.addActionListener(this);
         printSourceMenuItem = new JMenuItem("Print Source Location");
         printSourceMenuItem.addActionListener(this);
+        printThreads = new JMenuItem("Print Threads");
+        printThreads.addActionListener(this);
 
         toggleVariableInspectorMenuItem = new JMenuItem("Show/Hide Variable Inspector");
         toggleVariableInspectorMenuItem.addActionListener(this);
@@ -175,6 +179,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         debugMenu.add(printLocalsMenuItem);
         debugMenu.add(printThisMenuItem);
         debugMenu.add(printSourceMenuItem);
+        debugMenu.add(printThreads);
         debugMenu.addSeparator();
         debugMenu.add(toggleVariableInspectorMenuItem);
         return debugMenu;
@@ -223,6 +228,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         } else if (source == printSourceMenuItem) {
             System.out.println("# clicked print source menu item");
             dbg.printSource();
+        } else if (source == printThreads) {
+            System.out.println("# clicked print threads menu item");
+            dbg.printThreads();
         } else if (source == setBreakpointMenuItem) {
             System.out.println("# clicked set breakpoint menu item");
             dbg.setBreakpoint();
