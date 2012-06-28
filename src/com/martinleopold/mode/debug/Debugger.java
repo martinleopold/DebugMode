@@ -397,25 +397,33 @@ public class Debugger implements VMEventListener {
                 //printType(rt);
                 mainClass = rt;
 
-                if (breakpoints.isEmpty()) {
-                    System.out.println("using auto brekapoints (no manual breakpoints set)");
-                    System.out.println("setting breakpoint on setup()");
-                    Location setupLocation = rt.methodsByName("setup").get(0).location();
-                    BreakpointRequest setupBp =
-                            runtime.vm().eventRequestManager().createBreakpointRequest(setupLocation);
-                    setupBp.enable();
+//                if (breakpoints.isEmpty()) {
+//                    System.out.println("using auto brekapoints (no manual breakpoints set)");
+//                    System.out.println("setting breakpoint on setup()");
+//                    Location setupLocation = rt.methodsByName("setup").get(0).location();
+//                    BreakpointRequest setupBp =
+//                            runtime.vm().eventRequestManager().createBreakpointRequest(setupLocation);
+//                    setupBp.enable();
+//
+//                    System.out.println("setting breakpoint on draw()");
+//                    Location drawLocation = rt.methodsByName("draw").get(0).location();
+//                    BreakpointRequest drawBp =
+//                            runtime.vm().eventRequestManager().createBreakpointRequest(drawLocation);
+//                    drawBp.enable();
+//                } else {
+//                    System.out.println("setting breakpoints:");
+//                    for (LineBreakpoint bp : breakpoints) {
+//                        bp.attach();
+//                    }
+//                }
 
-                    System.out.println("setting breakpoint on draw()");
-                    Location drawLocation = rt.methodsByName("draw").get(0).location();
-                    BreakpointRequest drawBp =
-                            runtime.vm().eventRequestManager().createBreakpointRequest(drawLocation);
-                    drawBp.enable();
-                } else {
+                if (!breakpoints.isEmpty()) {
                     System.out.println("setting breakpoints:");
                     for (LineBreakpoint bp : breakpoints) {
                         bp.attach();
                     }
                 }
+
                 started = true;
                 paused = false;
                 runtime.vm().resume();
