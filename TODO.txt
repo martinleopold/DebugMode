@@ -61,7 +61,7 @@ Variable Inspector
 – "Locals" -> "Locals at breakpoint #4"? ... "at line #123"?
 
 Editor
-– Kann man prüfen und warnen daß man erst saven muß? ... sonst ist nicht klar warum manchmal die Breakpoints nicht gehen
+x Kann man prüfen und warnen daß man erst saven muß? ... sonst ist nicht klar warum manchmal die Breakpoints nicht gehen
 – das rosa Highlight sieht sehr nach Fehler aus ... könnte das nicht eine andere Farbe sein? .. grün / blau?
 
 Mode

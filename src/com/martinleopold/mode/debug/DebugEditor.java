@@ -47,7 +47,8 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     //protected EditorToolbar toolbar;
 
     // highlighting
-    public static final Color BREAKPOINT_COLOR = new Color(255, 170, 170); // the background color for highlighting elines
+    //public static final Color BREAKPOINT_COLOR = new Color(255, 170, 170); // the background color for highlighting elines
+    public static final Color BREAKPOINT_COLOR = new Color(180, 210, 255); // the background color for highlighting elines
     public static final Color CURRENT_LINE_COLOR = new Color(255, 255, 0); // the background color for highlighting lines
     protected List<LineHighlight> breakpointedLines = new ArrayList(); // breakpointed lines
     protected LineHighlight currentLine; // line the debugger is currently suspended at
