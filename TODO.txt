@@ -106,10 +106,8 @@ x var inspector
 
 
 PROTOTYPE 3:
-* important missing features
+x important missing features
 	x var inspector: stack trace
-	? var inspector: modes
-	? line annotation
 * iteration
 	* stability
 		x thread safety w/event thread
@@ -118,22 +116,27 @@ PROTOTYPE 3:
 	x refactoring
 		x LineID is a design mess
 		x rid Debugger of view-related functions, especially line highlighting
-	* var.inspector
-		! lazy loading of nested object refs.
-		* handling special objects
-			* arrays
-			* p5 types…
-		? p5 mode
-	* breakpoints
+	x var.inspector
+		x lazy loading of nested object refs.
+	x breakpoints
 		x setting/modifying at runtime
 		x clear bps on file open, new
 x more code documentation
-/ loose dependence on hacked core
 x make debugging work on unsaved sketch
 x kill debuggee vm on sketch close, p5 quit.
 x fix late update of canvas
-! dynamic line translation (when editing sketch)
 ! handle editing during debug session
+* rethink line translation
+* update for current svn
+
+
+
+PROTOTYPE 4:
+* UI
+	* gutter left / line annotation
+	* var insp: p5 mode
+		* hide non-processing vars
+		* handle p5 types, arrays
 
 
 
@@ -270,6 +273,9 @@ x add/rem a bp on the current line: messes up line highlight colors (-> color st
 	at java.awt.AWTEventMulticaster.mouseDragged(AWTEventMulticaster.java:302)
 * disallow stepping into invisible code
 * rethink: isPaused() vs. isBusy()
+
+* remove auto breakpoints
+* 
 
 
 QUESTIONS:
