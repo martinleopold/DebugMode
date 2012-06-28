@@ -314,7 +314,6 @@ public class Debugger implements VMEventListener {
      * Remove all breakpoints.
      */
     public synchronized void clearBreakpoints() {
-        System.out.println("clear ");
         //TODO: handle busy-ness correctly
         if (isBusy()) {
             System.out.println("busy");

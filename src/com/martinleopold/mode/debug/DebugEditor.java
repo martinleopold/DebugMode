@@ -269,7 +269,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         boolean didOpen = super.handleOpenInternal(path);
         if (didOpen && dbg != null) {
             // should already been stopped (open calls handleStop)
-            System.out.println("did open");
             dbg.clearBreakpoints();
             clearBreakpointedLines(); // force clear breakpoint highlights
         }
