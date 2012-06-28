@@ -459,7 +459,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public void removeBreakpointedLine(int lineIdx) {
         LineID line = getLineIDInCurrentTab(lineIdx);
-        System.out.println("line id: " + line.fileName() + " " + line.lineIdx());
+        //System.out.println("line id: " + line.fileName() + " " + line.lineIdx());
         LineHighlight foundLine = null;
         for (LineHighlight hl : breakpointedLines) {
             if (hl.lineID.equals(line)) {

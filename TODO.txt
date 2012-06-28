@@ -108,10 +108,10 @@ x var inspector
 PROTOTYPE 3:
 x important missing features
 	x var inspector: stack trace
-* iteration
-	* stability
+x iteration
+	x stability
 		x thread safety w/event thread
-		! issues that cause exceptions
+		x issues that cause exceptions
 		x issues from feedback
 	x refactoring
 		x LineID is a design mess
@@ -126,10 +126,10 @@ x more code documentation
 x make debugging work on unsaved sketch
 x kill debuggee vm on sketch close, p5 quit.
 x fix late update of canvas
+x remove default breakpoints
 ! handle editing during debug session
 ! rethink line translation
 * update for current svn
-* remove default breakpoints
 
 
 
@@ -139,6 +139,9 @@ PROTOTYPE 4:
 	* var insp: p5 mode
 		* hide non-processing vars
 		* handle p5 types, arrays
+		* show when relevant
+		* grey out when not current
+		* dock to main window
 * disallow stepping into invisible code
 * handle debug output
 * forward debuggee streams
@@ -241,7 +244,7 @@ x thread safety: events come in asynchronously
 13.6.2012
 x transform LineID to Breakpoint, possibly Breakpoint as subclass of LineID
 * line highlight on first line doesn't move down
-! clear bps on file open, new
+x clear bps on file open, new
 15.6.2012
 x line highlight interference with other line coloring methods
 	x current line highlight
@@ -261,7 +264,7 @@ x fast stepping exception: Only one step request allowed per thread
 19.6.2012
 x NullPointerException when stepping into println (dbg_test.foo()) --> thisObject() was null (native or static mehthod)
 20.6.2012
-! sketch output window shows up after several draw() cycles, canvas updated even later
+x sketch output window shows up after several draw() cycles, canvas updated even later
 x fast continue: com.sun.jdi.IncompatibleThreadStateException
 x fast continue: sometimes restarts debugger
 * debug button lights up, until moused over
@@ -270,11 +273,12 @@ x hitting a breakpoint during a step + stepping again: DuplicateRequestException
 -> policy: when breakpoint hit during step: cancel step, cause we stopped anyway (only finer grained)
 * in stacktrace indicate if in native or static method
 x add/rem a bp on the current line: messes up line highlight colors (-> color stacking system!)
-! debugging w/2 editors open:
+* debugging w/2 editors open, focusing second (empty) editor just after hitting debug on first:
 	Exception in thread "AWT-EventQueue-0" java.lang.IllegalArgumentException: Bounds out of range: 32,47 [32]
 	at processing.app.syntax.JEditTextArea.select(JEditTextArea.java:1193)
 	at processing.app.syntax.JEditTextArea$DragHandler.mouseDragged(JEditTextArea.java:2313)
 	at java.awt.AWTEventMulticaster.mouseDragged(AWTEventMulticaster.java:302)
+28.6.2012
 * disallow stepping into invisible code
 * rethink: isPaused() vs. isBusy()
 * remove auto breakpoints

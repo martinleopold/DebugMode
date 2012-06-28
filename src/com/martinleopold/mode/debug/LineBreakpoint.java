@@ -88,7 +88,7 @@ public class LineBreakpoint {
     }
 
     public void remove() {
-        System.out.println("removing " + line.lineIdx());
+        //System.out.println("removing " + line.lineIdx());
         dbg.editor().removeBreakpointedLine(line.lineIdx());
         if (dbg.isPaused()) {
             // immediately remove the breakpoint
