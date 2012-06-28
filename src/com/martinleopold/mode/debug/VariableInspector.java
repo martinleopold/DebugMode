@@ -18,23 +18,29 @@
 package com.martinleopold.mode.debug;
 
 import javax.swing.JTree;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.ExpandVetoException;
 
 /**
  * Variable Inspector window.
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
-public class VariableInspector extends javax.swing.JFrame {
+public class VariableInspector extends javax.swing.JFrame implements TreeWillExpandListener {
 
-    DefaultMutableTreeNode rootNode;
+    protected DefaultMutableTreeNode rootNode;
+    protected Debugger dbg;
 
     /**
      * Creates new form NewJFrame
      */
-    public VariableInspector() {
+    public VariableInspector(Debugger dbg) {
+        this.dbg = dbg;
         initComponents();
         jTree1.setRootVisible(false);
+        jTree1.addTreeWillExpandListener(this);
         this.setTitle("Variable Inspector");
     }
 
@@ -67,44 +73,42 @@ public class VariableInspector extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /*
-         * Set the Nimbus look and feel
-         */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /*
-         * If Nimbus (introduced in Java SE 6) is not available, stay with the
-         * default look and feel. For details see
-         * http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
-         */
-        try {
-            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /*
-         * Create and display the form
-         */
-        run(new VariableInspector());
-    }
-
+//    /**
+//     * @param args the command line arguments
+//     */
+//    public static void main(String args[]) {
+//        /*
+//         * Set the Nimbus look and feel
+//         */
+//        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+//        /*
+//         * If Nimbus (introduced in Java SE 6) is not available, stay with the
+//         * default look and feel. For details see
+//         * http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
+//         */
+//        try {
+//            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
+//        } catch (ClassNotFoundException ex) {
+//            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+//        } catch (InstantiationException ex) {
+//            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+//        } catch (IllegalAccessException ex) {
+//            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+//        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+//            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+//        }
+//        //</editor-fold>
+//
+//        /*
+//         * Create and display the form
+//         */
+//        run(new VariableInspector());
+//    }
     protected static void run(final VariableInspector vi) {
         /*
          * Create and display the form
          */
         java.awt.EventQueue.invokeLater(new Runnable() {
-
             @Override
             public void run() {
                 vi.setVisible(true);
@@ -133,4 +137,21 @@ public class VariableInspector extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTree jTree1;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void treeWillExpand(TreeExpansionEvent tee) throws ExpandVetoException {
+        //System.out.println("tree expansion: " + tee.getPath());
+        Object last = tee.getPath().getLastPathComponent();
+        if (!(last instanceof VariableNode)) return;
+        VariableNode var = (VariableNode) last;
+        // load children
+        if (!dbg.isPaused()) throw new ExpandVetoException(tee, "Debugger busy");
+        //System.out.println("loading children for: " + var);
+        var.addChildren(dbg.getFields(var.getValue(), 0));
+    }
+
+    @Override
+    public void treeWillCollapse(TreeExpansionEvent tee) throws ExpandVetoException {
+        //throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

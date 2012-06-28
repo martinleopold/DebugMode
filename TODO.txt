@@ -215,7 +215,7 @@ x Class Design (MVC)
 			x new window vs column
 			? toolbar
 			* processing vs. advanced modes
-		! lazy loading (otherwise way too much to load, due to circular refs)
+		x lazy loading (otherwise way too much to load, due to circular refs)
 		* array support
 		? loop detection
 
@@ -269,6 +269,7 @@ x add/rem a bp on the current line: messes up line highlight colors (-> color st
 	at processing.app.syntax.JEditTextArea$DragHandler.mouseDragged(JEditTextArea.java:2313)
 	at java.awt.AWTEventMulticaster.mouseDragged(AWTEventMulticaster.java:302)
 * disallow stepping into invisible code
+* rethink: isPaused() vs. isBusy()
 
 
 QUESTIONS:

@@ -71,7 +71,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     protected JMenuItem printThisMenuItem;
     protected JMenuItem printSourceMenuItem;
     protected JMenuItem printThreads;
-
     // variable inspector
     protected JMenuItem toggleVariableInspectorMenuItem;
     protected DebugMode dmode;
@@ -91,7 +90,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         dbg = new Debugger(this);
 
         // variable inspector window
-        vi = new VariableInspector();
+        vi = new VariableInspector(dbg);
 
         // access to customized (i.e. subclassed) text area
         ta = (TextArea) textarea;

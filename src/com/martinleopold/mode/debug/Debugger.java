@@ -511,7 +511,9 @@ public class Debugger implements VMEventListener {
 
     // TODO: doc
     protected void resumeOtherThreads(ThreadReference t) {
-        if (!isStarted()) return;
+        if (!isStarted()) {
+            return;
+        }
         for (ThreadReference other : vm().allThreads()) {
             if (!other.equals(t) && other.isSuspended()) {
                 other.resume();
@@ -521,12 +523,14 @@ public class Debugger implements VMEventListener {
 
     // TODO: doc
     public synchronized void printThreads() {
-        if (!isPaused()) return;
+        if (!isPaused()) {
+            return;
+        }
         System.out.println("threads:");
         for (ThreadReference t : vm().allThreads()) {
             printThread(t);
         }
-   }
+    }
 
     protected void printThread(ThreadReference t) {
         System.out.println(t.name());
@@ -615,14 +619,14 @@ public class Debugger implements VMEventListener {
 
                 // local variables
                 DefaultMutableTreeNode localVarsNode = new DefaultMutableTreeNode("Locals");
-                for (VariableNode var : getLocals(t, 1)) {
+                for (VariableNode var : getLocals(t, 0)) {
                     localVarsNode.add(var);
                 }
                 rootNode.add(localVarsNode);
 
                 // this fields
                 DefaultMutableTreeNode thisNode = new DefaultMutableTreeNode("this");
-                for (VariableNode var : getThisFields(t, 1)) {
+                for (VariableNode var : getThisFields(t, 0)) {
                     thisNode.add(var);
                 }
                 rootNode.add(thisNode);
@@ -662,20 +666,8 @@ public class Debugger implements VMEventListener {
                 for (LocalVariable lv : sf.visibleVariables()) {
                     //System.out.println("local var: " + lv.name());
                     Value val = sf.getValue(lv);
-                    VariableNode var = new VariableNode(lv.name(), lv.typeName(), val == null ? "null" : val);
-                    if (val != null) {
-                        try {
-                            // is this local var an object?
-                            if (val instanceof ObjectReference) {
-                                ObjectReference env = (ObjectReference) val;
-                                for (Field f : ((ReferenceType) lv.type()).visibleFields()) {
-                                    var.addChild(getFieldRecursive(f, env, 1, depth));
-                                }
-                            }
-                        } catch (ClassNotLoadedException ex) {
-                            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
+                    VariableNode var = new VariableNode(lv.name(), lv.typeName(), val);
+                    var.addChildren(getFields(val, depth - 1));
                     vars.add(var);
                 }
             }
@@ -697,58 +689,71 @@ public class Debugger implements VMEventListener {
      */
     protected List<VariableNode> getThisFields(ThreadReference t, int depth) {
         //System.out.println("getting this");
-        List<VariableNode> vars = new ArrayList();
         try {
             if (t.frameCount() > 0) {
                 StackFrame sf = t.frame(0);
                 ObjectReference thisObj = sf.thisObject();
-                if (thisObj != null) { // will be null in native or static methods
-                    //System.out.println("type: " + thisObj.referenceType().name());
-                    for (Field f : thisObj.referenceType().visibleFields()) {
-                        if (f == null) {
-                            System.out.println("field is null!");
-                        }
-                        //System.out.println("recursively adding field: " + f.name());
-                        vars.add(getFieldRecursive(f, thisObj, 0, depth));
-                    }
-                }
+                return getFields(thisObj, depth);
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return vars;
+        return new ArrayList();
     }
 
-    /**
-     * Recursively resolve a field for use in a {@link JTree}. Uses an object
-     * reference as environment. Used by {@link #getLocals} and
-     * {@link #getThisFields}.
-     *
-     * @param field the field to resolve
-     * @param obj the object reference used as environment (must contain the
-     * field to resolve)
-     * @param depth the current depth (in the recursive call)
-     * @param maxDepth the depth to stop recursion at
-     * @return the resolved field
-     */
-    protected VariableNode getFieldRecursive(Field field, ObjectReference obj, int depth, int maxDepth) {
-        // resolve the field to a value using the provided object reference
-        Value val = obj.getValue(field);
-        VariableNode var = new VariableNode(field.name(), field.typeName(), val == null ? "null" : val.toString());
-        //System.out.println("field: " + var);
-
-        if (val != null && depth < maxDepth) {
-            // add all child fields (if field represents an object)
-            if (val instanceof ObjectReference) {
-                ObjectReference env = (ObjectReference) val;
-                //add all children
-                for (Field f : env.referenceType().visibleFields()) {
-                    //System.out.print(String.format(String.format("%%0%dd", depth + 1), 0).replace("0", "  "));
-                    var.addChild(getFieldRecursive(f, env, depth + 1, maxDepth));
+//    /**
+//     * Recursively resolve a field for use in a {@link JTree}. Uses an object
+//     * reference as environment. Used by {@link #getLocals} and
+//     * {@link #getThisFields}.
+//     *
+//     * @param field the field to resolve
+//     * @param obj the object reference used as environment (must contain the
+//     * field to resolve)
+//     * @param depth the current depth (in the recursive call)
+//     * @param maxDepth the depth to stop recursion at
+//     * @return the resolved field
+//     */
+//    protected VariableNode getFieldRecursive(Field field, ObjectReference obj, int depth, int maxDepth) {
+//        // resolve the field to a value using the provided object reference
+//        Value val = obj.getValue(field);
+//        VariableNode var = new VariableNode(field.name(), field.typeName(), val == null ? "null" : val.toString());
+//        //System.out.println("field: " + var);
+//
+//        if (val != null && depth < maxDepth) {
+//            // add all child fields (if field represents an object)
+//            if (val instanceof ObjectReference) {
+//                ObjectReference env = (ObjectReference) val;
+//                //add all children
+//                for (Field f : env.referenceType().visibleFields()) {
+//                    //System.out.print(String.format(String.format("%%0%dd", depth + 1), 0).replace("0", "  "));
+//                    var.addChild(getFieldRecursive(f, env, depth + 1, maxDepth));
+//                }
+//            }
+//        }
+//        return var;
+//    }
+    protected List<VariableNode> getFields(Value value, int depth, int maxDepth) {
+        // remember: Value <- ObjectReference, ArrayReference
+        List<VariableNode> fields = new ArrayList();
+        if (value instanceof ObjectReference) {
+            ObjectReference obj = (ObjectReference) value;
+            // get the fields of this object
+            for (Field field : obj.referenceType().visibleFields()) {
+                Value val = obj.getValue(field); // get the value, may be null
+                VariableNode var = new VariableNode(field.name(), field.typeName(), val);
+                // recursively add children
+                if (val != null && depth < maxDepth) {
+                    var.addChildren(getFields(val, depth + 1, maxDepth));
                 }
+                fields.add(var);
             }
         }
-        return var;
+        return fields;
+    }
+
+    // maxDepth: 0 .. only the fields.
+    protected List<VariableNode> getFields(Value value, int maxDepth) {
+        return getFields(value, 0, maxDepth);
     }
 
     /**
@@ -774,7 +779,7 @@ public class Debugger implements VMEventListener {
                 } catch (AbsentInformationException ex) {
                     Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                stack.add(new DefaultMutableTreeNode(l.declaringType().name() + "." + l.method().name() + ":" + (lineIdx+1)));
+                stack.add(new DefaultMutableTreeNode(l.declaringType().name() + "." + l.method().name() + ":" + (lineIdx + 1)));
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);

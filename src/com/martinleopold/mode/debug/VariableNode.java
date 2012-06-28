@@ -17,6 +17,8 @@
  */
 package com.martinleopold.mode.debug;
 
+import com.sun.jdi.ObjectReference;
+import com.sun.jdi.Value;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -35,7 +37,7 @@ public class VariableNode implements MutableTreeNode {
 
     protected String type;
     protected String name;
-    protected String value;
+    protected Value value;
     List<MutableTreeNode> children = new ArrayList();
     MutableTreeNode parent;
 
@@ -50,18 +52,28 @@ public class VariableNode implements MutableTreeNode {
         this.type = type;
     }
 
-    public VariableNode(String name, String type, Object value) {
+    public VariableNode(String name, String type, Value value) {
         this(name, type);
         setValue(value);
     }
 
-    public void setValue(Object value) {
-        this.value = value.toString();
+    public void setValue(Value value) {
+        this.value = value;
+    }
+
+    public Value getValue() {
+        return value;
     }
 
     public void addChild(VariableNode c) {
         children.add(c);
         c.setParent(this);
+    }
+
+    public void addChildren(List<VariableNode> children) {
+        for (VariableNode child : children) {
+            addChild(child);
+        }
     }
 
     @Override
@@ -86,12 +98,18 @@ public class VariableNode implements MutableTreeNode {
 
     @Override
     public boolean getAllowsChildren() {
-        return isLeaf();
+        return ((Value) value) instanceof ObjectReference;
     }
 
+    /**
+     * This controls the default icon and disclosure triangle.
+     *
+     * @return true, will show "folder" icon and disclosure triangle.
+     */
     @Override
     public boolean isLeaf() {
-        return children.size() == 0;
+        //return children.size() == 0;
+        return !getAllowsChildren();
     }
 
     @Override
@@ -106,7 +124,9 @@ public class VariableNode implements MutableTreeNode {
             str += " (" + type + ")";
         }
         if (value != null) {
-            str += ": " + value;
+            str += ": " + value.toString();
+        } else {
+            str += ": " + "null";
         }
         return str;
     }
@@ -129,7 +149,9 @@ public class VariableNode implements MutableTreeNode {
 
     @Override
     public void setUserObject(Object o) {
-        setValue(o);
+        if (o instanceof Value) {
+            setValue((Value) o);
+        }
     }
 
     @Override
