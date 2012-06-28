@@ -618,14 +618,14 @@ public class Debugger implements VMEventListener {
                 rootNode.add(callStackNode);
 
                 // local variables
-                DefaultMutableTreeNode localVarsNode = new DefaultMutableTreeNode("Locals");
+                DefaultMutableTreeNode localVarsNode = new DefaultMutableTreeNode("Locals at " + currentLocation(t));
                 for (VariableNode var : getLocals(t, 0)) {
                     localVarsNode.add(var);
                 }
                 rootNode.add(localVarsNode);
 
                 // this fields
-                DefaultMutableTreeNode thisNode = new DefaultMutableTreeNode("this");
+                DefaultMutableTreeNode thisNode = new DefaultMutableTreeNode("Class " + thisName(t));
                 for (VariableNode var : getThisFields(t, 0)) {
                     thisNode.add(var);
                 }
@@ -647,6 +647,45 @@ public class Debugger implements VMEventListener {
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    // TODO: doc
+    protected String thisName(ThreadReference t) {
+        try {
+            if (!t.isSuspended() || t.frameCount() == 0) {
+                return "";
+            }
+            return t.frame(0).thisObject().referenceType().name();
+        } catch (IncompatibleThreadStateException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+    }
+
+    // TODO: doc
+    protected String currentLocation(ThreadReference t) {
+        try {
+            if (!t.isSuspended() || t.frameCount() == 0) {
+                return "";
+            }
+            return locationToString(t.frame(0).location());
+        } catch (IncompatibleThreadStateException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+    }
+
+    // TODO: doc
+    // class.method:translated_line_noa
+    protected String locationToString(Location l) {
+        LineID line = locationToLineID(l);
+        int lineNumber;
+        if (line != null) {
+            lineNumber = line.lineIdx() + 1;
+        } else {
+            lineNumber = l.lineNumber();
+        }
+        return l.declaringType().name() + "." + l.method().name() + ":" + lineNumber;
     }
 
     /**
@@ -732,6 +771,7 @@ public class Debugger implements VMEventListener {
 //        }
 //        return var;
 //    }
+    // TODO: doc
     protected List<VariableNode> getFields(Value value, int depth, int maxDepth) {
         // remember: Value <- ObjectReference, ArrayReference
         List<VariableNode> fields = new ArrayList();
@@ -751,6 +791,7 @@ public class Debugger implements VMEventListener {
         return fields;
     }
 
+    // TODO: doc
     // maxDepth: 0 .. only the fields.
     protected List<VariableNode> getFields(Value value, int maxDepth) {
         return getFields(value, 0, maxDepth);
@@ -768,18 +809,7 @@ public class Debugger implements VMEventListener {
         try {
             int i = 0;
             for (StackFrame f : t.frames()) {
-                Location l = f.location();
-                int lineIdx = l.lineNumber() - 1;
-                try {
-                    // line number translation
-                    LineID sketchLine = lineMap.get(LineID.create(l.sourceName(), lineIdx));
-                    if (sketchLine != null) {
-                        lineIdx = sketchLine.lineIdx();
-                    }
-                } catch (AbsentInformationException ex) {
-                    Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                stack.add(new DefaultMutableTreeNode(l.declaringType().name() + "." + l.method().name() + ":" + (lineIdx + 1)));
+                stack.add(new DefaultMutableTreeNode(locationToString(f.location())));
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);

@@ -57,18 +57,18 @@ Icons
 Variable Inspector
 – Order- und File-Icons? Icon nach Datentyp? Primitive jeweils und generisch für Objekte?
 – Kann man die internen und default Vars verstecken?
-– "this" -> Sketch-Name
-– "Locals" -> "Locals at breakpoint #4"? ... "at line #123"?
+x "this" -> Sketch-Name
+x "Locals" -> "Locals at breakpoint #4"? ... "at line #123"?
 
 Editor
 x Kann man prüfen und warnen daß man erst saven muß? ... sonst ist nicht klar warum manchmal die Breakpoints nicht gehen
-– das rosa Highlight sieht sehr nach Fehler aus ... könnte das nicht eine andere Farbe sein? .. grün / blau?
+x das rosa Highlight sieht sehr nach Fehler aus ... könnte das nicht eine andere Farbe sein? .. grün / blau?
 
 Mode
-– Mit einem Breakpoint in draw() scheint println() nicht zu gehen?
-– Mit einem Breakpoint in draw() updated sich die Zeichenfläche nicht ... man sieht also gar nicht was passiert
+x Mit einem Breakpoint in draw() scheint println() nicht zu gehen?
+x Mit einem Breakpoint in draw() updated sich die Zeichenfläche nicht ... man sieht also gar nicht was passiert
 – Braucht man die Ausgabe des fokusierten Codes in der Konsole wirklich? .. und die VM events sind nur für dich zum Debuggen, oder?
-– Die default Breakpoints bei setup() / draw() braucht man nun nicht mehr? ... oder?
+x Die default Breakpoints bei setup() / draw() braucht man nun nicht mehr? ... oder?
 
 
 
@@ -111,13 +111,14 @@ x important missing features
 * iteration
 	* stability
 		x thread safety w/event thread
-		x issues that cause exceptions
-		* issues from feedback
+		! issues that cause exceptions
+		x issues from feedback
 	x refactoring
 		x LineID is a design mess
 		x rid Debugger of view-related functions, especially line highlighting
 	x var.inspector
 		x lazy loading of nested object refs.
+		x more descriptive text for this, locals
 	x breakpoints
 		x setting/modifying at runtime
 		x clear bps on file open, new
@@ -126,8 +127,9 @@ x make debugging work on unsaved sketch
 x kill debuggee vm on sketch close, p5 quit.
 x fix late update of canvas
 ! handle editing during debug session
-* rethink line translation
+! rethink line translation
 * update for current svn
+* remove default breakpoints
 
 
 
@@ -137,7 +139,9 @@ PROTOTYPE 4:
 	* var insp: p5 mode
 		* hide non-processing vars
 		* handle p5 types, arrays
-
+* disallow stepping into invisible code
+* handle debug output
+* forward debuggee streams
 
 
 IMPLEMENTATION:
@@ -273,9 +277,9 @@ x add/rem a bp on the current line: messes up line highlight colors (-> color st
 	at java.awt.AWTEventMulticaster.mouseDragged(AWTEventMulticaster.java:302)
 * disallow stepping into invisible code
 * rethink: isPaused() vs. isBusy()
-
 * remove auto breakpoints
-* 
+* can't set breakpoint in a classes constructor?
+
 
 
 QUESTIONS:
