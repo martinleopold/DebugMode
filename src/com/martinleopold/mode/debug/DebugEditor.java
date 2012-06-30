@@ -263,6 +263,13 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         }
     }
 
+    /**
+     * Event handler called when loading another sketch in this editor. Clears
+     * breakpoints of previous sketch.
+     *
+     * @param path
+     * @return true if a sketch was opened, false if aborted
+     */
     @Override
     protected boolean handleOpenInternal(String path) {
         //System.out.println("handleOpen");
@@ -478,7 +485,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         }
     }
 
-    // TODO: doc
+    /**
+     * Remove all highlights for breakpointed lines.
+     */
     public void clearBreakpointedLines() {
         for (LineHighlight hl : breakpointedLines) {
             hl.clear();

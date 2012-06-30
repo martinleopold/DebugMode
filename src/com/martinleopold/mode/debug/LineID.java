@@ -67,8 +67,9 @@ public class LineID implements DocumentListener {
     }
 
     /**
-     * Static Factory for creating {@link LineID}s. TODO: explain why this is
-     * there
+     * Static Factory for creating {@link LineID}s. Line ids are equal if their
+     * file name and line index are equal. This factory ensures that two equal
+     * lines will also track the same document (if a document is attached).
      *
      * @param fileName the file name
      * @param lineIdx the line index (i.e. line number, starting at 0)
@@ -187,6 +188,12 @@ public class LineID implements DocumentListener {
         trackedLines.remove(this);
     }
 
+    /**
+     * Cleanup. At the very end of this objects life cycle ensure no more events
+     * are dispatched from tracked documents.
+     *
+     * @throws Throwable
+     */
     @Override
     public void finalize() throws Throwable {
         super.finalize();

@@ -42,14 +42,30 @@ public class LineBreakpoint {
         set();
     }
 
+    /**
+     * Get the line id this breakpoint is on.
+     *
+     * @return the line id
+     */
     public LineID lineID() {
         return line;
     }
 
+    /**
+     * Test if this breakpoint is on a certain line.
+     *
+     * @param testLine the line id to test
+     * @return true if this breakpoint is on the given line
+     */
     public boolean isOnLine(LineID testLine) {
         return line.equals(testLine);
     }
 
+    /**
+     * Attach this breakpoint to the VM. Creates and enables a
+     * {@link BreakpointRequest}. VM needs to be paused.
+     */
+    // TODO: check VM status
     public void attach() {
         // find line in java space
         LineID javaLine = dbg.lineMapping().get(line);
@@ -72,6 +88,10 @@ public class LineBreakpoint {
         }
     }
 
+    /**
+     * Detach this breakpoint from the VM. Deletes the
+     * {@link BreakpointRequest}.
+     */
     protected void detach() {
         if (bpr != null) {
             dbg.vm().eventRequestManager().deleteEventRequest(bpr);
@@ -79,6 +99,10 @@ public class LineBreakpoint {
         }
     }
 
+    /**
+     * Set this breakpoint. Adds the line highlight. If Debugger is paused also
+     * attaches the breakpoint by calling {@link #attach()}.
+     */
     protected void set() {
         dbg.editor().addBreakpointedLine(line.lineIdx());
         if (dbg.isPaused()) { // in a paused debug session
@@ -87,6 +111,10 @@ public class LineBreakpoint {
         }
     }
 
+    /**
+     * Remove this breakpoint. Clears the highlight and detaches the breakpoint
+     * if the debugger is paused.
+     */
     public void remove() {
         //System.out.println("removing " + line.lineIdx());
         dbg.editor().removeBreakpointedLine(line.lineIdx());

@@ -517,7 +517,12 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    // TODO: doc
+    /**
+     * Resume all other threads except the one given as parameter. Useful e.g.
+     * to just keep the thread suspended a breakpoint occurred in.
+     *
+     * @param t the thread not to resume
+     */
     protected void resumeOtherThreads(ThreadReference t) {
         if (!isStarted()) {
             return;
@@ -529,7 +534,10 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    // TODO: doc
+    /**
+     * Print info about all current threads. Includes name, status, isSuspended,
+     * isAtBreakpoint.
+     */
     public synchronized void printThreads() {
         if (!isPaused()) {
             return;
@@ -540,6 +548,12 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    /**
+     * Print info about a thread. Includes name, status, isSuspended,
+     * isAtBreakpoint.
+     *
+     * @param t the thread to print info about
+     */
     protected void printThread(ThreadReference t) {
         System.out.println(t.name());
         System.out.println("   is suspended: " + t.isSuspended());
@@ -547,6 +561,19 @@ public class Debugger implements VMEventListener {
         System.out.println("   status: " + threadStatusToString(t.status()));
     }
 
+    /**
+     * Convert a status code returned by {@link ThreadReference#status() } to a
+     * human readable form.
+     *
+     * @param status {@link ThreadReference#THREAD_STATUS_MONITOR},
+     * {@link ThreadReference#THREAD_STATUS_NOT_STARTED},
+     * {@link ThreadReference#THREAD_STATUS_RUNNING},
+     * {@link ThreadReference#THREAD_STATUS_SLEEPING},
+     * {@link ThreadReference#THREAD_STATUS_UNKNOWN},
+     * {@link ThreadReference#THREAD_STATUS_WAIT} or
+     * {@link ThreadReference#THREAD_STATUS_ZOMBIE}
+     * @return String containing readable status code.
+     */
     protected String threadStatusToString(int status) {
         switch (status) {
             case ThreadReference.THREAD_STATUS_MONITOR:
@@ -657,7 +684,12 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    // TODO: doc
+    /**
+     * Get the class name of the current this object in a suspended thread.
+     *
+     * @param t a suspended thread
+     * @return the class name of this
+     */
     protected String thisName(ThreadReference t) {
         try {
             if (!t.isSuspended() || t.frameCount() == 0) {
@@ -670,7 +702,13 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    // TODO: doc
+    /**
+     * Get a description of the current location in a suspended thread. Format:
+     * class.method:translated_line_number
+     *
+     * @param t a suspended thread
+     * @return descriptive string for the given location
+     */
     protected String currentLocation(ThreadReference t) {
         try {
             if (!t.isSuspended() || t.frameCount() == 0) {
@@ -683,8 +721,13 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    // TODO: doc
-    // class.method:translated_line_noa
+    /**
+     * Get a string describing a location. Format:
+     * class.method:translated_line_number
+     *
+     * @param l a location
+     * @return descriptive string for the given location
+     */
     protected String locationToString(Location l) {
         LineID line = locationToLineID(l);
         int lineNumber;
@@ -779,7 +822,15 @@ public class Debugger implements VMEventListener {
 //        }
 //        return var;
 //    }
-    // TODO: doc
+    /**
+     * Recursively get the fields of a {@link Value} for insertion into a
+     * {@link JTree}.
+     *
+     * @param value must be an instance of {@link ObjectReference}
+     * @param depth the current depth
+     * @param maxDepth the depth to stop at
+     * @return list of child fields of the given value
+     */
     protected List<VariableNode> getFields(Value value, int depth, int maxDepth) {
         // remember: Value <- ObjectReference, ArrayReference
         List<VariableNode> fields = new ArrayList();
@@ -799,8 +850,14 @@ public class Debugger implements VMEventListener {
         return fields;
     }
 
-    // TODO: doc
-    // maxDepth: 0 .. only the fields.
+    /**
+     * Recursively get the fields of a {@link Value} for insertion into a
+     * {@link JTree}.
+     *
+     * @param value must be an instance of {@link ObjectReference}
+     * @param maxDepth max recursion depth. 0 will give only direct children
+     * @return list of child fields of the given value
+     */
     protected List<VariableNode> getFields(Value value, int maxDepth) {
         return getFields(value, 0, maxDepth);
     }

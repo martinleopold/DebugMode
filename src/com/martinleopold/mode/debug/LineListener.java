@@ -18,10 +18,18 @@
 package com.martinleopold.mode.debug;
 
 /**
+ * A Listener for line number changes.
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
 public interface LineListener {
 
+    /**
+     * Event handler for line number changes (due to editing).
+     *
+     * @param line the line that has changed
+     * @param oldLineIdx the old line index (0-based)
+     * @param newLineIdx the new line index (0-based)
+     */
     void lineChanged(LineID line, int oldLineIdx, int newLineIdx);
 }

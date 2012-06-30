@@ -64,10 +64,24 @@ public class LineHighlight implements LineListener {
         return bgColor;
     }
 
+    /**
+     * Test if this highlight is on a certain line.
+     *
+     * @param testLine the line to test
+     * @return true if this highlight is on the given line
+     */
     public boolean isOnLine(LineID testLine) {
         return lineID.equals(testLine);
     }
 
+    /**
+     * Event handler for line number changes (due to editing). Will remove the
+     * highlight from the old line number and repaint it at the new location.
+     *
+     * @param line the line that has changed
+     * @param oldLineIdx the old line index (0-based)
+     * @param newLineIdx the new line index (0-based)
+     */
     @Override
     public void lineChanged(LineID line, int oldLineIdx, int newLineIdx) {
         // clear old line
@@ -78,7 +92,10 @@ public class LineHighlight implements LineListener {
         paint();
     }
 
-    // notify this linehighlight that it is no linger used.
+    /**
+     * Notify this linehighlight that it is no linger used.
+     *
+     */
     public void dispose() {
         lineID.removeListener(this);
     }
