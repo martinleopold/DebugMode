@@ -105,7 +105,7 @@ x var inspector
 		x fixed depth
 
 
-PROTOTYPE 3:
+PROTOTYPE 3 (v0.3):
 x important missing features
 	x var inspector: stack trace
 x iteration
@@ -122,15 +122,15 @@ x iteration
 	x breakpoints
 		x setting/modifying at runtime
 		x clear bps on file open, new
-x more code documentation
 x make debugging work on unsaved sketch
 x kill debuggee vm on sketch close, p5 quit.
 x fix late update of canvas
 x remove default breakpoints
-! handle editing during debug session
+! how to handle editing during debug session
 ! rethink line translation
 * update for current svn
-
+* update code documentation
+* disallow stepping into invisible code
 
 
 PROTOTYPE 4:
@@ -142,8 +142,9 @@ PROTOTYPE 4:
 		* show when relevant
 		* grey out when not current
 		* dock to main window
-* disallow stepping into invisible code
-* handle debug output
+	* icon symbols, choice, placement
+	* icon and menu locking
+* handle debug output -> use logging
 * forward debuggee streams
 
 
@@ -281,7 +282,7 @@ x add/rem a bp on the current line: messes up line highlight colors (-> color st
 28.6.2012
 * disallow stepping into invisible code
 * rethink: isPaused() vs. isBusy()
-* remove auto breakpoints
+x remove auto breakpoints
 * can't set breakpoint in a classes constructor?
 
 
@@ -290,7 +291,7 @@ QUESTIONS:
 * p5 alpha errors
 	* file menu takes a long time to open the first time
 	* <Error>: CGContextGetCTM: invalid context 0x0
-x translate: sketch line numbers --> after preprocessing
+x translate: sketch line numbers --> after pre/Users/mlg/Documents/NetBeansProjects/DebugMode/TODO.txtprocessing
 x line background color
 x how to extend p5 classes when all i want is change one member to a subclass
 
@@ -304,6 +305,7 @@ REQUESTS:
 * JEditTextArea: make ComponentHandler, MouseHandler, DragHandler protected
 ! Editor.java: allow setting TextArea without overwriting class and copying/modifying constructor. copying the constructor is not easy due to protected/private fields..
     --> factory method
+
 
 
 OBSERVATIONS:
@@ -322,6 +324,7 @@ OBSERVATIONS:
 		+ better have all hi-priority features 50% done than some random ones at 100%
 	+ iteratively flesh out and refine
 	+ top down view on design
+
 
 
 SYMBOLS:
