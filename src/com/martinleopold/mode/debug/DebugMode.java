@@ -31,7 +31,7 @@ import processing.mode.java.JavaMode;
  */
 public class DebugMode extends JavaMode {
 
-    public static final boolean VERBOSE_LOGGING = false;
+    public static final boolean VERBOSE_LOGGING = true;
 
     // important inherited fields:
     // protected Base base;
@@ -45,7 +45,7 @@ public class DebugMode extends JavaMode {
         Logger logger = Logger.getLogger("");
         //Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME); // doesn't work on os x
         if (VERBOSE_LOGGING) {
-             logger.setLevel(Level.ALL);
+            logger.setLevel(Level.ALL);
         } else {
             logger.setLevel(Level.WARNING);
         }

@@ -25,9 +25,7 @@ import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTree;
@@ -35,6 +33,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import processing.app.Sketch;
+import processing.app.SketchCode;
 
 /**
  * Main controller class for debugging mode. Mainly works with DebugEditor as
@@ -54,7 +53,7 @@ public class Debugger implements VMEventListener {
     protected ReferenceType mainClass;
     protected String srcPath; // path to the src folder of the current build
     protected DebugBuild build; // todo: might not need to be global
-    protected Map<LineID, LineID> lineMap = new HashMap(); // maps source lines from "sketch-space" to "java-space" and vice-versa
+    //protected Map<LineID, LineID> lineMap = new HashMap(); // maps source lines from "sketch-space" to "java-space" and vice-versa
     protected List<LineBreakpoint> breakpoints = new ArrayList();
     protected StepRequest requestedStep; // the step request we are currently in, or null if not in a step
 
@@ -85,9 +84,9 @@ public class Debugger implements VMEventListener {
         return mainClass;
     }
 
-    public Map<LineID, LineID> lineMapping() {
-        return lineMap;
-    }
+//    public Map<LineID, LineID> lineMapping() {
+//        return lineMap;
+//    }
 
     /**
      * Access the editor associated with this debugger.
@@ -116,11 +115,11 @@ public class Debugger implements VMEventListener {
             build = new DebugBuild(sketch);
 
             Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "building sketch: {0}", sketch.getName());
-            LineMapping.addLineNumbers(sketch); // annotate
+            //LineMapping.addLineNumbers(sketch); // annotate
             mainClassName = build.build(false);
-            LineMapping.removeLineNumbers(sketch); // annotate
-
+            //LineMapping.removeLineNumbers(sketch); // annotate
             Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "class: {0}", mainClassName);
+
             // folder with assembled/preprocessed src
             srcPath = build.getSrcFolder().getPath();
             Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "build src: {0}", srcPath);
@@ -129,12 +128,7 @@ public class Debugger implements VMEventListener {
 
             if (mainClassName != null) {
                 // generate the source line mapping
-                lineMap = LineMapping.generateMapping(srcPath + File.separator + mainClassName + ".java");
-                /*
-                 * for (Entry<LineID, LineID> entry : lineMap.entrySet()) {
-                 * System.out.println(entry.getKey() + " -> " +
-                 * entry.getValue()); }
-                 */
+                //lineMap = LineMapping.generateMapping(srcPath + File.separator + mainClassName + ".java");
 
                 Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "launching debuggee runtime");
                 runtime = new DebugRunner(build, editor);
@@ -1024,30 +1018,30 @@ public class Debugger implements VMEventListener {
      * @param l {@link Location} object that describes source location to
      * select.
      */
-    protected void selectSourceLocation(Location l) {
-        try {
-            LineID sketchLine = lineMap.get(LineID.create(l.sourceName(), l.lineNumber()));
-            editor.clearSelection();
-            if (sketchLine != null) {
-                int lineIdx = sketchLine.lineIdx(); // 0-based line number
-                String tab = sketchLine.fileName();
-                //System.out.println("sketch line: " + sketchLine);
-
-                // switch to tab
-                Sketch s = editor.getSketch();
-                for (int i = 0; i < s.getCodeCount(); i++) {
-                    if (tab.equals(s.getCode(i).getFileName())) {
-                        s.setCurrentCode(i);
-                        break;
-                    }
-                }
-                // select line
-                editor.selectLine(lineIdx);
-            }
-        } catch (AbsentInformationException ex) {
-            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
+//    protected void selectSourceLocation(Location l) {
+//        try {
+//            LineID sketchLine = lineMap.get(LineID.create(l.sourceName(), l.lineNumber()));
+//            editor.clearSelection();
+//            if (sketchLine != null) {
+//                int lineIdx = sketchLine.lineIdx(); // 0-based line number
+//                String tab = sketchLine.fileName();
+//                //System.out.println("sketch line: " + sketchLine);
+//
+//                // switch to tab
+//                Sketch s = editor.getSketch();
+//                for (int i = 0; i < s.getCodeCount(); i++) {
+//                    if (tab.equals(s.getCode(i).getFileName())) {
+//                        s.setCurrentCode(i);
+//                        break;
+//                    }
+//                }
+//                // select line
+//                editor.selectLine(lineIdx);
+//            }
+//        } catch (AbsentInformationException ex) {
+//            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//    }
 
     /**
      * Translate a java source location to a sketch line id.
@@ -1057,10 +1051,55 @@ public class Debugger implements VMEventListener {
      */
     protected LineID locationToLineID(Location l) {
         try {
-            return lineMap.get(LineID.create(l.sourceName(), l.lineNumber() - 1));
+            //return lineMap.get(LineID.create(l.sourceName(), l.lineNumber() - 1));
+            return javaToSketchLine(LineID.create(l.sourceName(), l.lineNumber() - 1));
+
         } catch (AbsentInformationException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
+    }
+
+    public LineID javaToSketchLine(LineID javaLine) {
+        Sketch sketch = editor.getSketch();
+        // first check to see if it's a .java file
+        for (int i = 0; i < sketch.getCodeCount(); i++) {
+            SketchCode code = sketch.getCode(i);
+            if (code.isExtension("java")) {
+                if (javaLine.fileName().equals(code.getFileName())) {
+                    return LineID.create(code.getFileName(), javaLine.lineIdx());
+                }
+            }
+        }
+
+        // If not the preprocessed file at this point, then need to get out
+        if (!javaLine.fileName().equals(sketch.getName() + ".java")) {
+            return null;
+        }
+
+        // this section searches through the list of .pde files
+        for (int i = sketch.getCodeCount()-1; i >= 0 ; i--) {
+            SketchCode code = sketch.getCode(i);
+
+            if (code.isExtension("pde") && code.getPreprocOffset() <= javaLine.lineIdx()) {
+                return LineID.create(code.getFileName(), javaLine.lineIdx() - code.getPreprocOffset());
+            }
+        }
+
+        return null;
+    }
+
+    // TODO: handle other cases
+    public LineID sketchToJavaLine(LineID sketchLine) {
+        // this section searches through the list of .pde files
+        Sketch sketch = editor.getSketch();
+        for (int i = 0; i < sketch.getCodeCount(); i++) {
+            SketchCode code = sketch.getCode(i);
+
+            if (code.getFileName().equals(sketchLine.fileName())) {
+                return LineID.create(sketch.getName() + ".java", sketchLine.lineIdx() + code.getPreprocOffset());
+            }
+        }
+        return null;
     }
 }

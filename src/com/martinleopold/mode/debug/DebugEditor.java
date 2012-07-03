@@ -49,9 +49,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     // highlighting
     //public static final Color BREAKPOINT_COLOR = new Color(255, 170, 170); // the background color for highlighting lines
     //public static final Color BREAKPOINT_COLOR = new Color(180, 210, 255); // the background color for highlighting lines
-    public static final Color BREAKPOINT_COLOR = new Color(230, 240, 255); // the background color for highlighting lines
+    public static final Color BREAKPOINT_COLOR = new Color(250, 250, 250); // the background color for highlighting lines
     public static final Color CURRENT_LINE_COLOR = new Color(255, 255, 200); // the background color for highlighting lines
-    public static final String BREAKPOINT_MARKER = "-";
+    public static final String BREAKPOINT_MARKER = "=";
     public static final String CURRENT_LINE_MARKER = ">";
     protected List<LineHighlight> breakpointedLines = new ArrayList(); // breakpointed lines
     protected LineHighlight currentLine; // line the debugger is currently suspended at

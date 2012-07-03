@@ -68,7 +68,7 @@ public class LineBreakpoint {
     // TODO: check VM status
     public void attach() {
         // find line in java space
-        LineID javaLine = dbg.lineMapping().get(line);
+        LineID javaLine = dbg.sketchToJavaLine(line);
         if (javaLine == null) {
             Logger.getLogger(LineBreakpoint.class.getName()).log(Level.WARNING, "Couldn''t find line {0} in the java code", line);
             return;
