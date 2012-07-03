@@ -126,11 +126,9 @@ x make debugging work on unsaved sketch
 x kill debuggee vm on sketch close, p5 quit.
 x fix late update of canvas
 x remove default breakpoints
-! how to handle editing during debug session
-! rethink line translation
-* update for current svn
-* update code documentation
-* disallow stepping into invisible code
+x how to handle editing during debug session
+x update for current svn
+x update code documentation
 
 
 PROTOTYPE 4:
@@ -144,8 +142,13 @@ PROTOTYPE 4:
 		* dock to main window
 	* icon symbols, choice, placement
 	* icon and menu locking
+
 * handle debug output -> use logging
 * forward debuggee streams
+* disallow stepping into invisible code
+* track all line changes when debugging 
+! rethink line translation
+	-> dynamic translation while debugging?
 
 
 IMPLEMENTATION:
