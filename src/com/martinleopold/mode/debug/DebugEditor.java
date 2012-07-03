@@ -413,7 +413,8 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
     /**
      * Set the line to highlight as currently suspended at. Will override the
-     * breakpoint color, if set. Switches to the appropriate tab.
+     * breakpoint color, if set. Switches to the appropriate tab and scroll to
+     * the line by placing the cursor there.
      *
      * @param line the line to highlight as current suspended line
      */
@@ -423,6 +424,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             return; // safety, e.g. when no line mapping is found and the null line is used.
         }
         switchToTab(line.fileName());
+        // scroll to line, by setting the cursor
+        cursorToLineStart(line.lineIdx());
+        // highlight line
         currentLine = new LineHighlight(line.lineIdx(), CURRENT_LINE_COLOR, this);
         currentLine.setMarker(CURRENT_LINE_MARKER);
     }
