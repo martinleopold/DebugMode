@@ -18,6 +18,8 @@
 package com.martinleopold.mode.debug;
 
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import processing.app.Base;
 import processing.app.EditorState;
 import processing.mode.java.JavaMode;
@@ -29,6 +31,8 @@ import processing.mode.java.JavaMode;
  */
 public class DebugMode extends JavaMode {
 
+    public static final boolean VERBOSE_LOGGING = false;
+
     // important inherited fields:
     // protected Base base;
     public DebugMode(Base base, File folder) {
@@ -36,6 +40,15 @@ public class DebugMode extends JavaMode {
         // output version from manifest file
         Package p = DebugMode.class.getPackage();
         System.out.println(p.getImplementationTitle() + " (v" + p.getImplementationVersion() + ")");
+
+        // set logging level
+        Logger logger = Logger.getLogger("");
+        //Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME); // doesn't work on os x
+        if (VERBOSE_LOGGING) {
+             logger.setLevel(Level.ALL);
+        } else {
+            logger.setLevel(Level.WARNING);
+        }
     }
 
     /**

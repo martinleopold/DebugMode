@@ -73,7 +73,7 @@ x Braucht man die Ausgabe des fokusierten Codes in der Konsole wirklich? .. und 
 x Die default Breakpoints bei setup() / draw() braucht man nun nicht mehr? ... oder?
 
 2012-06-29
-1)
+x 1)
 Wenn man steppt (step in) und die Zeile ist in einem anderen Tab, dann stimmt zwar das Highlight, aber der Textview scrollt nicht an die Stelle ... ist das unser oder Ben's Problem?
 
 2)
