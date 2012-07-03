@@ -460,6 +460,12 @@ public class Debugger implements VMEventListener {
                 mgr.deleteEventRequest(se.request());
                 requestedStep = null; // mark that there is no step request pending
                 paused = true;
+
+                // disallow stepping into invisible lines
+                if (locationToLineID(se.location()) == null) {
+                    //continueDebug();
+                    stepOut();
+                }
             } else if (e instanceof VMDisconnectEvent) {
                 started = false;
                 // clear line highlight
