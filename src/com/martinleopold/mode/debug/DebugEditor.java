@@ -555,6 +555,8 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         if (ta != null) { // can be null when setCode is called the first time (in constructor)
             // clear all line backgrounds
             ta.clearLineBgColors();
+            // clear all gutter text
+            ta.clearGutterText();
             // load appropriate line backgrounds for tab
             // first paint breakpoints
             for (LineHighlight hl : breakpointedLines) {

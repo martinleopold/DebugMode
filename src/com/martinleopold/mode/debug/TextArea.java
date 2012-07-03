@@ -85,6 +85,13 @@ public class TextArea extends JEditTextArea {
         painter.invalidateLine(lineIdx);
     }
 
+    public void clearGutterText() {
+        for (int lineIdx : gutterText.keySet()) {
+            painter.invalidateLine(lineIdx);
+        }
+        gutterText.clear();
+    }
+
     public String getGutterText(int lineIdx) {
         return gutterText.get(lineIdx);
     }
