@@ -20,6 +20,8 @@ package com.martinleopold.mode.debug;
 import com.sun.jdi.VMDisconnectedException;
 import com.sun.jdi.event.EventQueue;
 import com.sun.jdi.event.EventSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Reader Thread for VM Events. Constantly monitors a VMs EventQueue for new
@@ -58,10 +60,9 @@ public class VMEventReader extends Thread {
                  */
             }
         } catch (VMDisconnectedException e) {
-            System.out.println("VMEventReader quit on VM disconnect");
+            Logger.getLogger(VMEventReader.class.getName()).log(Level.INFO, "VMEventReader quit on VM disconnect");
         } catch (Exception e) {
-            System.err.println("VMEventReader quit: " + e);
-            e.printStackTrace();
+            Logger.getLogger(VMEventReader.class.getName()).log(Level.SEVERE, "VMEventReader quit", e);
         }
     }
 }

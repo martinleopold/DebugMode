@@ -93,15 +93,11 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
      * @param x
      */
     protected void paintLineBgColor(Graphics gfx, int line, int x) {
-        //System.out.println("1");
         int y = ta.lineToY(line);
-        //System.out.println("2");
         y += fm.getLeading() + fm.getMaxDescent();
-        //System.out.println("3");
         int height = fm.getHeight();
 
         // get the color
-        //System.out.println("4");
         Color col = ta.getLineBgColor(line);
         //System.out.print("bg line " + line + ": ");
         // no need to paint anything
@@ -110,9 +106,7 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
             return;
         }
         // paint line background
-        //System.out.println("5");
         gfx.setColor(col);
-        //System.out.println("6");
         gfx.fillRect(0, y, getWidth(), height);
     }
 }

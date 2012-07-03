@@ -20,6 +20,8 @@ package com.martinleopold.mode.debug;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import processing.app.Sketch;
 import processing.app.SketchCode;
 
@@ -111,10 +113,10 @@ public class LineMapping {
 
             r.close();
         } catch (FileNotFoundException ex) {
-            System.err.println(ex);
+            Logger.getLogger(LineMapping.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         } catch (IOException ex) {
-            System.err.println(ex);
+            Logger.getLogger(LineMapping.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
         return map;

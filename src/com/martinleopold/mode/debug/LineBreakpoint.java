@@ -70,19 +70,19 @@ public class LineBreakpoint {
         // find line in java space
         LineID javaLine = dbg.lineMapping().get(line);
         if (javaLine == null) {
-            System.out.println("Couldn't find line " + line + " in the java code");
+            Logger.getLogger(LineBreakpoint.class.getName()).log(Level.WARNING, "Couldn''t find line {0} in the java code", line);
             return;
         }
         try {
             List<Location> locations = dbg.mainClass().locationsOfLine(javaLine.lineIdx() + 1);
             if (locations.isEmpty()) {
-                System.out.println("no location found for line " + line + " -> " + javaLine);
+                Logger.getLogger(LineBreakpoint.class.getName()).log(Level.WARNING, "no location found for line {0} -> {1}", new Object[]{line, javaLine});
                 return;
             }
             // use first found location
             bpr = dbg.vm().eventRequestManager().createBreakpointRequest(locations.get(0));
             bpr.enable();
-            System.out.println(line + " -> " + javaLine);
+            Logger.getLogger(LineBreakpoint.class.getName()).log(Level.INFO, "attached breakpoint to {0} -> {1}", new Object[]{line, javaLine});
         } catch (AbsentInformationException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
         }
