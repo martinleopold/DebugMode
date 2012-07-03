@@ -47,9 +47,12 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     //protected EditorToolbar toolbar;
 
     // highlighting
-    //public static final Color BREAKPOINT_COLOR = new Color(255, 170, 170); // the background color for highlighting elines
-    public static final Color BREAKPOINT_COLOR = new Color(180, 210, 255); // the background color for highlighting elines
-    public static final Color CURRENT_LINE_COLOR = new Color(255, 255, 0); // the background color for highlighting lines
+    //public static final Color BREAKPOINT_COLOR = new Color(255, 170, 170); // the background color for highlighting lines
+    //public static final Color BREAKPOINT_COLOR = new Color(180, 210, 255); // the background color for highlighting lines
+    public static final Color BREAKPOINT_COLOR = new Color(230, 240, 255); // the background color for highlighting lines
+    public static final Color CURRENT_LINE_COLOR = new Color(255, 255, 200); // the background color for highlighting lines
+    public static final String BREAKPOINT_MARKER = "-";
+    public static final String CURRENT_LINE_MARKER = ">";
     protected List<LineHighlight> breakpointedLines = new ArrayList(); // breakpointed lines
     protected LineHighlight currentLine; // line the debugger is currently suspended at
     // menus
@@ -421,6 +424,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         }
         switchToTab(line.fileName());
         currentLine = new LineHighlight(line.lineIdx(), CURRENT_LINE_COLOR, this);
+        currentLine.setMarker(CURRENT_LINE_MARKER);
     }
 
     /**
@@ -450,6 +454,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public void addBreakpointedLine(int lineIdx) {
         LineHighlight hl = new LineHighlight(lineIdx, BREAKPOINT_COLOR, this);
+        hl.setMarker(BREAKPOINT_MARKER);
         breakpointedLines.add(hl);
         // repaint current line if it's on this line
         if (currentLine != null && currentLine.lineID().equals(getLineIDInCurrentTab(lineIdx))) {

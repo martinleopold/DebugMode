@@ -19,6 +19,8 @@ package com.martinleopold.mode.debug;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import javax.swing.text.Segment;
+import javax.swing.text.Utilities;
 import processing.app.syntax.TextAreaDefaults;
 import processing.app.syntax.TokenMarker;
 
@@ -47,8 +49,40 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
     @Override
     protected void paintLine(Graphics gfx, TokenMarker tokenMarker,
             int line, int x) {
-        paintLineBgColor(gfx, line, x);
-        super.paintLine(gfx, tokenMarker, line, x);
+
+        // paint gutter
+        paintGutterBgColor(gfx, line, x);
+
+        paintLineBgColor(gfx, line, x + ta.gutterWidth());
+
+        // paint gutter symbol
+        paintGutterText(gfx, line, x);
+
+        super.paintLine(gfx, tokenMarker, line, x + ta.gutterWidth());
+    }
+
+    protected void paintGutterBgColor(Graphics gfx, int line, int x) {
+        gfx.setColor(ta.gutterColor);
+        int y = ta.lineToY(line) + fm.getLeading() + fm.getMaxDescent();
+        int height = fm.getHeight();
+        gfx.fillRect(0, y, ta.gutterWidth(), height);
+    }
+
+    protected void paintGutterText(Graphics gfx, int line, int x) {
+        String text = ta.getGutterText(line);
+        if (text == null) return;
+
+        gfx.setFont(getFont());
+        gfx.setColor(getForeground());
+        int y = ta.lineToY(line) + fm.getHeight();
+
+        //int len = text.length() > ta.gutterChars ? ta.gutterChars : text.length();
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder(), y, gfx, this,0);
+
+            // Draw characters via input method.
+//    if (compositionTextPainter != null && compositionTextPainter.hasComposedTextLayout()) {
+//      compositionTextPainter.draw(gfx, lineHighlightColor);
+//    }
     }
 
     /**

@@ -29,6 +29,7 @@ public class LineHighlight implements LineListener {
     protected DebugEditor editor; // the view, used for highlighting lines by setting a background color
     protected Color bgColor; // the background color for highlighting lines
     protected LineID lineID;
+    protected String marker;
 
     /**
      * Create a {@link LineHighlight} on the current tab.
@@ -43,6 +44,11 @@ public class LineHighlight implements LineListener {
         this.editor = editor;
         lineID.addListener(this);
         lineID.startTracking(editor.currentDocument()); // todo: overwrite a previous doc?
+        paint();
+    }
+
+    public void setMarker(String marker) {
+        this.marker = marker;
         paint();
     }
 
@@ -87,6 +93,7 @@ public class LineHighlight implements LineListener {
         // clear old line
         if (editor.isInCurrentTab(LineID.create(line.fileName(), oldLineIdx))) {
             editor.textArea().clearLineBgColor(oldLineIdx);
+            editor.textArea().clearGutterText(oldLineIdx);
         }
         // paint new line
         paint();
@@ -107,6 +114,9 @@ public class LineHighlight implements LineListener {
     public void paint() {
         if (editor.isInCurrentTab(lineID)) {
             editor.textArea().setLineBgColor(lineID.lineIdx(), bgColor);
+            if (marker != null) {
+                editor.textArea().setGutterText(lineID.lineIdx(), marker);
+            }
         }
     }
 
@@ -116,6 +126,7 @@ public class LineHighlight implements LineListener {
     public void clear() {
         if (editor.isInCurrentTab(lineID)) {
             editor.textArea().clearLineBgColor(lineID.lineIdx());
+            editor.textArea().clearGutterText(lineID.lineIdx());
         }
     }
 }
