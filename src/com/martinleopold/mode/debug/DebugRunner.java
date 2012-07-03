@@ -20,7 +20,9 @@ package com.martinleopold.mode.debug;
 import com.sun.jdi.VirtualMachine;
 import processing.app.RunnerListener;
 import processing.app.SketchException;
+import processing.app.exec.StreamRedirectThread;
 import processing.mode.java.JavaBuild;
+import processing.mode.java.runner.MessageSiphon;
 
 /**
  * Runs a JavaBuild. Launches the build in a new debuggee VM.
@@ -92,7 +94,23 @@ public class DebugRunner extends processing.mode.java.runner.Runner {
          *
          */
         vm = launchVirtualMachine(machineParamList, sketchParamList); // will return null on failure
+        if (vm != null) {
+            redirectStreams(vm);
+        }
         return vm;
+    }
+
+    /**
+     * Redirect a VMs output and error streams to System.out and System.err
+     *
+     * @param vm the VM
+     */
+    protected void redirectStreams(VirtualMachine vm) {
+        MessageSiphon ms = new MessageSiphon(vm.process().getErrorStream(), this);
+        errThread = ms.getThread();
+        outThread = new StreamRedirectThread("VM output reader", vm.process().getInputStream(), System.out);
+        errThread.start();
+        outThread.start();
     }
 
     /**
