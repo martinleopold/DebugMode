@@ -185,12 +185,12 @@ PROTOTYPE 4:
 		* grey out when not current
 		* dock to main window
 
-~ handle debug output -> use logging
+x handle debug output -> use logging
 x forward debuggee streams
 x disallow stepping into invisible code
-* track all line changes when debugging 
 ! rethink line translation
-	-> dynamic translation while debugging?
+	* track all line changes when debugging 
+	* dynamic translation while debugging?
 
 
 
@@ -330,6 +330,12 @@ x disallow stepping into invisible code
 * rethink: isPaused() vs. isBusy()
 x remove auto breakpoints
 * can't set breakpoint in a classes constructor?
+3.7.2012
+? can i make a modular Editor? (no matter how ugly?)
+* gutter fg color, bg color, per line. general bg color, trennlinie?
+! stepping out of println() returns to the same line, leads to NullPointerException when done multiple times. + VMMismatchException when restarting dbg
+* change logger console format to something more readable
+x allow setting log-level
 
 
 
