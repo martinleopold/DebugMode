@@ -25,8 +25,10 @@ import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -180,6 +182,8 @@ public class Debugger implements VMEventListener {
                 // test setting a breakpoint on setup()
                 //Location
                 //vm.eventRequestManager().createBreakpointRequest(null);
+
+                startTrackingLineChanges();
             }
         } catch (Exception e) {
             editor.statusError(e);
@@ -203,6 +207,7 @@ public class Debugger implements VMEventListener {
             //clearHighlight();
             editor.clearCurrentLine();
         }
+        stopTrackingLineChanges();
         started = false;
     }
 
@@ -480,6 +485,7 @@ public class Debugger implements VMEventListener {
 
                 //printSourceLocation(currentThread);
                 editor.setCurrentLine(locationToLineID(be.location()));
+
                 updateVariableInspector(currentThread);
 
                 // hit a breakpoint during a step, need to cancel the step.
@@ -513,9 +519,10 @@ public class Debugger implements VMEventListener {
                     stepOut();
                 }
             } else if (e instanceof VMDisconnectEvent) {
-                started = false;
-                // clear line highlight
-                editor.clearCurrentLine();
+//                started = false;
+//                // clear line highlight
+//                editor.clearCurrentLine();
+                stopDebug();
             } else if (e instanceof VMDeathEvent) {
                 started = false;
             }
@@ -1105,7 +1112,7 @@ public class Debugger implements VMEventListener {
     protected LineID locationToLineID(Location l) {
         try {
             //return lineMap.get(LineID.create(l.sourceName(), l.lineNumber() - 1));
-            return javaToSketchLine(LineID.create(l.sourceName(), l.lineNumber() - 1));
+            return javaToSketchLine(new LineID(l.sourceName(), l.lineNumber() - 1));
 
         } catch (AbsentInformationException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
@@ -1127,7 +1134,7 @@ public class Debugger implements VMEventListener {
         SketchCode tab = editor.getTab(javaLine.fileName());
         if (tab != null && tab.isExtension("java")) {
             // can translate 1:1
-            return javaLine;
+            return runtimeTransformSketchLine(javaLine);
         }
 
 //        for (int i = 0; i < sketch.getCodeCount(); i++) {
@@ -1152,11 +1159,17 @@ public class Debugger implements VMEventListener {
             // ignore .java files
             // the tabs offset must not be greater than the java line number
             if (tab.isExtension("pde") && tab.getPreprocOffset() <= javaLine.lineIdx()) {
-                return LineID.create(tab.getFileName(), javaLine.lineIdx() - tab.getPreprocOffset());
+                return runtimeTransformSketchLine(new LineID(tab.getFileName(), javaLine.lineIdx() - tab.getPreprocOffset()));
             }
         }
 
         return null;
+    }
+
+    protected LineID runtimeTransformSketchLine(LineID line) {
+        LineID transformed = runtimeLineChanges.get(line);
+        if (transformed == null) return line;
+        return transformed;
     }
 
     /**
@@ -1166,6 +1179,8 @@ public class Debugger implements VMEventListener {
      * @return the corresponding java line id or null if failed to translate
      */
     public LineID sketchToJavaLine(LineID sketchLine) {
+        sketchLine = runtimeTransformSketchLine(sketchLine);
+
         // check if there is a tab for this line
         SketchCode tab = editor.getTab(sketchLine.fileName());
         if (tab == null) {
@@ -1180,6 +1195,36 @@ public class Debugger implements VMEventListener {
 
         // the java file has a name sketchname.java
         // just add the tabs offset to get the java name
-        return LineID.create(editor.getSketch().getName() + ".java", sketchLine.lineIdx() + tab.getPreprocOffset());
+        LineID javaLine = new LineID(editor.getSketch().getName() + ".java", sketchLine.lineIdx() + tab.getPreprocOffset());
+        return javaLine;
+    }
+
+    // for the current tab track all line number changes
+    Map<LineID, LineID> runtimeLineChanges = new HashMap();
+    //Set<String> runtimeTabsTracked = new HashSet();
+
+    protected void startTrackingLineChanges() {
+        SketchCode tab = editor.getSketch().getCurrentCode();
+//        if (runtimeTabsTracked.contains(tab.getFileName())) {
+//            return;
+//        }
+
+        for (int i=0; i<tab.getLineCount(); i++) {
+            LineID old = new LineID(tab.getFileName(), i);
+            LineID tracked = new LineID(tab.getFileName(), i);
+            tracked.startTracking(editor.currentDocument());
+            runtimeLineChanges.put(old, tracked);
+        }
+        //runtimeTabsTracked.add(tab.getFileName());
+        System.out.println("tracking tab: " + tab.getFileName());
+    }
+
+    protected void stopTrackingLineChanges() {
+        System.out.println("stop tracking line changes");
+        for (LineID tracked : runtimeLineChanges.values()) {
+            tracked.stopTracking();
+        }
+        runtimeLineChanges.clear();
+        //runtimeTabsTracked.clear();
     }
 }

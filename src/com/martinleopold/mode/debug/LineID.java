@@ -36,16 +36,22 @@ import javax.swing.text.Position;
  */
 public class LineID implements DocumentListener {
 
-    protected static Set<LineID> trackedLines = new HashSet();
+    //protected static Set<LineID> trackedLines = new HashSet();
     protected String fileName; // the filename
     protected int lineIdx; // the line number, 0-based
     protected Document doc; // the Document to use for line number tracking
     protected Position pos; // the Position acquired during line number tracking
     protected Set<LineListener> listeners = new HashSet(); // listeners for line number changes
 
-    private LineID(String fileName, int lineIdx) {
+    protected static int count = 0;
+    protected static int tracked = 0;
+
+    public LineID(String fileName, int lineIdx) {
         this.fileName = fileName;
         this.lineIdx = lineIdx;
+        //count++;
+        //System.out.println("creating line id: " + this + " " + count);
+
     }
 
     /**
@@ -66,27 +72,28 @@ public class LineID implements DocumentListener {
         return lineIdx;
     }
 
-    /**
-     * Static Factory for creating {@link LineID}s. Line ids are equal if their
-     * file name and line index are equal. This factory ensures that two equal
-     * lines will also track the same document (if a document is attached).
-     *
-     * @param fileName the file name
-     * @param lineIdx the line index (i.e. line number, starting at 0)
-     * @return the line id
-     */
-    public static LineID create(String fileName, int lineIdx) {
-        // check if this was already created
-        LineID line = new LineID(fileName, lineIdx);
-        if (trackedLines.contains(line)) {
-            for (LineID checkLine : trackedLines) {
-                if (checkLine.equals(line)) {
-                    return checkLine;
-                }
-            }
-        }
-        return line;
-    }
+//    /**
+//     * Static Factory for creating {@link LineID}s. Line ids are equal if their
+//     * file name and line index are equal. This factory ensures that two equal
+//     * lines will also track the same document (if a document is attached).
+//     *
+//     * @param fileName the file name
+//     * @param lineIdx the line index (i.e. line number, starting at 0)
+//     * @return the line id
+//     */
+//    public static LineID create(String fileName, int lineIdx) {
+//        // check if this was already created
+//        LineID line = new LineID(fileName, lineIdx);
+//        if (trackedLines.contains(line)) {
+//            for (LineID checkLine : trackedLines) {
+//                if (checkLine.equals(line)) {
+//                    System.out.println("recylce line: " + checkLine);
+//                    return checkLine;
+//                }
+//            }
+//        }
+//        return line;
+//    }
 
     @Override
     public int hashCode() {
@@ -150,6 +157,7 @@ public class LineID implements DocumentListener {
     // multiple startTracking calls will replace the tracked document.
     // whoever wants a tracked line should track it... and add itself as listener if necessary. (LineHighlight, Breakpoint.)
     public synchronized void startTracking(Document doc) {
+        System.out.println("tracking: " + this);
         if (doc == null) {
             return; // null arg
         }
@@ -167,38 +175,38 @@ public class LineID implements DocumentListener {
             this.doc = doc;
             doc.addDocumentListener(this);
             //System.out.println("creating position @ " + pos.getOffset());
-            trackedLines.add(this);
+            //trackedLines.add(this);
         } catch (BadLocationException ex) {
             Logger.getLogger(LineID.class.getName()).log(Level.SEVERE, null, ex);
             pos = null;
             this.doc = null;
         }
+
+        System.out.println("tracked: " + ++tracked);
+
     }
 
     /**
-     * Notify this {@link LineHighlight} that it is no longer in use. Will stop
-     * position tracking. Call this when this {@link LineHighlight} is no longer
+     * Notify this {@link LineID} that it is no longer in use. Will stop
+     * position tracking. Call this when this {@link LineID} is no longer
      * needed.
      */
-    protected synchronized void stopTracking() {
+    public synchronized void stopTracking() {
         if (doc != null) {
             doc.removeDocumentListener(this);
             doc = null;
         }
-        trackedLines.remove(this);
+        //trackedLines.remove(this);
+        //System.out.println("tracked: " + --tracked);
     }
 
-    /**
-     * Cleanup. At the very end of this objects life cycle ensure no more events
-     * are dispatched from tracked documents.
-     *
-     * @throws Throwable
-     */
-    @Override
-    public void finalize() throws Throwable {
-        super.finalize();
-        stopTracking();
-    }
+
+//    @Override
+//    public void finalize() throws Throwable {
+//        super.finalize();
+//        count--;
+//        System.out.println("GC: " + this + " " + count);
+//    }
 
     /**
      * Update the tracked position. Will notify listeners if line number has

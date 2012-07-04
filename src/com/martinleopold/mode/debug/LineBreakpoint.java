@@ -147,6 +147,7 @@ public class LineBreakpoint implements ClassLoadListener {
             // immediately remove the breakpoint
             detach();
         }
+        line.stopTracking();
     }
 
 //    public void enable() {

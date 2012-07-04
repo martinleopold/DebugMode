@@ -91,7 +91,7 @@ public class LineHighlight implements LineListener {
     @Override
     public void lineChanged(LineID line, int oldLineIdx, int newLineIdx) {
         // clear old line
-        if (editor.isInCurrentTab(LineID.create(line.fileName(), oldLineIdx))) {
+        if (editor.isInCurrentTab(new LineID(line.fileName(), oldLineIdx))) {
             editor.textArea().clearLineBgColor(oldLineIdx);
             editor.textArea().clearGutterText(oldLineIdx);
         }
@@ -100,11 +100,12 @@ public class LineHighlight implements LineListener {
     }
 
     /**
-     * Notify this linehighlight that it is no linger used.
+     * Notify this line highlight that it is no linger used.
      *
      */
     public void dispose() {
         lineID.removeListener(this);
+        lineID.stopTracking();
     }
 
     /**

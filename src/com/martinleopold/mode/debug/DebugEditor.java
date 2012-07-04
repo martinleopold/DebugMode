@@ -49,9 +49,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     // highlighting
     //public static final Color BREAKPOINT_COLOR = new Color(255, 170, 170); // the background color for highlighting lines
     //public static final Color BREAKPOINT_COLOR = new Color(180, 210, 255); // the background color for highlighting lines
-    public static final Color BREAKPOINT_COLOR = new Color(250, 250, 250); // the background color for highlighting lines
+    public static final Color BREAKPOINT_COLOR = new Color(240, 240, 240); // the background color for highlighting lines
     public static final Color CURRENT_LINE_COLOR = new Color(255, 255, 200); // the background color for highlighting lines
-    public static final String BREAKPOINT_MARKER = "=";
+    public static final String BREAKPOINT_MARKER = "-";
     public static final String CURRENT_LINE_MARKER = ">";
     protected List<LineHighlight> breakpointedLines = new ArrayList(); // breakpointed lines
     protected LineHighlight currentLine; // line the debugger is currently suspended at
@@ -520,7 +520,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      * current tab
      */
     public LineID getLineIDInCurrentTab(int lineIdx) {
-        return LineID.create(getSketch().getCurrentCode().getFileName(), lineIdx);
+        return new LineID(getSketch().getCurrentCode().getFileName(), lineIdx);
     }
 
     /**
@@ -531,7 +531,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     protected LineID getCurrentLineID() {
         String tab = getSketch().getCurrentCode().getFileName();
         int lineNo = getTextArea().getCaretLine();
-        return LineID.create(tab, lineNo);
+        return new LineID(tab, lineNo);
     }
 
     /**
@@ -575,6 +575,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
                 }
             }
         }
+//        if (dbg != null && dbg().isPaused()) {
+//            dbg().startTrackingLineChanges();
+//        }
     }
 
     /**
