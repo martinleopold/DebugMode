@@ -19,27 +19,41 @@ package com.martinleopold.mode.debug;
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.Location;
+import com.sun.jdi.ReferenceType;
 import com.sun.jdi.request.BreakpointRequest;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Model/Controller of a line breakpoint. Can be set before or while debugging.
+ * Adds a highlight using the debuggers view ({@link DebugEditor}).
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
-public class LineBreakpoint {
+public class LineBreakpoint implements ClassLoadListener {
 
-    protected Debugger dbg;
-    protected LineID line;
-    protected BreakpointRequest bpr;
+    protected Debugger dbg; // the debugger
+    protected LineID line; // the line this breakpoint is set on
+    protected BreakpointRequest bpr; // the request on the VM's event request manager
+    protected ReferenceType theClass; // the class containing this breakpoint, null when not yet loaded
 
-    // allow line breakpoints only on lineIdx of current tab, since it needs to track the doc
+    /**
+     * Create a breakpoint. Only allowed on current tab, since it needs to track
+     * the doc. If in a debug session, will try to immediately set the
+     * breakpoint. If not in a debug session or the corresponding class is not
+     * yet loaded the breakpoint will activate on class load.
+     *
+     * @param lineIdx the line index of the current tab to create the breakpoint
+     * on
+     * @param dbg the debugger
+     */
     public LineBreakpoint(int lineIdx, Debugger dbg) {
         this.line = dbg.editor().getLineIDInCurrentTab(lineIdx);
         line.startTracking(dbg.editor().currentDocument());
         this.dbg = dbg;
-        set();
+        theClass = dbg.getClass(className()); // try to get the class immediately, may return null if not yet loaded
+        set(); // activate the breakpoint (show highlight, attach if debugger is running)
     }
 
     /**
@@ -65,16 +79,25 @@ public class LineBreakpoint {
      * Attach this breakpoint to the VM. Creates and enables a
      * {@link BreakpointRequest}. VM needs to be paused.
      */
-    // TODO: check VM status
-    public void attach() {
+    protected void attach() {
+        if (!dbg.isPaused()) {
+            Logger.getLogger(LineBreakpoint.class.getName()).log(Level.WARNING, "can't attach breakpoint, debugger not paused");
+            return;
+        }
+
+        if (theClass == null) {
+            Logger.getLogger(LineBreakpoint.class.getName()).log(Level.WARNING, "can't attach breakpoint, class not loaded: {0}", className());
+            return;
+        }
+
         // find line in java space
         LineID javaLine = dbg.sketchToJavaLine(line);
         if (javaLine == null) {
-            Logger.getLogger(LineBreakpoint.class.getName()).log(Level.WARNING, "Couldn''t find line {0} in the java code", line);
+            Logger.getLogger(LineBreakpoint.class.getName()).log(Level.WARNING, "couldn't find line {0} in the java code", line);
             return;
         }
         try {
-            List<Location> locations = dbg.mainClass().locationsOfLine(javaLine.lineIdx() + 1);
+            List<Location> locations = theClass.locationsOfLine(javaLine.lineIdx() + 1);
             if (locations.isEmpty()) {
                 Logger.getLogger(LineBreakpoint.class.getName()).log(Level.WARNING, "no location found for line {0} -> {1}", new Object[]{line, javaLine});
                 return;
@@ -104,8 +127,9 @@ public class LineBreakpoint {
      * attaches the breakpoint by calling {@link #attach()}.
      */
     protected void set() {
+        dbg.addClassLoadListener(this); // class may not yet be loaded
         dbg.editor().addBreakpointedLine(line.lineIdx());
-        if (dbg.isPaused()) { // in a paused debug session
+        if (theClass != null && dbg.isPaused()) { // class is loaded
             // immediately activate the breakpoint
             attach();
         }
@@ -116,6 +140,7 @@ public class LineBreakpoint {
      * if the debugger is paused.
      */
     public void remove() {
+        dbg.removeClassLoadListener(this);
         //System.out.println("removing " + line.lineIdx());
         dbg.editor().removeBreakpointedLine(line.lineIdx());
         if (dbg.isPaused()) {
@@ -124,14 +149,52 @@ public class LineBreakpoint {
         }
     }
 
-    public void enable() {
-    }
-
-    public void disable() {
-    }
-
+//    public void enable() {
+//    }
+//
+//    public void disable() {
+//    }
     @Override
     public String toString() {
         return line.toString();
+    }
+
+    /**
+     * Get the name of the class this breakpoint belongs to. Needed for fetching
+     * the right location to create a breakpoint request.
+     *
+     * @return the class name
+     */
+    protected String className() {
+        if (line.fileName().endsWith(".pde")) {
+            // standard tab
+            ReferenceType mainClass = dbg.mainClass();
+            if (mainClass == null) {
+                return null;
+            }
+            return dbg.mainClass().name();
+        }
+
+        if (line.fileName().endsWith(".java")) {
+            // pure java tab
+            return line.fileName().substring(0, line.fileName().lastIndexOf(".java"));
+        }
+
+        return null;
+    }
+
+    /**
+     * Event handler called when a class is loaded in the debugger. Causes the
+     * breakpoint to be attached, if its class was loaded.
+     *
+     * @param theClass the class that was just loaded.
+     */
+    @Override
+    public void classLoaded(ReferenceType theClass) {
+        // check if our class is being loaded
+        if (theClass.name().equals(className())) {
+            this.theClass = theClass;
+            attach();
+        }
     }
 }

@@ -578,6 +578,23 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     }
 
     /**
+     * Get a tab by its file name.
+     *
+     * @param fileName the filename to search for.
+     * @return the {@link SketchCode} object representing the tab, or null if
+     * not found
+     */
+    public SketchCode getTab(String fileName) {
+        Sketch s = getSketch();
+        for (SketchCode c : s.getCode()) {
+            if (c.getFileName().equals(fileName)) {
+                return c;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Access the currently edited document.
      *
      * @return the document object

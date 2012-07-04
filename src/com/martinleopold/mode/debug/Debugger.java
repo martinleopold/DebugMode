@@ -25,7 +25,9 @@ import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTree;
@@ -51,6 +53,7 @@ public class Debugger implements VMEventListener {
     protected ThreadReference currentThread; // thread the last breakpoint or step occured in
     protected String mainClassName; // name of the main class that's currently being debugged
     protected ReferenceType mainClass;
+    protected Set<ReferenceType> classes = new HashSet();
     protected String srcPath; // path to the src folder of the current build
     protected DebugBuild build; // todo: might not need to be global
     //protected Map<LineID, LineID> lineMap = new HashMap(); // maps source lines from "sketch-space" to "java-space" and vice-versa
@@ -84,10 +87,33 @@ public class Debugger implements VMEventListener {
         return mainClass;
     }
 
+    public ReferenceType getClass(String name) {
+        if (name == null) {
+            return null;
+        }
+        if (name.equals(mainClassName)) {
+            return mainClass;
+        }
+        for (ReferenceType rt : classes) {
+            if (rt.name().equals(name)) {
+                return rt;
+            }
+        }
+        return null;
+    }
+    protected List<ClassLoadListener> classLoadListeners = new ArrayList();
+
+    public void addClassLoadListener(ClassLoadListener listener) {
+        classLoadListeners.add(listener);
+    }
+
+    public void removeClassLoadListener(ClassLoadListener listener) {
+        classLoadListeners.remove(listener);
+    }
+
 //    public Map<LineID, LineID> lineMapping() {
 //        return lineMap;
 //    }
-
     /**
      * Access the editor associated with this debugger.
      *
@@ -172,6 +198,7 @@ public class Debugger implements VMEventListener {
             runtime.close();
             runtime = null;
             build = null;
+            classes.clear();
             // need to clear highlight here because, VMDisconnectedEvent seems to be unreliable. TODO: likely synchronization problem
             //clearHighlight();
             editor.clearCurrentLine();
@@ -204,8 +231,7 @@ public class Debugger implements VMEventListener {
     protected void step(int stepDepth) {
         if (isPaused()) {
             // use global to mark that there is a step request pending
-            requestedStep =
-                    runtime.vm().eventRequestManager().createStepRequest(currentThread, StepRequest.STEP_LINE, stepDepth);
+            requestedStep = runtime.vm().eventRequestManager().createStepRequest(currentThread, StepRequest.STEP_LINE, stepDepth);
             requestedStep.addCountFilter(1); // valid for one step only
             requestedStep.enable();
             paused = false;
@@ -378,46 +404,74 @@ public class Debugger implements VMEventListener {
                 //printStackTrace(t);
 
                 // break on main class load
-                Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "requesting event on class load: {0}", mainClassName);
+                Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "requesting event on main class load: {0}", mainClassName);
                 ClassPrepareRequest mainClassPrepare = runtime.vm().eventRequestManager().createClassPrepareRequest();
                 mainClassPrepare.addClassFilter(mainClassName);
                 mainClassPrepare.enable();
+
+                // break on loading custom classes
+                for (SketchCode tab : editor.getSketch().getCode()) {
+                    if (tab.isExtension("java")) {
+                        Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "requesting event on class load: {0}", tab.getPrettyName());
+                        ClassPrepareRequest customClassPrepare = runtime.vm().eventRequestManager().createClassPrepareRequest();
+                        customClassPrepare.addClassFilter(tab.getPrettyName());
+                        customClassPrepare.enable();
+                    }
+
+                }
+
                 runtime.vm().resume();
             } else if (e instanceof ClassPrepareEvent) {
                 ClassPrepareEvent ce = (ClassPrepareEvent) e;
                 ReferenceType rt = ce.referenceType();
-                //printType(rt);
-                mainClass = rt;
+                currentThread = ce.thread();
+                paused = true; // for now we're paused
 
-//                if (breakpoints.isEmpty()) {
-//                    System.out.println("using auto brekapoints (no manual breakpoints set)");
-//                    System.out.println("setting breakpoint on setup()");
-//                    Location setupLocation = rt.methodsByName("setup").get(0).location();
-//                    BreakpointRequest setupBp =
-//                            runtime.vm().eventRequestManager().createBreakpointRequest(setupLocation);
-//                    setupBp.enable();
-//
-//                    System.out.println("setting breakpoint on draw()");
-//                    Location drawLocation = rt.methodsByName("draw").get(0).location();
-//                    BreakpointRequest drawBp =
-//                            runtime.vm().eventRequestManager().createBreakpointRequest(drawLocation);
-//                    drawBp.enable();
-//                } else {
-//                    System.out.println("setting breakpoints:");
-//                    for (LineBreakpoint bp : breakpoints) {
-//                        bp.attach();
+                if (rt.name().equals(mainClassName)) {
+                    //printType(rt);
+                    mainClass = rt;
+                    Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "main class load: {0}", rt.name());
+
+                    //                if (breakpoints.isEmpty()) {
+                    //                    System.out.println("using auto brekapoints (no manual breakpoints set)");
+                    //                    System.out.println("setting breakpoint on setup()");
+                    //                    Location setupLocation = rt.methodsByName("setup").get(0).location();
+                    //                    BreakpointRequest setupBp =
+                    //                            runtime.vm().eventRequestManager().createBreakpointRequest(setupLocation);
+                    //                    setupBp.enable();
+                    //
+                    //                    System.out.println("setting breakpoint on draw()");
+                    //                    Location drawLocation = rt.methodsByName("draw").get(0).location();
+                    //                    BreakpointRequest drawBp =
+                    //                            runtime.vm().eventRequestManager().createBreakpointRequest(drawLocation);
+                    //                    drawBp.enable();
+                    //                } else {
+                    //                    System.out.println("setting breakpoints:");
+                    //                    for (LineBreakpoint bp : breakpoints) {
+                    //                        bp.attach();
+                    //                    }
+                    //                }
+
+//                    if (!breakpoints.isEmpty()) {
+//                        Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "setting breakpoints:");
+//                        for (LineBreakpoint bp : breakpoints) {
+//                            bp.attach();
+//                        }
 //                    }
-//                }
+                    started = true; // now that main class is loaded, we're started
+                } else {
+                    classes.add(rt);
+                    Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "class load: {0}", rt.name());
+                }
 
-                if (!breakpoints.isEmpty()) {
-                    Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "setting breakpoints:");
-                    for (LineBreakpoint bp : breakpoints) {
-                        bp.attach();
+                // notify listeners
+                for (ClassLoadListener listener : classLoadListeners) {
+                    if (listener != null) {
+                        listener.classLoaded(rt);
                     }
                 }
 
-                started = true;
-                paused = false;
+                paused = false; // resuming now
                 runtime.vm().resume();
             } else if (e instanceof BreakpointEvent) {
                 BreakpointEvent be = (BreakpointEvent) e;
@@ -1042,7 +1096,6 @@ public class Debugger implements VMEventListener {
 //            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
 //        }
 //    }
-
     /**
      * Translate a java source location to a sketch line id.
      *
@@ -1060,46 +1113,73 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    /**
+     * Translate a line (index) from java space to sketch space.
+     *
+     * @param javaLine the java line id
+     * @return the corresponding sketch line id or null if failed to translate
+     */
     public LineID javaToSketchLine(LineID javaLine) {
         Sketch sketch = editor.getSketch();
-        // first check to see if it's a .java file
-        for (int i = 0; i < sketch.getCodeCount(); i++) {
-            SketchCode code = sketch.getCode(i);
-            if (code.isExtension("java")) {
-                if (javaLine.fileName().equals(code.getFileName())) {
-                    return LineID.create(code.getFileName(), javaLine.lineIdx());
-                }
-            }
+
+        // it may belong to a pure java file created in the sketch
+        // try to find an exact filename match and check the extension
+        SketchCode tab = editor.getTab(javaLine.fileName());
+        if (tab != null && tab.isExtension("java")) {
+            // can translate 1:1
+            return javaLine;
         }
 
-        // If not the preprocessed file at this point, then need to get out
+//        for (int i = 0; i < sketch.getCodeCount(); i++) {
+//            SketchCode code = sketch.getCode(i);
+//            if (code.isExtension("java")) {
+//                if (javaLine.fileName().equals(code.getFileName())) {
+//                    return LineID.create(code.getFileName(), javaLine.lineIdx());
+//                }
+//            }
+//        }
+
+        // check if it is the preprocessed/assembled file for this sketch
+        // java file name needs to match the sketches filename
         if (!javaLine.fileName().equals(sketch.getName() + ".java")) {
             return null;
         }
 
-        // this section searches through the list of .pde files
-        for (int i = sketch.getCodeCount()-1; i >= 0 ; i--) {
-            SketchCode code = sketch.getCode(i);
-
-            if (code.isExtension("pde") && code.getPreprocOffset() <= javaLine.lineIdx()) {
-                return LineID.create(code.getFileName(), javaLine.lineIdx() - code.getPreprocOffset());
+        // find the tab (.pde file) this line belongs to
+        // get the last tab that has an offset not greater than the java line number
+        for (int i = sketch.getCodeCount() - 1; i >= 0; i--) {
+            tab = sketch.getCode(i);
+            // ignore .java files
+            // the tabs offset must not be greater than the java line number
+            if (tab.isExtension("pde") && tab.getPreprocOffset() <= javaLine.lineIdx()) {
+                return LineID.create(tab.getFileName(), javaLine.lineIdx() - tab.getPreprocOffset());
             }
         }
 
         return null;
     }
 
-    // TODO: handle other cases
+    /**
+     * Translate a line (index) from sketch space to java space.
+     *
+     * @param sketchLine the sketch line id
+     * @return the corresponding java line id or null if failed to translate
+     */
     public LineID sketchToJavaLine(LineID sketchLine) {
-        // this section searches through the list of .pde files
-        Sketch sketch = editor.getSketch();
-        for (int i = 0; i < sketch.getCodeCount(); i++) {
-            SketchCode code = sketch.getCode(i);
-
-            if (code.getFileName().equals(sketchLine.fileName())) {
-                return LineID.create(sketch.getName() + ".java", sketchLine.lineIdx() + code.getPreprocOffset());
-            }
+        // check if there is a tab for this line
+        SketchCode tab = editor.getTab(sketchLine.fileName());
+        if (tab == null) {
+            return null;
         }
-        return null;
+
+        // check if the tab is a pure java file anyway
+        if (tab.isExtension("java")) {
+            // 1:1 translation
+            return sketchLine;
+        }
+
+        // the java file has a name sketchname.java
+        // just add the tabs offset to get the java name
+        return LineID.create(editor.getSketch().getName() + ".java", sketchLine.lineIdx() + tab.getPreprocOffset());
     }
 }

@@ -175,10 +175,14 @@ x update code documentation
 
 PROTOTYPE 4:
 * UI
-	x gutter left / line annotation
+	~ gutter left / line annotation
+		* fg color
+		* bg color
+		* unicode
+		* line
 	* icon symbols, choice, placement
 	* icon and menu locking
-	* var insp: p5 mode
+	! var insp: p5 mode
 		* hide non-processing vars
 		* handle p5 types, arrays
 		* show when relevant
