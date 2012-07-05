@@ -62,17 +62,18 @@ public class TextArea extends JEditTextArea {
 
         add(CENTER, painter);
     }
-    protected int gutterChars = 1; // # characters
-    protected int gutterBorder = 1; // px
-    protected Color gutterColor = Color.WHITE;
+    protected int gutterChars = 2; // # characters
+    protected int gutterMargins = 3; // px, space added left and right
+    protected Color gutterColor = new Color(252, 252, 252);
+    protected Color gutterLineColor = new Color(233, 233, 233);
     protected Map<Integer, String> gutterText = new HashMap();
 
     protected int gutterWidth() {
-        return gutterChars * painter.getFontMetrics().getMaxAdvance() + 2 * gutterBorder;
+        return gutterChars * painter.getFontMetrics().getMaxAdvance() + 2 * gutterMargins;
     }
 
     protected int gutterBorder() {
-        return gutterBorder;
+        return gutterMargins;
     }
 
     public void setGutterText(int lineIdx, String text) {

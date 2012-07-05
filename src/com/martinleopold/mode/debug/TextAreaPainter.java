@@ -51,9 +51,11 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
             int line, int x) {
 
         // paint gutter
-        paintGutterBgColor(gfx, line, x);
+        paintGutterBg(gfx, line, x);
 
         paintLineBgColor(gfx, line, x + ta.gutterWidth());
+
+        paintGutterLine(gfx, line, x);
 
         // paint gutter symbol
         paintGutterText(gfx, line, x);
@@ -61,11 +63,16 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
         super.paintLine(gfx, tokenMarker, line, x + ta.gutterWidth());
     }
 
-    protected void paintGutterBgColor(Graphics gfx, int line, int x) {
+    protected void paintGutterBg(Graphics gfx, int line, int x) {
         gfx.setColor(ta.gutterColor);
         int y = ta.lineToY(line) + fm.getLeading() + fm.getMaxDescent();
-        int height = fm.getHeight();
-        gfx.fillRect(0, y, ta.gutterWidth(), height);
+        gfx.fillRect(0, y, ta.gutterWidth(), fm.getHeight());
+    }
+
+    protected void paintGutterLine(Graphics gfx, int line, int x) {
+        int y = ta.lineToY(line) + fm.getLeading() + fm.getMaxDescent();
+        gfx.setColor(ta.gutterLineColor);
+        gfx.drawLine(ta.gutterWidth(), y, ta.gutterWidth(), y + fm.getHeight());
     }
 
     protected void paintGutterText(Graphics gfx, int line, int x) {
@@ -77,7 +84,9 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
         int y = ta.lineToY(line) + fm.getHeight();
 
         //int len = text.length() > ta.gutterChars ? ta.gutterChars : text.length();
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder(), y-1, gfx, this,0);
         Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder(), y, gfx, this,0);
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder(), y+1, gfx, this,0);
 
             // Draw characters via input method.
 //    if (compositionTextPainter != null && compositionTextPainter.hasComposedTextLayout()) {
