@@ -552,7 +552,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     @Override
     protected void setCode(SketchCode code) {
-        //System.out.println("tab switch");
+        System.out.println("tab switch: " + code.getFileName());
         super.setCode(code); // set the new document in the textarea, etc. need to do this first
 
         // set line background colors for tab
@@ -575,9 +575,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
                 }
             }
         }
-//        if (dbg != null && dbg().isPaused()) {
-//            dbg().startTrackingLineChanges();
-//        }
+        if (dbg() != null && dbg().isStarted()) {
+            dbg().startTrackingLineChanges();
+        }
     }
 
     /**

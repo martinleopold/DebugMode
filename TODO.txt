@@ -192,7 +192,7 @@ PROTOTYPE 4:
 x handle debug output -> use logging
 x forward debuggee streams
 x disallow stepping into invisible code
-! rethink line translation
+~ rethink line translation
 	* track all line changes when debugging 
 	* dynamic translation while debugging?
 

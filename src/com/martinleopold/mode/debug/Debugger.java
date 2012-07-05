@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,6 +62,8 @@ public class Debugger implements VMEventListener {
     //protected Map<LineID, LineID> lineMap = new HashMap(); // maps source lines from "sketch-space" to "java-space" and vice-versa
     protected List<LineBreakpoint> breakpoints = new ArrayList();
     protected StepRequest requestedStep; // the step request we are currently in, or null if not in a step
+    protected Map<LineID, LineID> runtimeLineChanges = new HashMap(); // maps line number changes at runtime (orig -> changed)
+    protected Set<String> runtimeTabsTracked = new HashSet(); // contains tab filenames which already have been tracked for runtime changes
 
     /**
      * Construct a Debugger object.
@@ -1134,7 +1137,7 @@ public class Debugger implements VMEventListener {
         SketchCode tab = editor.getTab(javaLine.fileName());
         if (tab != null && tab.isExtension("java")) {
             // can translate 1:1
-            return runtimeTransformSketchLine(javaLine);
+            return originalToRuntimeLine(javaLine);
         }
 
 //        for (int i = 0; i < sketch.getCodeCount(); i++) {
@@ -1159,17 +1162,44 @@ public class Debugger implements VMEventListener {
             // ignore .java files
             // the tabs offset must not be greater than the java line number
             if (tab.isExtension("pde") && tab.getPreprocOffset() <= javaLine.lineIdx()) {
-                return runtimeTransformSketchLine(new LineID(tab.getFileName(), javaLine.lineIdx() - tab.getPreprocOffset()));
+                return originalToRuntimeLine(new LineID(tab.getFileName(), javaLine.lineIdx() - tab.getPreprocOffset()));
             }
         }
 
         return null;
     }
 
-    protected LineID runtimeTransformSketchLine(LineID line) {
+    /**
+     * Get the runtime-changed line id for an original sketch line. Used to
+     * translate line numbers from the VM (which runs on the original line
+     * numbers) to their current (possibly changed) counterparts.
+     *
+     * @param line the original line id (at compile time)
+     * @return the changed version or the line given as parameter if not found
+     */
+    protected LineID originalToRuntimeLine(LineID line) {
         LineID transformed = runtimeLineChanges.get(line);
-        if (transformed == null) return line;
+        if (transformed == null) {
+            return line;
+        }
         return transformed;
+    }
+
+    /**
+     * Get the original line id for a sketch line that was changed at runtime.
+     * Used to translate line numbers from the UI at runtime (which can differ
+     * from the ones the VM runs on) to their original counterparts.
+     *
+     * @param line the (possibly) changed runtime line
+     * @return the original line or the line given as parameter if not found
+     */
+    protected LineID runtimeToOriginalLine(LineID line) {
+        for (Entry<LineID, LineID> entry : runtimeLineChanges.entrySet()) {
+            if (entry.getValue().equals(line)) {
+                return entry.getKey();
+            }
+        }
+        return line;
     }
 
     /**
@@ -1179,7 +1209,7 @@ public class Debugger implements VMEventListener {
      * @return the corresponding java line id or null if failed to translate
      */
     public LineID sketchToJavaLine(LineID sketchLine) {
-        sketchLine = runtimeTransformSketchLine(sketchLine);
+        sketchLine = runtimeToOriginalLine(sketchLine); // transform back to orig (before changes at runtime)
 
         // check if there is a tab for this line
         SketchCode tab = editor.getTab(sketchLine.fileName());
@@ -1199,32 +1229,34 @@ public class Debugger implements VMEventListener {
         return javaLine;
     }
 
-    // for the current tab track all line number changes
-    Map<LineID, LineID> runtimeLineChanges = new HashMap();
-    //Set<String> runtimeTabsTracked = new HashSet();
-
+    /**
+     * Start tracking all line changes (due to edits) in the current tab.
+     */
     protected void startTrackingLineChanges() {
         SketchCode tab = editor.getSketch().getCurrentCode();
-//        if (runtimeTabsTracked.contains(tab.getFileName())) {
-//            return;
-//        }
+        if (runtimeTabsTracked.contains(tab.getFileName())) {
+            return;
+        }
 
-        for (int i=0; i<tab.getLineCount(); i++) {
+        for (int i = 0; i < tab.getLineCount(); i++) {
             LineID old = new LineID(tab.getFileName(), i);
             LineID tracked = new LineID(tab.getFileName(), i);
             tracked.startTracking(editor.currentDocument());
             runtimeLineChanges.put(old, tracked);
         }
-        //runtimeTabsTracked.add(tab.getFileName());
-        System.out.println("tracking tab: " + tab.getFileName());
+        runtimeTabsTracked.add(tab.getFileName());
+        //System.out.println("tracking tab: " + tab.getFileName());
     }
 
+    /**
+     * Stop tracking line changes in all tabs.
+     */
     protected void stopTrackingLineChanges() {
-        System.out.println("stop tracking line changes");
+        //System.out.println("stop tracking line changes");
         for (LineID tracked : runtimeLineChanges.values()) {
             tracked.stopTracking();
         }
         runtimeLineChanges.clear();
-        //runtimeTabsTracked.clear();
+        runtimeTabsTracked.clear();
     }
 }

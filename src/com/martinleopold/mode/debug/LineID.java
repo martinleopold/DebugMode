@@ -43,9 +43,8 @@ public class LineID implements DocumentListener {
     protected Position pos; // the Position acquired during line number tracking
     protected Set<LineListener> listeners = new HashSet(); // listeners for line number changes
 
-    protected static int count = 0;
-    protected static int tracked = 0;
-
+    //protected static int count = 0;
+    //protected static int tracked = 0;
     public LineID(String fileName, int lineIdx) {
         this.fileName = fileName;
         this.lineIdx = lineIdx;
@@ -94,7 +93,6 @@ public class LineID implements DocumentListener {
 //        }
 //        return line;
 //    }
-
     @Override
     public int hashCode() {
         return toString().hashCode();
@@ -157,7 +155,7 @@ public class LineID implements DocumentListener {
     // multiple startTracking calls will replace the tracked document.
     // whoever wants a tracked line should track it... and add itself as listener if necessary. (LineHighlight, Breakpoint.)
     public synchronized void startTracking(Document doc) {
-        System.out.println("tracking: " + this);
+        //System.out.println("tracking: " + this);
         if (doc == null) {
             return; // null arg
         }
@@ -182,7 +180,7 @@ public class LineID implements DocumentListener {
             this.doc = null;
         }
 
-        System.out.println("tracked: " + ++tracked);
+        //System.out.println("tracked: " + ++tracked);
 
     }
 
@@ -200,14 +198,12 @@ public class LineID implements DocumentListener {
         //System.out.println("tracked: " + --tracked);
     }
 
-
 //    @Override
 //    public void finalize() throws Throwable {
 //        super.finalize();
 //        count--;
 //        System.out.println("GC: " + this + " " + count);
 //    }
-
     /**
      * Update the tracked position. Will notify listeners if line number has
      * changed.
