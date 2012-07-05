@@ -176,8 +176,8 @@ x update code documentation
 PROTOTYPE 4:
 * UI
 	~ gutter left / line annotation
-		* fg color
-		* bg color
+		* fg colors
+		* bg colors
 		* unicode
 		* line
 	* icon symbols, choice, placement
@@ -192,9 +192,8 @@ PROTOTYPE 4:
 x handle debug output -> use logging
 x forward debuggee streams
 x disallow stepping into invisible code
-~ rethink line translation
-	* track all line changes when debugging 
-	* dynamic translation while debugging?
+x rethink line translation
+	x dynamic translation at runtime (track all line changes when debugging)
 
 
 
@@ -340,6 +339,16 @@ x remove auto breakpoints
 ! stepping out of println() returns to the same line, leads to NullPointerException when done multiple times. + VMMismatchException when restarting dbg
 * change logger console format to something more readable
 x allow setting log-level
+5.7.2012
+* sporadic while switching tabs (breakpoint hits,…):
+java.lang.ArrayIndexOutOfBoundsException: 344
+	at javax.swing.text.Utilities.drawTabbedText(Utilities.java:132)
+	at javax.swing.text.Utilities.drawTabbedText(Utilities.java:89)
+	at javax.swing.text.Utilities.drawTabbedText(Utilities.java:67)
+	at processing.app.syntax.SyntaxUtilities.paintSyntaxLine(SyntaxUtilities.java:146)
+	at processing.app.syntax.TextAreaPainter.paintSyntaxLine(TextAreaPainter.java:625)
+	at processing.app.syntax.TextAreaPainter.paintLine(TextAreaPainter.java:588)
+	at com.martinleopold.mode.debug.TextAreaPainter.paintLine(Unknown Source)
 
 
 
