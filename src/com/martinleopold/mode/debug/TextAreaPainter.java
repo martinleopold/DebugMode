@@ -84,9 +84,10 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
         int y = ta.lineToY(line) + fm.getHeight();
 
         //int len = text.length() > ta.gutterChars ? ta.gutterChars : text.length();
-        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder(), y-1, gfx, this,0);
-        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder(), y, gfx, this,0);
-        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder(), y+1, gfx, this,0);
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder()  , y, gfx, this,0);
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder()+1, y, gfx, this,0);
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder()  , y+1, gfx, this,0);
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder()+1, y+1, gfx, this,0);
 
             // Draw characters via input method.
 //    if (compositionTextPainter != null && compositionTextPainter.hasComposedTextLayout()) {
