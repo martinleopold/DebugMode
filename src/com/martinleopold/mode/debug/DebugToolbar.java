@@ -30,18 +30,15 @@ import processing.mode.java.JavaToolbar;
  */
 public class DebugToolbar extends JavaToolbar {
 
-    static protected final int RUN = 0;
-    static protected final int STOP = 1;
-
-    static protected final int TOGGLE_BREAKPOINT = 2;
-    static protected final int CONTINUE = 3;
-    static protected final int STEP_OVER = 4;
-    static protected final int TOGGLE_VAR_INSPECTOR = 5;
-
-    static protected final int NEW = 6;
-    static protected final int OPEN = 7;
-    static protected final int SAVE = 8;
-    static protected final int EXPORT = 9;
+    static protected final int DEBUG = 0;
+    static protected final int STEP = 1;
+    static protected final int STOP = 2;
+    static protected final int TOGGLE_BREAKPOINT = 3;
+    static protected final int TOGGLE_VAR_INSPECTOR = 4;
+    static protected final int NEW = 5;
+    static protected final int OPEN = 6;
+    static protected final int SAVE = 7;
+    static protected final int EXPORT = 8;
 
     public DebugToolbar(Editor editor, Base base) {
         super(editor, base);
@@ -53,7 +50,7 @@ public class DebugToolbar extends JavaToolbar {
     @Override
     public void init() {
         Image[][] images = loadImages();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 9; i++) {
             addButton(getTitle(i, false), getTitle(i, true), images[i], i == NEW || i == TOGGLE_BREAKPOINT);
         }
     }
@@ -68,8 +65,8 @@ public class DebugToolbar extends JavaToolbar {
      */
     public static String getTitle(int index, boolean shift) {
         switch (index) {
-            case RUN:
-                return JavaToolbar.getTitle(JavaToolbar.RUN, shift);
+//            case RUN:
+//                return JavaToolbar.getTitle(JavaToolbar.RUN, shift);
             case STOP:
                 return JavaToolbar.getTitle(JavaToolbar.STOP, shift);
             case NEW:
@@ -80,13 +77,20 @@ public class DebugToolbar extends JavaToolbar {
                 return JavaToolbar.getTitle(JavaToolbar.SAVE, shift);
             case EXPORT:
                 return JavaToolbar.getTitle(JavaToolbar.EXPORT, shift);
-            case CONTINUE:
-                return "Debug/Continue";
+            case DEBUG:
+                if (shift) {
+                    return "Run";
+                } else {
+                    return "Debug/Continue";
+                }
             case TOGGLE_BREAKPOINT:
                 return "Toggle Breakpoint";
-            case STEP_OVER:
-                if (shift) return "Step Into";
-                else return "Step";
+            case STEP:
+                if (shift) {
+                    return "Step Into";
+                } else {
+                    return "Step";
+                }
             case TOGGLE_VAR_INSPECTOR:
                 return "Variable Inspector";
         }
@@ -105,9 +109,9 @@ public class DebugToolbar extends JavaToolbar {
         DebugEditor deditor = (DebugEditor) editor;
 
         switch (sel) {
-            case RUN:
-                super.handlePressed(e, JavaToolbar.RUN);
-                break;
+//            case RUN:
+//                super.handlePressed(e, JavaToolbar.RUN);
+//                break;
             case STOP:
                 super.handlePressed(e, JavaToolbar.STOP);
                 break;
@@ -123,15 +127,22 @@ public class DebugToolbar extends JavaToolbar {
             case EXPORT:
                 super.handlePressed(e, JavaToolbar.EXPORT);
                 break;
-            case CONTINUE:
-                deditor.dbg.continueDebug();
+            case DEBUG:
+                if (shift) {
+                    deditor.handleRun();
+                } else {
+                    deditor.dbg.continueDebug();
+                }
                 break;
             case TOGGLE_BREAKPOINT:
                 deditor.dbg.toggleBreakpoint();
                 break;
-            case STEP_OVER:
-                if (shift) deditor.dbg.stepInto();
-                else  deditor.dbg.stepOver();
+            case STEP:
+                if (shift) {
+                    deditor.dbg.stepInto();
+                } else {
+                    deditor.dbg.stepOver();
+                }
                 break;
 //            case STEP_INTO:
 //                deditor.dbg.stepInto();
