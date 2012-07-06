@@ -17,10 +17,9 @@
  */
 package com.martinleopold.mode.debug;
 
-import com.sun.jdi.ArrayReference;
-import com.sun.jdi.Value;
 import java.awt.Component;
 import java.io.File;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Icon;
@@ -31,7 +30,9 @@ import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
+import javax.swing.tree.TreePath;
 
 /**
  * Variable Inspector window.
@@ -41,6 +42,9 @@ import javax.swing.tree.ExpandVetoException;
 public class VariableInspector extends javax.swing.JFrame implements TreeWillExpandListener {
 
     protected DefaultMutableTreeNode rootNode;
+    protected DefaultMutableTreeNode callStackNode;
+    protected DefaultMutableTreeNode localVarsNode;
+    protected DefaultMutableTreeNode thisFieldsNode;
     protected DebugEditor editor;
     protected Debugger dbg;
 
@@ -50,14 +54,21 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     public VariableInspector(DebugEditor editor) {
         this.editor = editor;
         this.dbg = editor.dbg();
-        initComponents();
+        initComponents(); // creates the root node
 
         // setup jTree
-        jTree1.setRootVisible(false);
-        jTree1.addTreeWillExpandListener(this);
+        tree.setRootVisible(false);
+        tree.addTreeWillExpandListener(this);
         TreeRenderer tcr = new TreeRenderer();
-        jTree1.setCellRenderer(tcr);
-        ToolTipManager.sharedInstance().registerComponent(jTree1);
+        tree.setCellRenderer(tcr);
+        ToolTipManager.sharedInstance().registerComponent(tree);
+
+        callStackNode = new DefaultMutableTreeNode();
+        localVarsNode = new DefaultMutableTreeNode();
+        thisFieldsNode = new DefaultMutableTreeNode();
+        rootNode.add(callStackNode);
+        rootNode.add(localVarsNode);
+        rootNode.add(thisFieldsNode);
 
         this.setTitle("Variable Inspector");
 
@@ -74,9 +85,9 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         jScrollPane1 = new javax.swing.JScrollPane();
         rootNode = new DefaultMutableTreeNode();
-        jTree1 = new javax.swing.JTree(rootNode);
+        tree = new javax.swing.JTree(rootNode);
 
-        jScrollPane1.setViewportView(jTree1);
+        jScrollPane1.setViewportView(tree);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -141,7 +152,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
      * @return the {@link JTree} object
      */
     public JTree getTree() {
-        return jTree1;
+        return tree;
     }
 
     /**
@@ -154,7 +165,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTree jTree1;
+    private javax.swing.JTree tree;
     // End of variables declaration//GEN-END:variables
 
     @Override
@@ -181,11 +192,11 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     }
 
     /**
-     *
+     * TODO: docs
      */
     protected class TreeRenderer extends DefaultTreeCellRenderer {
 
-        Icon[] icons;
+        protected Icon[] icons;
 
         public TreeRenderer() {
             // load icons
@@ -224,15 +235,6 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
                     expanded, leaf, row,
                     hasFocus);
 
-            /*
-             if (leaf && isTutorialBook(value)) {
-             setIcon(tutorialIcon);
-             setToolTipText("This book is in the Tutorial series.");
-             } else {
-             setToolTipText(null); //no tool tip
-             }
-             */
-
             if (value instanceof VariableNode) {
                 VariableNode node = (VariableNode) value;
                 String typeName = node.getTypeName();
@@ -264,5 +266,60 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
             //if (img == null) System.out.println("couldn't load image: " + fileName);
             return new ImageIcon(file.getAbsolutePath());
         }
+    }
+    protected boolean p5mode = true;
+
+    public void setAdvancedMode() {
+        p5mode = false;
+    }
+
+    public void setP5Mode() {
+        p5mode = true;
+    }
+
+    public void toggleMode() {
+        if (p5mode) {
+            setAdvancedMode();
+        } else {
+            setP5Mode();
+        }
+    }
+
+    public void updateCallStack(List<DefaultMutableTreeNode> nodes, String title) {
+        callStackNode.setUserObject(title);
+        callStackNode.removeAllChildren();
+        for (DefaultMutableTreeNode node : nodes) {
+            callStackNode.add(node);
+        }
+
+    }
+
+    public void updateLocals(List<VariableNode> nodes, String title) {
+        localVarsNode.setUserObject(title);
+        localVarsNode.removeAllChildren();
+        for (VariableNode var : nodes) {
+            localVarsNode.add(var);
+        }
+    }
+
+    public void updateThisFields(List<VariableNode> nodes, String title) {
+        thisFieldsNode.setUserObject(title);
+        thisFieldsNode.removeAllChildren();
+        for (VariableNode var : nodes) {
+            thisFieldsNode.add(var);
+        }
+    }
+
+    public void rebuild() {
+        // notify tree (using model)
+        //http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
+        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+        model.nodeStructureChanged(rootNode);
+
+        // expand top level nodes
+        // needs to happen after nodeStructureChanged
+        tree.expandPath(new TreePath(new Object[]{rootNode, callStackNode}));
+        tree.expandPath(new TreePath(new Object[]{rootNode, localVarsNode}));
+        tree.expandPath(new TreePath(new Object[]{rootNode, thisFieldsNode}));
     }
 }

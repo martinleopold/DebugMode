@@ -36,7 +36,7 @@
 
       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
       <SubComponents>
-        <Component class="javax.swing.JTree" name="jTree1">
+        <Component class="javax.swing.JTree" name="tree">
           <AuxValues>
             <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new javax.swing.JTree(rootNode)"/>
             <AuxValue name="JavaCodeGenerator_CreateCodePre" type="java.lang.String" value="rootNode = new DefaultMutableTreeNode();"/>

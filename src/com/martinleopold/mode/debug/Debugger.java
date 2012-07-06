@@ -699,48 +699,15 @@ public class Debugger implements VMEventListener {
             return;
         }
         VariableInspector vi = editor.variableInspector();
-        JTree tree = vi.getTree();
-        DefaultMutableTreeNode rootNode = vi.getRootNode();
-        rootNode.removeAllChildren(); // clear tree
-
         try {
             if (t.frameCount() == 0) {
                 // TODO: needs to be handled in a better way:
                 Logger.getLogger(Debugger.class.getName()).log(Level.WARNING, "call stack empty");
             } else {
-                // stack trace
-                DefaultMutableTreeNode callStackNode = new DefaultMutableTreeNode("Call stack");
-                for (DefaultMutableTreeNode node : getStackTrace(t)) {
-                    callStackNode.add(node);
-                }
-                rootNode.add(callStackNode);
-
-                // local variables
-                DefaultMutableTreeNode localVarsNode = new DefaultMutableTreeNode("Locals at " + currentLocation(t));
-                for (VariableNode var : getLocals(t, 0)) {
-                    localVarsNode.add(var);
-                }
-                rootNode.add(localVarsNode);
-
-                // this fields
-                DefaultMutableTreeNode thisNode = new DefaultMutableTreeNode("Class " + thisName(t));
-                for (VariableNode var : getThisFields(t, 0)) {
-                    thisNode.add(var);
-                }
-                rootNode.add(thisNode);
-
-                // notify tree (using model)
-                //http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
-                DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-                model.nodeStructureChanged(rootNode);
-                // expand top level nodes
-                // needs to happen after nodeStructureChanged
-                tree.expandPath(new TreePath(new Object[]{rootNode, callStackNode}));
-                tree.expandPath(new TreePath(new Object[]{rootNode, localVarsNode}));
-                tree.expandPath(new TreePath(new Object[]{rootNode, thisNode}));
-
-                //tree.repaint();
-                //vi.repaint();
+                vi.updateCallStack(getStackTrace(t), "Call Stack");
+                vi.updateLocals(getLocals(t,0), "Locals at " + currentLocation(t));
+                vi.updateThisFields(getThisFields(t, 0), "Class " + thisName(t));
+                vi.rebuild();
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
