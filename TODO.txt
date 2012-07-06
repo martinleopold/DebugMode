@@ -178,16 +178,18 @@ PROTOTYPE 4:
 	~ gutter left / line annotation
 		* fg colors
 		* bg colors
-		* unicode
-		* line
-	* icon symbols, choice, placement
+		/ unicode
+		x line
+	~ icon symbols, choice, placement
 	* icon and menu locking
 	! var insp: p5 mode
 		* hide non-processing vars
 		* handle p5 types, arrays
-		* show when relevant
-		* grey out when not current
-		* dock to main window
+		* clear on open/new
+		* symbols for types
+		? show when relevant
+		? grey out when not current
+		? dock to main window
 
 x handle debug output -> use logging
 x forward debuggee streams
@@ -275,10 +277,16 @@ x Class Design (MVC)
 			x new window vs column
 			? toolbar
 			* processing vs. advanced modes
+			* type symbols
+			* columnized
 		x lazy loading (otherwise way too much to load, due to circular refs)
+		* support p5 variables	
 		* array support
-		? loop detection
-
+		* color support
+		/ loop detection
+		* sorting
+		* click interaction
+		* remember scroll position & expansions
 
 ISSUES:
 * on debug quit running sketch

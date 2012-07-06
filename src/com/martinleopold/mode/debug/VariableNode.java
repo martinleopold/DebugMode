@@ -17,8 +17,20 @@
  */
 package com.martinleopold.mode.debug;
 
+import com.sun.jdi.ArrayType;
+import com.sun.jdi.BooleanType;
+import com.sun.jdi.ByteType;
+import com.sun.jdi.CharType;
+import com.sun.jdi.DoubleType;
+import com.sun.jdi.FloatType;
+import com.sun.jdi.IntegerType;
+import com.sun.jdi.LongType;
 import com.sun.jdi.ObjectReference;
+import com.sun.jdi.ReferenceType;
+import com.sun.jdi.ShortType;
+import com.sun.jdi.Type;
 import com.sun.jdi.Value;
+import com.sun.jdi.VoidType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -35,19 +47,33 @@ import javax.swing.tree.TreeNode;
  */
 public class VariableNode implements MutableTreeNode {
 
+    public static final int TYPE_UNKNOWN = -1;
+    public static final int TYPE_OBJECT = 0;
+    public static final int TYPE_ARRAY = 1;
+    public static final int TYPE_INTEGER = 2;
+    public static final int TYPE_FLOAT = 3;
+    public static final int TYPE_BOOLEAN = 4;
+    public static final int TYPE_CHAR = 5;
+    public static final int TYPE_STRING = 6;
+    public static final int TYPE_LONG = 7;
+    public static final int TYPE_DOUBLE = 8;
+    public static final int TYPE_BYTE = 9;
+    public static final int TYPE_SHORT = 10;
+    public static final int TYPE_VOID = 11;
+
     protected String type;
     protected String name;
     protected Value value;
     List<MutableTreeNode> children = new ArrayList();
     MutableTreeNode parent;
 
-    public VariableNode(String name) {
+    private VariableNode(String name) {
         this.name = name;
         this.type = null;
         this.value = null;
     }
 
-    public VariableNode(String name, String type) {
+    private VariableNode(String name, String type) {
         this(name);
         this.type = type;
     }
@@ -63,6 +89,29 @@ public class VariableNode implements MutableTreeNode {
 
     public Value getValue() {
         return value;
+    }
+
+    public String getTypeName() {
+        return type;
+    }
+
+    public int getType() {
+        if (type == null) {
+            return TYPE_UNKNOWN;
+        }
+        if (type.endsWith("[]")) return TYPE_ARRAY;
+        if (type.equals("int")) return TYPE_INTEGER;
+        if (type.equals("long")) return TYPE_LONG;
+        if (type.equals("byte")) return TYPE_BYTE;
+        if (type.equals("short")) return TYPE_SHORT;
+        if (type.equals("float")) return TYPE_FLOAT;
+        if (type.equals("double")) return TYPE_DOUBLE;
+        if (type.equals("char")) return TYPE_CHAR;
+        if (type.equals("java.lang.String")) return TYPE_STRING;
+        if (type.equals("boolean")) return TYPE_BOOLEAN;
+        if (type.equals("void")) return TYPE_VOID; //TODO: check if this is correct
+
+        return TYPE_OBJECT;
     }
 
     public void addChild(VariableNode c) {
@@ -120,9 +169,9 @@ public class VariableNode implements MutableTreeNode {
     @Override
     public String toString() {
         String str = name;
-        if (type != null) {
-            str += " (" + type + ")";
-        }
+//        if (type != null) {
+//            str += " (" + type + ")";
+//        }
         if (value != null) {
             str += ": " + value.toString();
         } else {

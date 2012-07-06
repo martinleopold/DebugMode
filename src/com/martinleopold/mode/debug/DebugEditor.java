@@ -94,7 +94,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         dbg = new Debugger(this);
 
         // variable inspector window
-        vi = new VariableInspector(dbg);
+        vi = new VariableInspector(this);
 
         // access to customized (i.e. subclassed) text area
         ta = (TextArea) textarea;
@@ -349,6 +349,15 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public Debugger dbg() {
         return dbg;
+    }
+
+    /**
+     * Access the mode.
+     *
+     * @return the mode object
+     */
+    public DebugMode mode() {
+        return dmode;
     }
 
     /**

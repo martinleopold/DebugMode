@@ -17,10 +17,18 @@
  */
 package com.martinleopold.mode.debug;
 
+import java.awt.Component;
+import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JTree;
+import javax.swing.ToolTipManager;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.ExpandVetoException;
 
 /**
@@ -31,17 +39,26 @@ import javax.swing.tree.ExpandVetoException;
 public class VariableInspector extends javax.swing.JFrame implements TreeWillExpandListener {
 
     protected DefaultMutableTreeNode rootNode;
+    protected DebugEditor editor;
     protected Debugger dbg;
 
     /**
      * Creates new form NewJFrame
      */
-    public VariableInspector(Debugger dbg) {
-        this.dbg = dbg;
+    public VariableInspector(DebugEditor editor) {
+        this.editor = editor;
+        this.dbg = editor.dbg();
         initComponents();
+
+        // setup jTree
         jTree1.setRootVisible(false);
         jTree1.addTreeWillExpandListener(this);
+        TreeRenderer tcr = new TreeRenderer();
+        jTree1.setCellRenderer(tcr);
+        ToolTipManager.sharedInstance().registerComponent(jTree1);
+
         this.setTitle("Variable Inspector");
+
     }
 
     /**
@@ -142,10 +159,14 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     public void treeWillExpand(TreeExpansionEvent tee) throws ExpandVetoException {
         //System.out.println("tree expansion: " + tee.getPath());
         Object last = tee.getPath().getLastPathComponent();
-        if (!(last instanceof VariableNode)) return;
+        if (!(last instanceof VariableNode)) {
+            return;
+        }
         VariableNode var = (VariableNode) last;
         // load children
-        if (!dbg.isPaused()) throw new ExpandVetoException(tee, "Debugger busy");
+        if (!dbg.isPaused()) {
+            throw new ExpandVetoException(tee, "Debugger busy");
+        }
         //System.out.println("loading children for: " + var);
         var.addChildren(dbg.getFields(var.getValue(), 0));
     }
@@ -153,5 +174,88 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     @Override
     public void treeWillCollapse(TreeExpansionEvent tee) throws ExpandVetoException {
         //throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     *
+     */
+    protected class TreeRenderer extends DefaultTreeCellRenderer {
+        Icon[] icons;
+
+        public TreeRenderer() {
+            // load icons
+            icons = new Icon[] {
+                loadIcon("theme/var-Object.gif"),
+                loadIcon("theme/var-array.gif"),
+                loadIcon("theme/var-int.gif"),
+                loadIcon("theme/var-float.gif"),
+                loadIcon("theme/var-boolean.gif"),
+                loadIcon("theme/var-char.gif"),
+                loadIcon("theme/var-String.gif"),
+                loadIcon("theme/var-long.gif"),
+                loadIcon("theme/var-double.gif")
+            };
+        }
+
+        protected Icon getIcon(int type) {
+            if (type < 0 || type > icons.length - 1) {
+                return null;
+            }
+            return icons[type];
+        }
+
+        @Override
+        public Component getTreeCellRendererComponent(
+                JTree tree,
+                Object value,
+                boolean sel,
+                boolean expanded,
+                boolean leaf,
+                int row,
+                boolean hasFocus) {
+
+            super.getTreeCellRendererComponent(
+                    tree, value, sel,
+                    expanded, leaf, row,
+                    hasFocus);
+
+            /*
+             if (leaf && isTutorialBook(value)) {
+             setIcon(tutorialIcon);
+             setToolTipText("This book is in the Tutorial series.");
+             } else {
+             setToolTipText(null); //no tool tip
+             }
+             */
+
+            if (value instanceof VariableNode) {
+                VariableNode node = (VariableNode) value;
+                String typeName = node.getTypeName();
+                if (typeName != null) setToolTipText(typeName);
+
+                Icon icon = getIcon(node.getType());
+                if (icon != null) {
+                    setIcon(icon);
+                }
+            } else {
+                setToolTipText("");
+            }
+
+            return this;
+        }
+
+        /**
+         * Returns an ImageIcon, or null if the path was invalid.
+         */
+        protected ImageIcon loadIcon(String fileName) {
+            DebugMode mode = editor.mode();
+            File file = mode.getContentFile(fileName);
+            if (!file.exists()) {
+                Logger.getLogger(TreeRenderer.class.getName()).log(Level.SEVERE, "icon file not found: {0}", file.getAbsolutePath());
+                return null;
+            }
+            //if (img == null) System.out.println("couldn't load image: " + fileName);
+            return new ImageIcon(file.getAbsolutePath());
+        }
     }
 }
