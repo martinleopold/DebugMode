@@ -35,8 +35,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 import processing.app.Sketch;
 import processing.app.SketchCode;
 
@@ -705,8 +703,9 @@ public class Debugger implements VMEventListener {
                 Logger.getLogger(Debugger.class.getName()).log(Level.WARNING, "call stack empty");
             } else {
                 vi.updateCallStack(getStackTrace(t), "Call Stack");
-                vi.updateLocals(getLocals(t,0), "Locals at " + currentLocation(t));
-                vi.updateThisFields(getThisFields(t, 0), "Class " + thisName(t));
+                vi.updateLocals(getLocals(t, 0), "Locals at " + currentLocation(t));
+                vi.updateThisFields(getThisFields(t, 0, true), "Class " + thisName(t));
+                vi.updateDeclaredThisFields(getThisFields(t, 0, false), "Class " + thisName(t));
                 vi.rebuild();
             }
         } catch (IncompatibleThreadStateException ex) {
@@ -787,7 +786,7 @@ public class Debugger implements VMEventListener {
                     //System.out.println("local var: " + lv.name());
                     Value val = sf.getValue(lv);
                     VariableNode var = new VariableNode(lv.name(), lv.typeName(), val);
-                    var.addChildren(getFields(val, depth - 1));
+                    var.addChildren(getFields(val, depth - 1, true));
                     vars.add(var);
                 }
             }
@@ -807,13 +806,13 @@ public class Debugger implements VMEventListener {
      * @param depth how deep to resolve nested object references
      * @return the list of fields in the current this object
      */
-    protected List<VariableNode> getThisFields(ThreadReference t, int depth) {
+    protected List<VariableNode> getThisFields(ThreadReference t, int depth, boolean includeInherited) {
         //System.out.println("getting this");
         try {
             if (t.frameCount() > 0) {
                 StackFrame sf = t.frame(0);
                 ObjectReference thisObj = sf.thisObject();
-                return getFields(thisObj, depth);
+                return getFields(thisObj, depth, includeInherited);
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
@@ -861,25 +860,26 @@ public class Debugger implements VMEventListener {
      * @param maxDepth the depth to stop at
      * @return list of child fields of the given value
      */
-    protected List<VariableNode> getFields(Value value, int depth, int maxDepth) {
+    protected List<VariableNode> getFields(Value value, int depth, int maxDepth, boolean includeInherited) {
         // remember: Value <- ObjectReference, ArrayReference
-        List<VariableNode> fields = new ArrayList();
+        List<VariableNode> vars = new ArrayList();
         if (value instanceof ArrayReference) {
             return getArrayFields((ArrayReference) value);
         } else if (value instanceof ObjectReference) {
             ObjectReference obj = (ObjectReference) value;
             // get the fields of this object
-            for (Field field : obj.referenceType().visibleFields()) {
+            List<Field> fields = includeInherited ? obj.referenceType().visibleFields() : obj.referenceType().fields();
+            for (Field field : fields) {
                 Value val = obj.getValue(field); // get the value, may be null
                 VariableNode var = new VariableNode(field.name(), field.typeName(), val);
                 // recursively add children
                 if (val != null && depth < maxDepth) {
-                    var.addChildren(getFields(val, depth + 1, maxDepth));
+                    var.addChildren(getFields(val, depth + 1, maxDepth, includeInherited));
                 }
-                fields.add(var);
+                vars.add(var);
             }
         }
-        return fields;
+        return vars;
     }
 
     /**
@@ -890,8 +890,8 @@ public class Debugger implements VMEventListener {
      * @param maxDepth max recursion depth. 0 will give only direct children
      * @return list of child fields of the given value
      */
-    protected List<VariableNode> getFields(Value value, int maxDepth) {
-        return getFields(value, 0, maxDepth);
+    protected List<VariableNode> getFields(Value value, int maxDepth, boolean includeInherited) {
+        return getFields(value, 0, maxDepth, includeInherited);
     }
 
     // TODO: doc
@@ -899,7 +899,9 @@ public class Debugger implements VMEventListener {
         List<VariableNode> fields = new ArrayList();
         if (array != null) {
             String arrayType = array.type().name();
-            if (arrayType.endsWith("[]")) arrayType = arrayType.substring(0, arrayType.length()-2);
+            if (arrayType.endsWith("[]")) {
+                arrayType = arrayType.substring(0, arrayType.length() - 2);
+            }
             int i = 0;
             for (Value val : array.getValues()) {
                 fields.add(new VariableNode("[" + i + "]", arrayType, val));

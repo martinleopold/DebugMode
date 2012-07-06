@@ -19,6 +19,8 @@ package com.martinleopold.mode.debug;
 
 import java.awt.Component;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,7 +34,6 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
-import javax.swing.tree.TreePath;
 
 /**
  * Variable Inspector window.
@@ -42,9 +43,14 @@ import javax.swing.tree.TreePath;
 public class VariableInspector extends javax.swing.JFrame implements TreeWillExpandListener {
 
     protected DefaultMutableTreeNode rootNode;
-    protected DefaultMutableTreeNode callStackNode;
-    protected DefaultMutableTreeNode localVarsNode;
-    protected DefaultMutableTreeNode thisFieldsNode;
+//    protected DefaultMutableTreeNode callStackNode;
+//    protected DefaultMutableTreeNode localsNode;
+//    protected DefaultMutableTreeNode thisNode;
+//    protected DefaultMutableTreeNode nonInheritedThisNode;
+    protected List<DefaultMutableTreeNode> callStack;
+    protected List<VariableNode> locals;
+    protected List<VariableNode> thisFields;
+    protected List<VariableNode> declaredThisFields;
     protected DebugEditor editor;
     protected Debugger dbg;
 
@@ -63,12 +69,19 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         tree.setCellRenderer(tcr);
         ToolTipManager.sharedInstance().registerComponent(tree);
 
-        callStackNode = new DefaultMutableTreeNode();
-        localVarsNode = new DefaultMutableTreeNode();
-        thisFieldsNode = new DefaultMutableTreeNode();
-        rootNode.add(callStackNode);
-        rootNode.add(localVarsNode);
-        rootNode.add(thisFieldsNode);
+//        callStackNode = new DefaultMutableTreeNode();
+//        localsNode = new DefaultMutableTreeNode();
+//        thisNode = new DefaultMutableTreeNode();
+//        nonInheritedThisNode = new DefaultMutableTreeNode();
+
+        callStack = new ArrayList();
+        locals = new ArrayList();
+        thisFields = new ArrayList();
+        declaredThisFields = new ArrayList();
+
+//        rootNode.add(callStackNode);
+//        rootNode.add(localsNode);
+//        rootNode.add(thisNode);
 
         this.setTitle("Variable Inspector");
 
@@ -181,8 +194,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
             throw new ExpandVetoException(tee, "Debugger busy");
         } else {
             //System.out.println("loading children for: " + var);
-            var.addChildren(dbg.getFields(var.getValue(), 0));
-
+            var.addChildren(dbg.getFields(var.getValue(), 0, true));
         }
     }
 
@@ -286,40 +298,83 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     }
 
     public void updateCallStack(List<DefaultMutableTreeNode> nodes, String title) {
-        callStackNode.setUserObject(title);
-        callStackNode.removeAllChildren();
-        for (DefaultMutableTreeNode node : nodes) {
-            callStackNode.add(node);
-        }
-
+        callStack = nodes;
     }
 
     public void updateLocals(List<VariableNode> nodes, String title) {
-        localVarsNode.setUserObject(title);
-        localVarsNode.removeAllChildren();
-        for (VariableNode var : nodes) {
-            localVarsNode.add(var);
-        }
+        locals = nodes;
     }
 
     public void updateThisFields(List<VariableNode> nodes, String title) {
-        thisFieldsNode.setUserObject(title);
-        thisFieldsNode.removeAllChildren();
-        for (VariableNode var : nodes) {
-            thisFieldsNode.add(var);
-        }
+        thisFields = nodes;
+    }
+
+    public void updateDeclaredThisFields(List<VariableNode> nodes, String title) {
+        declaredThisFields = nodes;
     }
 
     public void rebuild() {
+        rootNode.removeAllChildren();
+        if (p5mode) {
+            // filter
+            P5BuiltinsFilter filter = new P5BuiltinsFilter();
+
+            // add all locals to root
+            for (VariableNode var : locals) {
+                rootNode.add(var);
+            }
+
+            // add non-inherited this fields
+            for (VariableNode var : declaredThisFields) {
+                rootNode.add(var);
+            }
+
+            // add p5 builtins
+            for (VariableNode var : thisFields) {
+                if (filter.accept(var)) {
+                    rootNode.add(var);
+                }
+            }
+            //System.out.println("shown fields: " + rootNode.getChildCount());
+        } else {
+            // TODO: implement advanced mode here
+//            rootNode.add(callStackNode);
+//            rootNode.add(localsNode);
+//            rootNode.add(thisNode);
+            // expand top level nodes
+            // needs to happen after nodeStructureChanged
+//            tree.expandPath(new TreePath(new Object[]{rootNode, callStackNode}));
+//            tree.expandPath(new TreePath(new Object[]{rootNode, localsNode}));
+//            tree.expandPath(new TreePath(new Object[]{rootNode, thisNode}));
+        }
+
         // notify tree (using model)
         //http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
         model.nodeStructureChanged(rootNode);
+    }
 
-        // expand top level nodes
-        // needs to happen after nodeStructureChanged
-        tree.expandPath(new TreePath(new Object[]{rootNode, callStackNode}));
-        tree.expandPath(new TreePath(new Object[]{rootNode, localVarsNode}));
-        tree.expandPath(new TreePath(new Object[]{rootNode, thisFieldsNode}));
+    public class P5BuiltinsFilter {
+
+        protected String[] p5Builtins = {
+            "focused",
+            "frameCount",
+            "frameRate",
+            "height",
+            "online",
+            "screen",
+            "width",
+            "mouseX",
+            "mouseY",
+            "pmouseX",
+            "pmouseY",
+            "key",
+            "keyCode",
+            "keyPressed"
+        };
+
+        public boolean accept(VariableNode var) {
+            return Arrays.asList(p5Builtins).contains(var.name);
+        }
     }
 }
