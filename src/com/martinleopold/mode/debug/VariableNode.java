@@ -17,20 +17,9 @@
  */
 package com.martinleopold.mode.debug;
 
-import com.sun.jdi.ArrayType;
-import com.sun.jdi.BooleanType;
-import com.sun.jdi.ByteType;
-import com.sun.jdi.CharType;
-import com.sun.jdi.DoubleType;
-import com.sun.jdi.FloatType;
-import com.sun.jdi.IntegerType;
-import com.sun.jdi.LongType;
+import com.sun.jdi.ArrayReference;
 import com.sun.jdi.ObjectReference;
-import com.sun.jdi.ReferenceType;
-import com.sun.jdi.ShortType;
-import com.sun.jdi.Type;
 import com.sun.jdi.Value;
-import com.sun.jdi.VoidType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -147,6 +136,12 @@ public class VariableNode implements MutableTreeNode {
 
     @Override
     public boolean getAllowsChildren() {
+        // handle arrays
+        if (value instanceof ArrayReference) {
+            ArrayReference array = (ArrayReference) value;
+            return array.length() > 0;
+        }
+        // handle objects
         if (value instanceof ObjectReference) { // this also rules out null
             // check if this object has any fields
             ObjectReference obj = (ObjectReference) value;

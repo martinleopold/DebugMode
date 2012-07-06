@@ -897,7 +897,9 @@ public class Debugger implements VMEventListener {
     protected List<VariableNode> getFields(Value value, int depth, int maxDepth) {
         // remember: Value <- ObjectReference, ArrayReference
         List<VariableNode> fields = new ArrayList();
-        if (value instanceof ObjectReference) {
+        if (value instanceof ArrayReference) {
+            return getArrayFields((ArrayReference) value);
+        } else if (value instanceof ObjectReference) {
             ObjectReference obj = (ObjectReference) value;
             // get the fields of this object
             for (Field field : obj.referenceType().visibleFields()) {
@@ -923,6 +925,21 @@ public class Debugger implements VMEventListener {
      */
     protected List<VariableNode> getFields(Value value, int maxDepth) {
         return getFields(value, 0, maxDepth);
+    }
+
+    // TODO: doc
+    protected List<VariableNode> getArrayFields(ArrayReference array) {
+        List<VariableNode> fields = new ArrayList();
+        if (array != null) {
+            String arrayType = array.type().name();
+            if (arrayType.endsWith("[]")) arrayType = arrayType.substring(0, arrayType.length()-2);
+            int i = 0;
+            for (Value val : array.getValues()) {
+                fields.add(new VariableNode("[" + i + "]", arrayType, val));
+                i++;
+            }
+        }
+        return fields;
     }
 
     /**

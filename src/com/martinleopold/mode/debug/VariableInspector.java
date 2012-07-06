@@ -17,6 +17,8 @@
  */
 package com.martinleopold.mode.debug;
 
+import com.sun.jdi.ArrayReference;
+import com.sun.jdi.Value;
 import java.awt.Component;
 import java.io.File;
 import java.util.logging.Level;
@@ -166,9 +168,11 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         // load children
         if (!dbg.isPaused()) {
             throw new ExpandVetoException(tee, "Debugger busy");
+        } else {
+            //System.out.println("loading children for: " + var);
+            var.addChildren(dbg.getFields(var.getValue(), 0));
+
         }
-        //System.out.println("loading children for: " + var);
-        var.addChildren(dbg.getFields(var.getValue(), 0));
     }
 
     @Override
@@ -180,11 +184,12 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
      *
      */
     protected class TreeRenderer extends DefaultTreeCellRenderer {
+
         Icon[] icons;
 
         public TreeRenderer() {
             // load icons
-            icons = new Icon[] {
+            icons = new Icon[]{
                 loadIcon("theme/var-Object.gif"),
                 loadIcon("theme/var-array.gif"),
                 loadIcon("theme/var-int.gif"),
@@ -231,7 +236,9 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
             if (value instanceof VariableNode) {
                 VariableNode node = (VariableNode) value;
                 String typeName = node.getTypeName();
-                if (typeName != null) setToolTipText(typeName);
+                if (typeName != null) {
+                    setToolTipText(typeName);
+                }
 
                 Icon icon = getIcon(node.getType());
                 if (icon != null) {
