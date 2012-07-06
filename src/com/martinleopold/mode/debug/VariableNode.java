@@ -147,7 +147,12 @@ public class VariableNode implements MutableTreeNode {
 
     @Override
     public boolean getAllowsChildren() {
-        return ((Value) value) instanceof ObjectReference;
+        if (value instanceof ObjectReference) { // this also rules out null
+            // check if this object has any fields
+            ObjectReference obj = (ObjectReference) value;
+            return !obj.referenceType().visibleFields().isEmpty();
+        }
+        return false;
     }
 
     /**
