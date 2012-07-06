@@ -94,7 +94,7 @@ XXXXX (blub$Klasse): instance of blub$Klasse
 ... den "instance of" Kram braucht man nur wenn es nicht die selbe Klasse ist wie der Var-Typus
 
 6)
-Wenn keine Locals da sind, sollte das Icon trotzdem ein Folder sein ... 
+Wenn keine Locals da sind, sollte das Icon trotzdem ein Folder sein ...
 
 7)
 "Leere" Objekt-Variablen haben im Inspektor ein "Öffner-Dreieck" ... wenn man das klickt verschwindet es einfach nur. Klar, du lädst den Inhalt nach dem Klick, aber es ist für den User unbefriedigend wenn man die Dinger dauernd klickt und dann nichts passiert. ... können wir anzeigen ob die leer sind, oder zumindest das Dreieckchen behalten?
@@ -183,10 +183,11 @@ PROTOTYPE 4:
 	~ icon symbols, choice, placement
 	* icon and menu locking
 	! var insp: p5 mode
-		* hide non-processing vars
-		* handle p5 types, arrays
+		~ hide non-processing vars
+		x handle p5 types
+                x handle arrays
 		* clear on open/new
-		* symbols for types
+		x symbols for types
 		? show when relevant
 		? grey out when not current
 		? dock to main window
@@ -280,7 +281,7 @@ x Class Design (MVC)
 			* type symbols
 			* columnized
 		x lazy loading (otherwise way too much to load, due to circular refs)
-		* support p5 variables	
+		* support p5 variables
 		* array support
 		* color support
 		/ loop detection
@@ -357,7 +358,14 @@ java.lang.ArrayIndexOutOfBoundsException: 344
 	at processing.app.syntax.TextAreaPainter.paintSyntaxLine(TextAreaPainter.java:625)
 	at processing.app.syntax.TextAreaPainter.paintLine(TextAreaPainter.java:588)
 	at com.martinleopold.mode.debug.TextAreaPainter.paintLine(Unknown Source)
-
+6.7.
+* implicit stepping (invisible code) updates var inspector
+* scrolling in vi when debugger stopped: com.sun.jdi.VMDisconnectedException:
+	-> possible error in VariableNode implementation
+* second debug session doesn't work (VMDisconnected)
+* breakpoint marker remains, when opening new file  (if marker is beyond opended file size
+* contents of Animal a show up double (dbg_test)
+* stepping out of setup doesn't stop in draw()
 
 
 QUESTIONS:
