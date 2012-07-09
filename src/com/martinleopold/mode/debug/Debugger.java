@@ -703,7 +703,9 @@ public class Debugger implements VMEventListener {
                 Logger.getLogger(Debugger.class.getName()).log(Level.WARNING, "call stack empty");
             } else {
                 vi.updateCallStack(getStackTrace(t), "Call Stack");
-                vi.updateLocals(getLocals(t, 0), "Locals at " + currentLocation(t));
+
+                List<VariableNode> locals = getLocals(t, 0);
+                vi.updateLocals(locals, "Locals at " + currentLocation(t));
                 vi.updateThisFields(getThisFields(t, 0, true), "Class " + thisName(t));
                 vi.updateDeclaredThisFields(getThisFields(t, 0, false), "Class " + thisName(t));
                 vi.rebuild();
@@ -773,9 +775,10 @@ public class Debugger implements VMEventListener {
      * {@link JTree}. Recursively resolves object references.
      *
      * @param t the suspended thread to get locals for
-     * @param depth how deep to resolve nested object references
+     * @param depth how deep to resolve nested object references. 0 will not resolve nested objects.
      * @return the list of current locals
      */
+    // TODO: there is an error with depth
     protected List<VariableNode> getLocals(ThreadReference t, int depth) {
         //System.out.println("getting locals");
         List<VariableNode> vars = new ArrayList();
@@ -786,7 +789,11 @@ public class Debugger implements VMEventListener {
                     //System.out.println("local var: " + lv.name());
                     Value val = sf.getValue(lv);
                     VariableNode var = new VariableNode(lv.name(), lv.typeName(), val);
-                    var.addChildren(getFields(val, depth - 1, true));
+                    System.out.println("local: " + var.name);
+                    if (depth > 0) {
+                        System.out.println("getting children");
+                        var.addChildren(getFields(val, depth - 1, true));
+                    }
                     vars.add(var);
                 }
             }
@@ -803,7 +810,7 @@ public class Debugger implements VMEventListener {
      * into a {@link JTree}. Recursively resolves object references.
      *
      * @param t the suspended thread to get locals for
-     * @param depth how deep to resolve nested object references
+     * @param depth how deep to resolve nested object references. 0 will not resolve nested objects.
      * @return the list of fields in the current this object
      */
     protected List<VariableNode> getThisFields(ThreadReference t, int depth, boolean includeInherited) {
@@ -857,26 +864,28 @@ public class Debugger implements VMEventListener {
      *
      * @param value must be an instance of {@link ObjectReference}
      * @param depth the current depth
-     * @param maxDepth the depth to stop at
+     * @param maxDepth the depth to stop at (inclusive)
      * @return list of child fields of the given value
      */
     protected List<VariableNode> getFields(Value value, int depth, int maxDepth, boolean includeInherited) {
         // remember: Value <- ObjectReference, ArrayReference
         List<VariableNode> vars = new ArrayList();
-        if (value instanceof ArrayReference) {
-            return getArrayFields((ArrayReference) value);
-        } else if (value instanceof ObjectReference) {
-            ObjectReference obj = (ObjectReference) value;
-            // get the fields of this object
-            List<Field> fields = includeInherited ? obj.referenceType().visibleFields() : obj.referenceType().fields();
-            for (Field field : fields) {
-                Value val = obj.getValue(field); // get the value, may be null
-                VariableNode var = new VariableNode(field.name(), field.typeName(), val);
-                // recursively add children
-                if (val != null && depth < maxDepth) {
-                    var.addChildren(getFields(val, depth + 1, maxDepth, includeInherited));
+        if (depth <= maxDepth) {
+            if (value instanceof ArrayReference) {
+                return getArrayFields((ArrayReference) value);
+            } else if (value instanceof ObjectReference) {
+                ObjectReference obj = (ObjectReference) value;
+                // get the fields of this object
+                List<Field> fields = includeInherited ? obj.referenceType().visibleFields() : obj.referenceType().fields();
+                for (Field field : fields) {
+                    Value val = obj.getValue(field); // get the value, may be null
+                    VariableNode var = new VariableNode(field.name(), field.typeName(), val);
+                    // recursively add children
+                    if (val != null) {
+                        var.addChildren(getFields(val, depth + 1, maxDepth, includeInherited));
+                    }
+                    vars.add(var);
                 }
-                vars.add(var);
             }
         }
         return vars;

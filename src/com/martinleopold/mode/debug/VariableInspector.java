@@ -34,6 +34,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
+import javax.swing.tree.TreePath;
 
 /**
  * Variable Inspector window.
@@ -193,6 +194,10 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         if (!dbg.isPaused()) {
             throw new ExpandVetoException(tee, "Debugger busy");
         } else {
+            if (var.name.equals("a")) {
+                List<VariableNode> list = dbg.getFields(var.getValue(), 0, true);
+                System.out.println(list.size());
+            }
             //System.out.println("loading children for: " + var);
             var.addChildren(dbg.getFields(var.getValue(), 0, true));
         }
@@ -329,12 +334,21 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
                 rootNode.add(var);
             }
 
-            // add p5 builtins
+            // add p5 builtins in a new folder
+            DefaultMutableTreeNode builtins = new DefaultMutableTreeNode("Processing");
             for (VariableNode var : thisFields) {
                 if (filter.accept(var)) {
-                    rootNode.add(var);
+                    builtins.add(var);
                 }
             }
+            rootNode.add(builtins);
+
+                    // notify tree (using model)
+        //http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
+        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+        model.nodeStructureChanged(rootNode);
+
+            tree.expandPath(new TreePath(new Object[]{rootNode, builtins}));
             //System.out.println("shown fields: " + rootNode.getChildCount());
         } else {
             // TODO: implement advanced mode here
@@ -348,10 +362,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 //            tree.expandPath(new TreePath(new Object[]{rootNode, thisNode}));
         }
 
-        // notify tree (using model)
-        //http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
-        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-        model.nodeStructureChanged(rootNode);
+
     }
 
     public class P5BuiltinsFilter {
