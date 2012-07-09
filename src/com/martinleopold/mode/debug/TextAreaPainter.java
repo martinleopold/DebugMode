@@ -63,8 +63,9 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
         super.paintLine(gfx, tokenMarker, line, x + ta.gutterWidth());
     }
 
+    // TODO: docs
     protected void paintGutterBg(Graphics gfx, int line, int x) {
-        gfx.setColor(ta.gutterColor);
+        gfx.setColor(ta.gutterBgColor);
         int y = ta.lineToY(line) + fm.getLeading() + fm.getMaxDescent();
         gfx.fillRect(0, y, ta.gutterWidth(), fm.getHeight());
     }
@@ -77,19 +78,26 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
 
     protected void paintGutterText(Graphics gfx, int line, int x) {
         String text = ta.getGutterText(line);
-        if (text == null) return;
+        if (text == null) {
+            return;
+        }
 
         gfx.setFont(getFont());
-        gfx.setColor(getForeground());
+        Color textColor = ta.getGutterTextColor(line);
+        if (textColor == null) {
+            gfx.setColor(getForeground());
+        } else {
+            gfx.setColor(textColor);
+        }
         int y = ta.lineToY(line) + fm.getHeight();
 
         //int len = text.length() > ta.gutterChars ? ta.gutterChars : text.length();
-        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder()  , y, gfx, this,0);
-        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder()+1, y, gfx, this,0);
-        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder()  , y+1, gfx, this,0);
-        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder()+1, y+1, gfx, this,0);
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder(), y, gfx, this, 0);
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder() + 1, y, gfx, this, 0);
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder(), y + 1, gfx, this, 0);
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder() + 1, y + 1, gfx, this, 0);
 
-            // Draw characters via input method.
+        // Draw characters via input method.
 //    if (compositionTextPainter != null && compositionTextPainter.hasComposedTextLayout()) {
 //      compositionTextPainter.draw(gfx, lineHighlightColor);
 //    }

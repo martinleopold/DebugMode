@@ -30,6 +30,7 @@ public class LineHighlight implements LineListener {
     protected Color bgColor; // the background color for highlighting lines
     protected LineID lineID;
     protected String marker;
+    protected Color markerColor;
 
     /**
      * Create a {@link LineHighlight} on the current tab.
@@ -50,6 +51,11 @@ public class LineHighlight implements LineListener {
     public void setMarker(String marker) {
         this.marker = marker;
         paint();
+    }
+
+    public void setMarker(String marker, Color markerColor) {
+        this.markerColor = markerColor;
+        setMarker(marker);
     }
 
     /**
@@ -116,15 +122,19 @@ public class LineHighlight implements LineListener {
         if (editor.isInCurrentTab(lineID)) {
             editor.textArea().setLineBgColor(lineID.lineIdx(), bgColor);
             if (marker != null) {
-                editor.textArea().setGutterText(lineID.lineIdx(), marker);
+                if (markerColor != null) {
+                    editor.textArea().setGutterText(lineID.lineIdx(), marker, markerColor);
+                } else {
+                    editor.textArea().setGutterText(lineID.lineIdx(), marker);
+                }
             }
         }
     }
 
-    /**
-     * Clear this line highlight. Needs to be on the current tab (obviously).
-     */
-    public void clear() {
+/**
+ * Clear this line highlight. Needs to be on the current tab (obviously).
+ */
+public void clear() {
         if (editor.isInCurrentTab(lineID)) {
             editor.textArea().clearLineBgColor(lineID.lineIdx());
             editor.textArea().clearGutterText(lineID.lineIdx());

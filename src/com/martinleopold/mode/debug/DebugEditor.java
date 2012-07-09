@@ -51,8 +51,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     //public static final Color BREAKPOINT_COLOR = new Color(180, 210, 255); // the background color for highlighting lines
     public static final Color BREAKPOINT_COLOR = new Color(240, 240, 240); // the background color for highlighting lines
     public static final Color CURRENT_LINE_COLOR = new Color(255, 255, 150); // the background color for highlighting lines
-    public static final String BREAKPOINT_MARKER = " -";
+    public static final String BREAKPOINT_MARKER = "--";
     public static final String CURRENT_LINE_MARKER = "->";
+    public static final Color BREAKPOINT_MARKER_COLOR = new Color(150, 150, 150);
+    public static final Color CURRENT_LINE_MARKER_COLOR = new Color(226, 117, 0);
+
     protected List<LineHighlight> breakpointedLines = new ArrayList(); // breakpointed lines
     protected LineHighlight currentLine; // line the debugger is currently suspended at
     // menus
@@ -437,7 +440,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         cursorToLineStart(line.lineIdx());
         // highlight line
         currentLine = new LineHighlight(line.lineIdx(), CURRENT_LINE_COLOR, this);
-        currentLine.setMarker(CURRENT_LINE_MARKER);
+        currentLine.setMarker(CURRENT_LINE_MARKER, CURRENT_LINE_MARKER_COLOR);
     }
 
     /**
@@ -467,7 +470,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public void addBreakpointedLine(int lineIdx) {
         LineHighlight hl = new LineHighlight(lineIdx, BREAKPOINT_COLOR, this);
-        hl.setMarker(BREAKPOINT_MARKER);
+        hl.setMarker(BREAKPOINT_MARKER, BREAKPOINT_MARKER_COLOR);
         breakpointedLines.add(hl);
         // repaint current line if it's on this line
         if (currentLine != null && currentLine.lineID().equals(getLineIDInCurrentTab(lineIdx))) {

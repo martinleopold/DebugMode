@@ -62,11 +62,13 @@ public class TextArea extends JEditTextArea {
 
         add(CENTER, painter);
     }
+    // TODO: docs
     protected int gutterChars = 2; // # characters
     protected int gutterMargins = 3; // px, space added left and right
-    protected Color gutterColor = new Color(252, 252, 252);
+    protected Color gutterBgColor = new Color(252, 252, 252);
     protected Color gutterLineColor = new Color(233, 233, 233);
     protected Map<Integer, String> gutterText = new HashMap();
+    protected Map<Integer, Color> gutterTextColors = new HashMap();
 
     protected int gutterWidth() {
         return gutterChars * painter.getFontMetrics().getMaxAdvance() + 2 * gutterMargins;
@@ -79,6 +81,11 @@ public class TextArea extends JEditTextArea {
     public void setGutterText(int lineIdx, String text) {
         gutterText.put(lineIdx, text);
         painter.invalidateLine(lineIdx);
+    }
+
+    public void setGutterText(int lineIdx, String text, Color textColor) {
+        gutterTextColors.put(lineIdx, textColor);
+        setGutterText(lineIdx, text);
     }
 
     public void clearGutterText(int lineIdx) {
@@ -95,6 +102,10 @@ public class TextArea extends JEditTextArea {
 
     public String getGutterText(int lineIdx) {
         return gutterText.get(lineIdx);
+    }
+
+    public Color getGutterTextColor(int lineIdx) {
+        return gutterTextColors.get(lineIdx);
     }
     protected Map<Integer, Color> lineColors = new HashMap(); // contains line background colors
 
