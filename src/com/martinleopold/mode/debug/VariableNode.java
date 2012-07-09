@@ -173,9 +173,13 @@ public class VariableNode implements MutableTreeNode {
 //            str += " (" + type + ")";
 //        }
         if (value != null) {
-            str += ": " + value.toString();
+            if (getType() == TYPE_OBJECT) {
+                str += ": instance of " + type;
+            } else {
+                str += ": " + value.toString();
+            }
         } else {
-            str += ": " + "null";
+            str += ": null";
         }
         return str;
     }
