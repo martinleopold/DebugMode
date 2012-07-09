@@ -210,6 +210,7 @@ public class Debugger implements VMEventListener {
         }
         stopTrackingLineChanges();
         started = false;
+        editor.variableInspector().lock();
     }
 
     /**
@@ -219,6 +220,7 @@ public class Debugger implements VMEventListener {
         //editor.clearSelection();
         //clearHighlight();
         editor.clearCurrentLine();
+        editor.variableInspector().lock();
         if (!isStarted()) {
             startDebug();
         } else if (isPaused()) {
@@ -242,6 +244,7 @@ public class Debugger implements VMEventListener {
             requestedStep.enable();
             paused = false;
             runtime.vm().resume();
+            editor.variableInspector().lock();
         }
     }
 
@@ -710,6 +713,7 @@ public class Debugger implements VMEventListener {
                 vi.updateDeclaredThisFields(getThisFields(t, 0, false), "Class " + thisName(t));
                 vi.rebuild();
             }
+            vi.unlock();
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
         }

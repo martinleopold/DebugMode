@@ -178,6 +178,14 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     public DefaultMutableTreeNode getRootNode() {
         return rootNode;
     }
+
+    public void unlock() {
+        tree.setEnabled(true);
+    }
+
+    public void lock() {
+        tree.setEnabled(false);
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTree tree;

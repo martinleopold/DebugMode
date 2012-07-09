@@ -177,26 +177,44 @@ PROTOTYPE 4:
 * UI
 	~ gutter left / line annotation
 		* fg colors
-		* bg colors
+		/ bg colors
 		/ unicode
 		x line
 	~ icon symbols, choice, placement
+		* variants
 	* icon and menu locking
 	! var insp: p5 mode
-		~ hide non-processing vars
+		x hide non-processing vars
 		x handle p5 types
                 x handle arrays
-		* clear on open/new
 		x symbols for types
-		? show when relevant
-		? grey out when not current
-		? dock to main window
-
+		* clear on open/new
+		* grey out when not current
+		* switch to advanced mode
+		* columnized interface
+		* sorting
+		* advanced mode switch
 x handle debug output -> use logging
 x forward debuggee streams
 x disallow stepping into invisible code
 x rethink line translation
 	x dynamic translation at runtime (track all line changes when debugging)
+! fix critical bugs
+
+
+PROTOTYPE 5:
+iteration
+
+* variable inspector
+	* maintain expansions and scroll positions
+	* automatically show when relevant
+	* dock to main window
+	* support p5 types
+		color
+		PImage
+		etc
+* bug fixes
+* update docs
 
 
 
@@ -282,7 +300,7 @@ x Class Design (MVC)
 			* columnized
 		x lazy loading (otherwise way too much to load, due to circular refs)
 		* support p5 variables
-		* array support
+		x array support
 		* color support
 		/ loop detection
 		* sorting
@@ -310,7 +328,7 @@ x line highlight interference with other line coloring methods
 	x selecting
 x we need a call stack window! (to know where we are)
 * var inspector
-	* tree icons
+	x tree icons
 	* grey out when info not current (i.e. vm not suspended)
 x line highlighting
 	x DebugEditor should provide the functions for setting the current line, not Debugger
@@ -343,7 +361,7 @@ x disallow stepping into invisible code
 x remove auto breakpoints
 * can't set breakpoint in a classes constructor?
 3.7.2012
-? can i make a modular Editor? (no matter how ugly?)
+x can i make a modular Editor? (no matter how ugly?) -> no
 * gutter fg color, bg color, per line. general bg color, trennlinie?
 ! stepping out of println() returns to the same line, leads to NullPointerException when done multiple times. + VMMismatchException when restarting dbg
 * change logger console format to something more readable
@@ -362,9 +380,11 @@ java.lang.ArrayIndexOutOfBoundsException: 344
 * implicit stepping (invisible code) updates var inspector
 * scrolling in vi when debugger stopped: com.sun.jdi.VMDisconnectedException:
 	-> possible error in VariableNode implementation
-* second debug session doesn't work (VMDisconnected)
+! second debug session doesn't work in some cases(VMEventReader quit on VM disconnect)
+	happens when completely stepping out of setup()
+	-> VMEventReader should reset things too, on disconnect?
 * breakpoint marker remains, when opening new file  (if marker is beyond opended file size
-* contents of Animal a show up double (dbg_test)
+x contents of Animal a show up double (dbg_test)
 * stepping out of setup doesn't stop in draw()
 
 
