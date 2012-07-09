@@ -49,12 +49,11 @@ public class VariableNode implements MutableTreeNode {
     public static final int TYPE_BYTE = 9;
     public static final int TYPE_SHORT = 10;
     public static final int TYPE_VOID = 11;
-
     protected String type;
     protected String name;
     protected Value value;
-    List<MutableTreeNode> children = new ArrayList();
-    MutableTreeNode parent;
+    protected List<MutableTreeNode> children = new ArrayList();
+    protected MutableTreeNode parent;
 
     private VariableNode(String name) {
         this.name = name;
@@ -88,18 +87,39 @@ public class VariableNode implements MutableTreeNode {
         if (type == null) {
             return TYPE_UNKNOWN;
         }
-        if (type.endsWith("[]")) return TYPE_ARRAY;
-        if (type.equals("int")) return TYPE_INTEGER;
-        if (type.equals("long")) return TYPE_LONG;
-        if (type.equals("byte")) return TYPE_BYTE;
-        if (type.equals("short")) return TYPE_SHORT;
-        if (type.equals("float")) return TYPE_FLOAT;
-        if (type.equals("double")) return TYPE_DOUBLE;
-        if (type.equals("char")) return TYPE_CHAR;
-        if (type.equals("java.lang.String")) return TYPE_STRING;
-        if (type.equals("boolean")) return TYPE_BOOLEAN;
-        if (type.equals("void")) return TYPE_VOID; //TODO: check if this is correct
-
+        if (type.endsWith("[]")) {
+            return TYPE_ARRAY;
+        }
+        if (type.equals("int")) {
+            return TYPE_INTEGER;
+        }
+        if (type.equals("long")) {
+            return TYPE_LONG;
+        }
+        if (type.equals("byte")) {
+            return TYPE_BYTE;
+        }
+        if (type.equals("short")) {
+            return TYPE_SHORT;
+        }
+        if (type.equals("float")) {
+            return TYPE_FLOAT;
+        }
+        if (type.equals("double")) {
+            return TYPE_DOUBLE;
+        }
+        if (type.equals("char")) {
+            return TYPE_CHAR;
+        }
+        if (type.equals("java.lang.String")) {
+            return TYPE_STRING;
+        }
+        if (type.equals("boolean")) {
+            return TYPE_BOOLEAN;
+        }
+        if (type.equals("void")) {
+            return TYPE_VOID; //TODO: check if this is correct
+        }
         return TYPE_OBJECT;
     }
 
@@ -136,17 +156,27 @@ public class VariableNode implements MutableTreeNode {
 
     @Override
     public boolean getAllowsChildren() {
+        if (value == null) {
+            return false;
+        }
+
+        // handle strings
+        if (getType() == TYPE_STRING) {
+            return false;
+        }
+
         // handle arrays
-        if (value instanceof ArrayReference) {
+        if (getType() == TYPE_ARRAY) {
             ArrayReference array = (ArrayReference) value;
             return array.length() > 0;
         }
         // handle objects
-        if (value instanceof ObjectReference) { // this also rules out null
+        if (getType() == TYPE_OBJECT) { // this also rules out null
             // check if this object has any fields
             ObjectReference obj = (ObjectReference) value;
             return !obj.referenceType().visibleFields().isEmpty();
         }
+
         return false;
     }
 
