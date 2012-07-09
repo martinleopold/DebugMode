@@ -34,6 +34,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
+import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 
 /**
@@ -194,12 +195,10 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         if (!dbg.isPaused()) {
             throw new ExpandVetoException(tee, "Debugger busy");
         } else {
-            if (var.name.equals("a")) {
-                List<VariableNode> list = dbg.getFields(var.getValue(), 0, true);
-                System.out.println(list.size());
-            }
+            // TODO: don't filter in advanced mode
             //System.out.println("loading children for: " + var);
-            var.addChildren(dbg.getFields(var.getValue(), 0, true));
+            // true means include inherited
+            var.addChildren(filterNodes(dbg.getFields(var.getValue(), 0, true), new ThisFilter()));
         }
     }
 
@@ -321,32 +320,21 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     public void rebuild() {
         rootNode.removeAllChildren();
         if (p5mode) {
-            // filter
-            P5BuiltinsFilter filter = new P5BuiltinsFilter();
-
             // add all locals to root
-            for (VariableNode var : locals) {
-                rootNode.add(var);
-            }
+            addAllNodes(rootNode, locals);
 
             // add non-inherited this fields
-            for (VariableNode var : declaredThisFields) {
-                rootNode.add(var);
-            }
+            addAllNodes(rootNode, declaredThisFields);
 
             // add p5 builtins in a new folder
             DefaultMutableTreeNode builtins = new DefaultMutableTreeNode("Processing");
-            for (VariableNode var : thisFields) {
-                if (filter.accept(var)) {
-                    builtins.add(var);
-                }
-            }
+            addAllNodes(builtins, filterNodes(thisFields, new P5BuiltinsFilter()));
             rootNode.add(builtins);
 
-                    // notify tree (using model)
-        //http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
-        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-        model.nodeStructureChanged(rootNode);
+            // notify tree (using model)
+            //http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
+            DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+            model.nodeStructureChanged(rootNode);
 
             tree.expandPath(new TreePath(new Object[]{rootNode, builtins}));
             //System.out.println("shown fields: " + rootNode.getChildCount());
@@ -361,11 +349,30 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 //            tree.expandPath(new TreePath(new Object[]{rootNode, localsNode}));
 //            tree.expandPath(new TreePath(new Object[]{rootNode, thisNode}));
         }
-
-
     }
 
-    public class P5BuiltinsFilter {
+    protected List<VariableNode> filterNodes(List<VariableNode> nodes, VariableNodeFilter filter) {
+        List<VariableNode> filtered = new ArrayList();
+        for (VariableNode node : nodes) {
+            if (filter.accept(node)) {
+                filtered.add(node);
+            }
+        }
+        return filtered;
+    }
+
+    protected void addAllNodes(DefaultMutableTreeNode root, List<? extends MutableTreeNode> nodes) {
+        for (MutableTreeNode node : nodes) {
+            root.add(node);
+        }
+    }
+
+    public interface VariableNodeFilter {
+
+        public boolean accept(VariableNode var);
+    }
+
+    public class P5BuiltinsFilter implements VariableNodeFilter {
 
         protected String[] p5Builtins = {
             "focused",
@@ -384,8 +391,17 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
             "keyPressed"
         };
 
+        @Override
         public boolean accept(VariableNode var) {
             return Arrays.asList(p5Builtins).contains(var.name);
+        }
+    }
+
+    public class ThisFilter implements VariableNodeFilter {
+
+        @Override
+        public boolean accept(VariableNode var) {
+            return !var.name.startsWith("this$");
         }
     }
 }
