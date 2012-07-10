@@ -18,6 +18,9 @@
 package com.martinleopold.mode.debug;
 
 import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,7 +89,6 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 //        rootNode.add(thisNode);
 
         this.setTitle("Variable Inspector");
-
     }
 
     /**
@@ -214,34 +216,25 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     public void treeWillCollapse(TreeExpansionEvent tee) throws ExpandVetoException {
         //throw new UnsupportedOperationException("Not supported yet.");
     }
+    protected static final int ICON_SIZE = 16;
 
     /**
      * TODO: docs
      */
     protected class TreeRenderer extends DefaultTreeCellRenderer {
 
-        protected Icon[] icons;
+        protected Icon[][] icons;
 
         public TreeRenderer() {
             // load icons
-            icons = new Icon[]{
-                loadIcon("theme/var-Object.gif"),
-                loadIcon("theme/var-array.gif"),
-                loadIcon("theme/var-int.gif"),
-                loadIcon("theme/var-float.gif"),
-                loadIcon("theme/var-boolean.gif"),
-                loadIcon("theme/var-char.gif"),
-                loadIcon("theme/var-String.gif"),
-                loadIcon("theme/var-long.gif"),
-                loadIcon("theme/var-double.gif")
-            };
+            icons = loadIcons("theme/var-icons.gif");
         }
 
-        protected Icon getIcon(int type) {
+        protected Icon getIcon(int type, int state) {
             if (type < 0 || type > icons.length - 1) {
                 return null;
             }
-            return icons[type];
+            return icons[type][state];
         }
 
         @Override
@@ -266,9 +259,13 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
                     setToolTipText(typeName);
                 }
 
-                Icon icon = getIcon(node.getType());
+                Icon icon = getIcon(node.getType(), 0);
                 if (icon != null) {
                     setIcon(icon);
+                }
+                Icon greyIcon = getIcon(node.getType(), 1);
+                if (greyIcon != null) {
+                    setDisabledIcon(greyIcon);
                 }
             } else {
                 setToolTipText("");
@@ -280,15 +277,33 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         /**
          * Returns an ImageIcon, or null if the path was invalid.
          */
-        protected ImageIcon loadIcon(String fileName) {
+        protected ImageIcon[][] loadIcons(String fileName) {
             DebugMode mode = editor.mode();
             File file = mode.getContentFile(fileName);
             if (!file.exists()) {
                 Logger.getLogger(TreeRenderer.class.getName()).log(Level.SEVERE, "icon file not found: {0}", file.getAbsolutePath());
                 return null;
             }
-            //if (img == null) System.out.println("couldn't load image: " + fileName);
-            return new ImageIcon(file.getAbsolutePath());
+            Image allIcons = mode.loadImage(fileName);
+            if (allIcons == null) System.out.println("allicons");
+            int cols = allIcons.getWidth(this) / ICON_SIZE;
+            int rows = allIcons.getHeight(this) / ICON_SIZE;
+            System.out.println("cols: " + cols + "   rows: " + rows);
+            ImageIcon[][] iconImages = new ImageIcon[cols][rows];
+            if (iconImages == null) System.out.println("icon images");
+
+            for (int i = 0; i < cols; i++) {
+                for (int j = 0; j < rows; j++) {
+                    //Image image = createImage(ICON_SIZE, ICON_SIZE);
+                    Image image = new BufferedImage(ICON_SIZE, ICON_SIZE, BufferedImage.TYPE_INT_ARGB);
+                    if (image == null) System.out.println("image null");
+                    Graphics g = image.getGraphics();
+                    if (g == null) System.out.println("g null");
+                    g.drawImage(allIcons, -i * ICON_SIZE, -j * ICON_SIZE, null);
+                    iconImages[i][j] = new ImageIcon(image);
+                }
+            }
+            return iconImages;
         }
     }
     protected boolean p5mode = true;

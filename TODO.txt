@@ -175,8 +175,8 @@ x update code documentation
 
 PROTOTYPE 4:
 * UI
-	~ gutter left / line annotation
-		* fg colors
+	x gutter left / line annotation
+		x fg colors
 		/ bg colors
 		/ unicode
 		x line
@@ -188,8 +188,8 @@ PROTOTYPE 4:
 		x handle p5 types
                 x handle arrays
 		x symbols for types
+		x grey out when not current
 		* clear on open/new
-		* grey out when not current
 		* switch to advanced mode
 		* columnized interface
 		* sorting
