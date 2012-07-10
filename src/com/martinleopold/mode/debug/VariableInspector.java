@@ -78,6 +78,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         tree.setModel(model);
         tree.setRootVisible(false);
         tree.setRenderDataProvider(new OutlineRenderer());
+        tree.setColumnHidingAllowed(false); // disable visible columns button (shows by default when right scroll bar is visible)
 
         callStack = new ArrayList();
         locals = new ArrayList();
