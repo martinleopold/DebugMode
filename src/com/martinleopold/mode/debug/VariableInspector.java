@@ -18,7 +18,6 @@
 package com.martinleopold.mode.debug;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -30,16 +29,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JTree;
-import javax.swing.ToolTipManager;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.OutlineModel;
@@ -54,7 +49,7 @@ import org.netbeans.swing.outline.RowModel;
 public class VariableInspector extends javax.swing.JFrame implements TreeWillExpandListener {
 
     protected DefaultMutableTreeNode rootNode;
-    protected OutlineModel outlineModel;
+    protected DefaultTreeModel treeModel;
 //    protected DefaultMutableTreeNode callStackNode;
 //    protected DefaultMutableTreeNode localsNode;
 //    protected DefaultMutableTreeNode thisNode;
@@ -77,16 +72,12 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         // setup Outline
         rootNode = new DefaultMutableTreeNode();
-        outlineModel = DefaultOutlineModel.createOutlineModel(new DefaultTreeModel(rootNode), new VariableRowModel(), true, "Name");
-        tree.setModel(outlineModel);
-
+        treeModel = (new DefaultTreeModel(rootNode));
+        OutlineModel model = DefaultOutlineModel.createOutlineModel(treeModel, new VariableRowModel(), true, "Name");
+        model.getTreePathSupport().addTreeWillExpandListener(this);
+        tree.setModel(model);
         tree.setRootVisible(false);
-        //tree.addTreeWillExpandListener(this);
-        //TreeRenderer tcr = new TreeRenderer();
-        //tree.setCellRenderer(tcr);
-        //ToolTipManager.sharedInstance().registerComponent(tree);
         tree.setRenderDataProvider(new OutlineRenderer());
-
 
         callStack = new ArrayList();
         locals = new ArrayList();
@@ -94,15 +85,23 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         declaredThisFields = new ArrayList();
 
         this.setTitle("Variable Inspector");
+
+//        for (Entry<Object, Object> entry : UIManager.getDefaults().entrySet()) {
+//            System.out.println(entry.getKey());
+//        }
     }
 
-    protected static class VariableRowModel implements RowModel {
+    protected class VariableRowModel implements RowModel {
 
         protected String[] columnNames = {"Value", "Type"};
 
         @Override
         public int getColumnCount() {
-            return 2;
+            if (p5mode) {
+                return 1; // only show value in p5 mode
+            } else {
+                return 2;
+            }
         }
 
         @Override
@@ -134,7 +133,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         @Override
         public void setValueFor(Object o, int i, Object o1) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            // do nothing
         }
 
         @Override
@@ -248,9 +247,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         thisFields.clear();
         declaredThisFields.clear();
         // update
-
-        //DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-        //model.nodeStructureChanged(rootNode);
+        treeModel.nodeStructureChanged(rootNode);
     }
 
     @Override
@@ -265,6 +262,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         if (!dbg.isPaused()) {
             throw new ExpandVetoException(tee, "Debugger busy");
         } else {
+            var.removeAllChildren(); // TODO: should we only load it once?
             // TODO: don't filter in advanced mode
             //System.out.println("loading children for: " + var);
             // true means include inherited
@@ -293,7 +291,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
             DebugMode mode = editor.mode();
             File file = mode.getContentFile(fileName);
             if (!file.exists()) {
-                Logger.getLogger(TreeRenderer.class.getName()).log(Level.SEVERE, "icon file not found: {0}", file.getAbsolutePath());
+                Logger.getLogger(OutlineRenderer.class.getName()).log(Level.SEVERE, "icon file not found: {0}", file.getAbsolutePath());
                 return null;
             }
             Image allIcons = mode.loadImage(fileName);
@@ -330,12 +328,13 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         @Override
         public String getDisplayName(Object o) {
-            VariableNode var = toVariableNode(o);
-            if (var != null) {
-                return var.getName();
-            } else {
-                return o.toString();
-            }
+            return o.toString(); // VariableNode.toString() returns name; (for sorting)
+//            VariableNode var = toVariableNode(o);
+//            if (var != null) {
+//                return var.getName();
+//            } else {
+//                return o.toString();
+//            }
         }
 
         @Override
@@ -345,13 +344,13 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         @Override
         public Color getBackground(Object o) {
-            return Color.WHITE;
+            return null;
         }
 
         @Override
         public Color getForeground(Object o) {
             if (tree.isEnabled()) {
-                return Color.BLACK;
+                return null; // default
             } else {
                 return Color.GRAY;
             }
@@ -361,7 +360,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         public String getTooltipText(Object o) {
             VariableNode var = toVariableNode(o);
             if (var != null) {
-                return var.toString();
+                return var.description();
             } else {
                 return "";
             }
@@ -378,94 +377,11 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
                 }
             } else {
                 return null;
+                //UIManager.getIcon(o);
             }
         }
     }
     protected static final int ICON_SIZE = 16;
-
-    /**
-     * TODO: docs
-     */
-    protected class TreeRenderer extends DefaultTreeCellRenderer {
-
-        protected Icon[][] icons;
-
-        public TreeRenderer() {
-            // load icons
-            icons = loadIcons("theme/var-icons.gif");
-        }
-
-        protected Icon getIcon(int type, int state) {
-            if (type < 0 || type > icons.length - 1) {
-                return null;
-            }
-            return icons[type][state];
-        }
-
-        @Override
-        public Component getTreeCellRendererComponent(
-                JTree tree,
-                Object value,
-                boolean sel,
-                boolean expanded,
-                boolean leaf,
-                int row,
-                boolean hasFocus) {
-
-            super.getTreeCellRendererComponent(
-                    tree, value, sel,
-                    expanded, leaf, row,
-                    hasFocus);
-
-            if (value instanceof VariableNode) {
-                VariableNode node = (VariableNode) value;
-                String typeName = node.getTypeName();
-                if (typeName != null) {
-                    setToolTipText(typeName);
-                }
-
-                Icon icon = getIcon(node.getType(), 0);
-                if (icon != null) {
-                    setIcon(icon);
-                }
-                Icon greyIcon = getIcon(node.getType(), 1);
-                if (greyIcon != null) {
-                    setDisabledIcon(greyIcon);
-                }
-            } else {
-                setToolTipText("");
-            }
-
-            return this;
-        }
-
-        /**
-         * Returns an ImageIcon, or null if the path was invalid.
-         */
-        protected ImageIcon[][] loadIcons(String fileName) {
-            DebugMode mode = editor.mode();
-            File file = mode.getContentFile(fileName);
-            if (!file.exists()) {
-                Logger.getLogger(TreeRenderer.class.getName()).log(Level.SEVERE, "icon file not found: {0}", file.getAbsolutePath());
-                return null;
-            }
-            Image allIcons = mode.loadImage(fileName);
-            int cols = allIcons.getWidth(this) / ICON_SIZE;
-            int rows = allIcons.getHeight(this) / ICON_SIZE;
-            ImageIcon[][] iconImages = new ImageIcon[cols][rows];
-
-            for (int i = 0; i < cols; i++) {
-                for (int j = 0; j < rows; j++) {
-                    //Image image = createImage(ICON_SIZE, ICON_SIZE);
-                    Image image = new BufferedImage(ICON_SIZE, ICON_SIZE, BufferedImage.TYPE_INT_ARGB);
-                    Graphics g = image.getGraphics();
-                    g.drawImage(allIcons, -i * ICON_SIZE, -j * ICON_SIZE, null);
-                    iconImages[i][j] = new ImageIcon(image);
-                }
-            }
-            return iconImages;
-        }
-    }
     protected boolean p5mode = true;
 
     public void setAdvancedMode() {
@@ -514,13 +430,14 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
             addAllNodes(builtins, filterNodes(thisFields, new P5BuiltinsFilter()));
             rootNode.add(builtins);
 
-            // notify tree (using model)
-            //http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
-            //DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-            //model.nodeStructureChanged(rootNode);
-
             tree.expandPath(new TreePath(new Object[]{rootNode, builtins}));
+
+            // notify tree (using model) changed a node and its children
+            //http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
+            treeModel.nodeStructureChanged(rootNode);
+
             //System.out.println("shown fields: " + rootNode.getChildCount());
+
         } else {
             // TODO: implement advanced mode here
 //            rootNode.add(callStackNode);

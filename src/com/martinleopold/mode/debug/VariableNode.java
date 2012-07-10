@@ -80,7 +80,7 @@ public class VariableNode implements MutableTreeNode {
     }
 
     public String getStringValue() {
-        String str ;
+        String str;
         if (value != null) {
             if (getType() == TYPE_OBJECT) {
                 str = "instance of " + type;
@@ -144,7 +144,6 @@ public class VariableNode implements MutableTreeNode {
     public void setName(String name) {
         this.name = name;
     }
-
 
     public void addChild(VariableNode c) {
         children.add(c);
@@ -221,6 +220,10 @@ public class VariableNode implements MutableTreeNode {
 
     @Override
     public String toString() {
+        return getName(); // for sorting
+    }
+
+    public String description() {
         String str = "";
         if (type != null) {
             str += type + " ";
@@ -237,13 +240,23 @@ public class VariableNode implements MutableTreeNode {
 
     @Override
     public void remove(int i) {
-        children.remove(i);
+        MutableTreeNode mtn = children.remove(i);
+        if (mtn != null) {
+            mtn.setParent(null);
+        }
     }
 
     @Override
     public void remove(MutableTreeNode mtn) {
         children.remove(mtn);
         mtn.setParent(null);
+    }
+
+    public void removeAllChildren() {
+        for (MutableTreeNode mtn : children) {
+            mtn.setParent(null);
+        }
+        children.clear();
     }
 
     @Override
