@@ -17,6 +17,7 @@
  */
 package com.martinleopold.mode.debug;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -42,6 +43,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.OutlineModel;
+import org.netbeans.swing.outline.RenderDataProvider;
 import org.netbeans.swing.outline.RowModel;
 
 /**
@@ -80,9 +82,11 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         tree.setRootVisible(false);
         //tree.addTreeWillExpandListener(this);
-        TreeRenderer tcr = new TreeRenderer();
+        //TreeRenderer tcr = new TreeRenderer();
         //tree.setCellRenderer(tcr);
         //ToolTipManager.sharedInstance().registerComponent(tree);
+        tree.setRenderDataProvider(new OutlineRenderer());
+
 
         callStack = new ArrayList();
         locals = new ArrayList();
@@ -93,6 +97,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     }
 
     protected static class VariableRowModel implements RowModel {
+
         protected String[] columnNames = {"Value", "Type"};
 
         @Override
@@ -270,6 +275,111 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     @Override
     public void treeWillCollapse(TreeExpansionEvent tee) throws ExpandVetoException {
         //throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    protected class OutlineRenderer implements RenderDataProvider {
+
+        protected Icon[][] icons;
+
+        public OutlineRenderer() {
+            // load icons
+            icons = loadIcons("theme/var-icons.gif");
+        }
+
+        /**
+         * Returns an ImageIcon, or null if the path was invalid.
+         */
+        protected ImageIcon[][] loadIcons(String fileName) {
+            DebugMode mode = editor.mode();
+            File file = mode.getContentFile(fileName);
+            if (!file.exists()) {
+                Logger.getLogger(TreeRenderer.class.getName()).log(Level.SEVERE, "icon file not found: {0}", file.getAbsolutePath());
+                return null;
+            }
+            Image allIcons = mode.loadImage(fileName);
+            int cols = allIcons.getWidth(null) / ICON_SIZE;
+            int rows = allIcons.getHeight(null) / ICON_SIZE;
+            ImageIcon[][] iconImages = new ImageIcon[cols][rows];
+
+            for (int i = 0; i < cols; i++) {
+                for (int j = 0; j < rows; j++) {
+                    //Image image = createImage(ICON_SIZE, ICON_SIZE);
+                    Image image = new BufferedImage(ICON_SIZE, ICON_SIZE, BufferedImage.TYPE_INT_ARGB);
+                    Graphics g = image.getGraphics();
+                    g.drawImage(allIcons, -i * ICON_SIZE, -j * ICON_SIZE, null);
+                    iconImages[i][j] = new ImageIcon(image);
+                }
+            }
+            return iconImages;
+        }
+
+        protected Icon getIcon(int type, int state) {
+            if (type < 0 || type > icons.length - 1) {
+                return null;
+            }
+            return icons[type][state];
+        }
+
+        protected VariableNode toVariableNode(Object o) {
+            if (o instanceof VariableNode) {
+                return (VariableNode) o;
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public String getDisplayName(Object o) {
+            VariableNode var = toVariableNode(o);
+            if (var != null) {
+                return var.getName();
+            } else {
+                return o.toString();
+            }
+        }
+
+        @Override
+        public boolean isHtmlDisplayName(Object o) {
+            return false;
+        }
+
+        @Override
+        public Color getBackground(Object o) {
+            return Color.WHITE;
+        }
+
+        @Override
+        public Color getForeground(Object o) {
+            if (tree.isEnabled()) {
+                return Color.BLACK;
+            } else {
+                return Color.GRAY;
+            }
+        }
+
+        @Override
+        public String getTooltipText(Object o) {
+            VariableNode var = toVariableNode(o);
+            if (var != null) {
+                return var.toString();
+            } else {
+                return "";
+            }
+        }
+
+        @Override
+        public Icon getIcon(Object o) {
+            VariableNode var = toVariableNode(o);
+            if (var != null) {
+                if (tree.isEnabled()) {
+                    return getIcon(var.getType(), 0);
+                } else {
+                    return getIcon(var.getType(), 1);
+                }
+            } else {
+                return null;
+            }
+        }
     }
     protected static final int ICON_SIZE = 16;
 

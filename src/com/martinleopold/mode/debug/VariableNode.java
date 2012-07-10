@@ -221,13 +221,13 @@ public class VariableNode implements MutableTreeNode {
 
     @Override
     public String toString() {
-        return name;
-//        String str = name;
-//        if (type != null) {
-//            str += " (" + type + ")";
-//        }
-//        str += ": " + getStringValue();
-//        return str;
+        String str = "";
+        if (type != null) {
+            str += type + " ";
+        }
+        str += name;
+        str += " = " + getStringValue();
+        return str;
     }
 
     @Override
