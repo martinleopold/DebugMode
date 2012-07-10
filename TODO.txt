@@ -180,8 +180,8 @@ PROTOTYPE 4:
 		/ bg colors
 		/ unicode
 		x line
-	~ icon symbols, choice, placement
-		* variants
+	x icon symbols, choice, placement
+		/ variants
 	? icon and menu locking
 	! var insp: p5 mode
 		x hide non-processing vars

@@ -38,7 +38,11 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
+import org.netbeans.swing.outline.DefaultOutlineModel;
+import org.netbeans.swing.outline.OutlineModel;
+import org.netbeans.swing.outline.RowModel;
 
 /**
  * Variable Inspector window.
@@ -46,8 +50,8 @@ import javax.swing.tree.TreePath;
  * @author Martin Leopold <m@martinleopold.com>
  */
 public class VariableInspector extends javax.swing.JFrame implements TreeWillExpandListener {
-
     protected DefaultMutableTreeNode rootNode;
+    protected OutlineModel outlineModel;
 //    protected DefaultMutableTreeNode callStackNode;
 //    protected DefaultMutableTreeNode localsNode;
 //    protected DefaultMutableTreeNode thisNode;
@@ -65,31 +69,59 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     public VariableInspector(DebugEditor editor) {
         this.editor = editor;
         this.dbg = editor.dbg();
-        initComponents(); // creates the root node
 
-        // setup jTree
+        initComponents();
+
+        // setup Outline
+        rootNode = new DefaultMutableTreeNode();
+        outlineModel = DefaultOutlineModel.createOutlineModel(new DefaultTreeModel(rootNode), new VariableRowModel(), true);
+        tree.setModel(outlineModel);
+
         tree.setRootVisible(false);
-        tree.addTreeWillExpandListener(this);
+        //tree.addTreeWillExpandListener(this);
         TreeRenderer tcr = new TreeRenderer();
-        tree.setCellRenderer(tcr);
-        ToolTipManager.sharedInstance().registerComponent(tree);
-
-//        callStackNode = new DefaultMutableTreeNode();
-//        localsNode = new DefaultMutableTreeNode();
-//        thisNode = new DefaultMutableTreeNode();
-//        nonInheritedThisNode = new DefaultMutableTreeNode();
+        //tree.setCellRenderer(tcr);
+        //ToolTipManager.sharedInstance().registerComponent(tree);
 
         callStack = new ArrayList();
         locals = new ArrayList();
         thisFields = new ArrayList();
         declaredThisFields = new ArrayList();
 
-//        rootNode.add(callStackNode);
-//        rootNode.add(localsNode);
-//        rootNode.add(thisNode);
-
         this.setTitle("Variable Inspector");
     }
+
+    protected class VariableRowModel implements RowModel {
+        @Override
+        public int getColumnCount() {
+            return 0;
+        }
+
+        @Override
+        public Object getValueFor(Object o, int i) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public Class getColumnClass(int i) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public boolean isCellEditable(Object o, int i) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public void setValueFor(Object o, int i, Object o1) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public String getColumnName(int i) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+}
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -100,21 +132,24 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jScrollPane1 = new javax.swing.JScrollPane();
-        rootNode = new DefaultMutableTreeNode();
-        tree = new javax.swing.JTree(rootNode);
+        scrollPane = new javax.swing.JScrollPane();
+        tree = new org.netbeans.swing.outline.Outline();
 
-        jScrollPane1.setViewportView(tree);
+        scrollPane.setViewportView(tree);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
+            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(scrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
+            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(scrollPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE))
         );
 
         pack();
@@ -163,18 +198,9 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTree tree;
+    private javax.swing.JScrollPane scrollPane;
+    protected org.netbeans.swing.outline.Outline tree;
     // End of variables declaration//GEN-END:variables
-
-    /**
-     * Access the JTree.
-     *
-     * @return the {@link JTree} object
-     */
-    public JTree getTree() {
-        return tree;
-    }
 
     /**
      * Access the root node of the JTree.
@@ -202,8 +228,9 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         thisFields.clear();
         declaredThisFields.clear();
         // update
-        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-        model.nodeStructureChanged(rootNode);
+
+        //DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+        //model.nodeStructureChanged(rootNode);
     }
 
     @Override
@@ -364,8 +391,8 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
             // notify tree (using model)
             //http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
-            DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-            model.nodeStructureChanged(rootNode);
+            //DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+            //model.nodeStructureChanged(rootNode);
 
             tree.expandPath(new TreePath(new Object[]{rootNode, builtins}));
             //System.out.println("shown fields: " + rootNode.getChildCount());

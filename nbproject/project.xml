@@ -75,7 +75,7 @@
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/3">
             <compilation-unit>
                 <package-root>src</package-root>
-                <classpath mode="compile">/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/pde.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/core.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/ecj.jar</classpath>
+                <classpath mode="compile">/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/pde.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/core.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/ecj.jar:lib/org-netbeans-swing-outline.jar</classpath>
                 <built-to>build</built-to>
                 <javadoc-built-to>doc</javadoc-built-to>
                 <source-level>1.6</source-level>
