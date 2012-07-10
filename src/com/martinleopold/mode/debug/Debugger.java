@@ -706,14 +706,13 @@ public class Debugger implements VMEventListener {
                 Logger.getLogger(Debugger.class.getName()).log(Level.WARNING, "call stack empty");
             } else {
                 vi.updateCallStack(getStackTrace(t), "Call Stack");
-
                 List<VariableNode> locals = getLocals(t, 0);
                 vi.updateLocals(locals, "Locals at " + currentLocation(t));
                 vi.updateThisFields(getThisFields(t, 0, true), "Class " + thisName(t));
                 vi.updateDeclaredThisFields(getThisFields(t, 0, false), "Class " + thisName(t));
+                vi.unlock(); // need to do this before rebuilding, otherwise we get these ... dots in the labels
                 vi.rebuild();
             }
-            vi.unlock();
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -779,7 +778,8 @@ public class Debugger implements VMEventListener {
      * {@link JTree}. Recursively resolves object references.
      *
      * @param t the suspended thread to get locals for
-     * @param depth how deep to resolve nested object references. 0 will not resolve nested objects.
+     * @param depth how deep to resolve nested object references. 0 will not
+     * resolve nested objects.
      * @return the list of current locals
      */
     // TODO: there is an error with depth
@@ -814,7 +814,8 @@ public class Debugger implements VMEventListener {
      * into a {@link JTree}. Recursively resolves object references.
      *
      * @param t the suspended thread to get locals for
-     * @param depth how deep to resolve nested object references. 0 will not resolve nested objects.
+     * @param depth how deep to resolve nested object references. 0 will not
+     * resolve nested objects.
      * @return the list of fields in the current this object
      */
     protected List<VariableNode> getThisFields(ThreadReference t, int depth, boolean includeInherited) {

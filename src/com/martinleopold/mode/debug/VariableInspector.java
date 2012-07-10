@@ -181,6 +181,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         return rootNode;
     }
 
+    // rebuild after this to avoid these ... dots
     public void unlock() {
         tree.setEnabled(true);
     }
@@ -285,20 +286,15 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
                 return null;
             }
             Image allIcons = mode.loadImage(fileName);
-            if (allIcons == null) System.out.println("allicons");
             int cols = allIcons.getWidth(this) / ICON_SIZE;
             int rows = allIcons.getHeight(this) / ICON_SIZE;
-            System.out.println("cols: " + cols + "   rows: " + rows);
             ImageIcon[][] iconImages = new ImageIcon[cols][rows];
-            if (iconImages == null) System.out.println("icon images");
 
             for (int i = 0; i < cols; i++) {
                 for (int j = 0; j < rows; j++) {
                     //Image image = createImage(ICON_SIZE, ICON_SIZE);
                     Image image = new BufferedImage(ICON_SIZE, ICON_SIZE, BufferedImage.TYPE_INT_ARGB);
-                    if (image == null) System.out.println("image null");
                     Graphics g = image.getGraphics();
-                    if (g == null) System.out.println("g null");
                     g.drawImage(allIcons, -i * ICON_SIZE, -j * ICON_SIZE, null);
                     iconImages[i][j] = new ImageIcon(image);
                 }
