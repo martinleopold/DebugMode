@@ -182,18 +182,18 @@ PROTOTYPE 4:
 		x line
 	~ icon symbols, choice, placement
 		* variants
-	* icon and menu locking
+	? icon and menu locking
 	! var insp: p5 mode
 		x hide non-processing vars
 		x handle p5 types
                 x handle arrays
 		x symbols for types
 		x grey out when not current
-		* clear on open/new
+		x handle this fields hidden by locals
+		x clear on open/new
 		* switch to advanced mode
 		* columnized interface
-		* sorting
-		* advanced mode switch
+			* sorting
 x handle debug output -> use logging
 x forward debuggee streams
 x disallow stepping into invisible code

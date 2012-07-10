@@ -162,6 +162,10 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
             }
         });
     }
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTree tree;
+    // End of variables declaration//GEN-END:variables
 
     /**
      * Access the JTree.
@@ -189,10 +193,18 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     public void lock() {
         tree.setEnabled(false);
     }
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTree tree;
-    // End of variables declaration//GEN-END:variables
+
+    public void clear() {
+        rootNode.removeAllChildren();
+        // clear local data for good measure (in case someone rebuilds)
+        callStack.clear();
+        locals.clear();
+        thisFields.clear();
+        declaredThisFields.clear();
+        // update
+        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+        model.nodeStructureChanged(rootNode);
+    }
 
     @Override
     public void treeWillExpand(TreeExpansionEvent tee) throws ExpandVetoException {
