@@ -191,9 +191,9 @@ PROTOTYPE 4:
 		x grey out when not current
 		x handle this fields hidden by locals
 		x clear on open/new
-		* switch to advanced mode
-		* columnized interface
+		~ columnized interface
 			* sorting
+			* edit values
 x handle debug output -> use logging
 x forward debuggee streams
 x disallow stepping into invisible code
@@ -206,6 +206,7 @@ PROTOTYPE 5:
 iteration
 
 * variable inspector
+	* switch to advanced mode
 	* maintain expansions and scroll positions
 	* automatically show when relevant
 	* dock to main window
