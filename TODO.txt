@@ -383,7 +383,7 @@ java.lang.ArrayIndexOutOfBoundsException: 344
 ! second debug session doesn't work in some cases(VMEventReader quit on VM disconnect)
 	happens when completely stepping out of setup()
 	-> VMEventReader should reset things too, on disconnect?
-* breakpoint marker remains, when opening new file  (if marker is beyond opended file size
+x breakpoint marker remains, when opening new file
 x contents of Animal a show up double (dbg_test)
 * stepping out of setup doesn't stop in draw()
 

@@ -518,6 +518,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         breakpointedLines.clear(); // remove all breakpoints
         // fix highlights not being removed when tab names have changed due to opening a new sketch in same editor
         ta.clearLineBgColors(); // force clear all highlights
+        ta.clearGutterText();
 
         // repaint current line
         if (currentLine != null) {
