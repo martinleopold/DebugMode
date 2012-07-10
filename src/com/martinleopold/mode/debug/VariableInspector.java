@@ -343,7 +343,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
             addAllNodes(rootNode, locals);
 
             // add non-inherited this fields
-            addAllNodes(rootNode, declaredThisFields);
+            addAllNodes(rootNode, filterNodes(declaredThisFields, new LocalHidesThisFilter(locals, LocalHidesThisFilter.MODE_PREFIX)));
 
             // add p5 builtins in a new folder
             DefaultMutableTreeNode builtins = new DefaultMutableTreeNode("Processing");
@@ -412,15 +412,46 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         @Override
         public boolean accept(VariableNode var) {
-            return Arrays.asList(p5Builtins).contains(var.name);
+            return Arrays.asList(p5Builtins).contains(var.getName());
         }
     }
 
+    // filter implicit this reference
     public class ThisFilter implements VariableNodeFilter {
 
         @Override
         public boolean accept(VariableNode var) {
-            return !var.name.startsWith("this$");
+            return !var.getName().startsWith("this$");
+        }
+    }
+
+    public class LocalHidesThisFilter implements VariableNodeFilter {
+
+        public static final int MODE_HIDE = 0; // don't show hidden this fields
+        public static final int MODE_PREFIX = 1; // prefix hidden this fields with "this."
+        protected List<VariableNode> locals;
+        protected int mode;
+
+        public LocalHidesThisFilter(List<VariableNode> locals, int mode) {
+            this.locals = locals;
+            this.mode = mode;
+        }
+
+        @Override
+        public boolean accept(VariableNode var) {
+            // check if the same name appears in the list of locals i.e. the local hides the field
+            for (VariableNode local : locals) {
+                if (var.getName().equals(local.getName())) {
+                    switch (mode) {
+                        case MODE_PREFIX:
+                            var.setName("this." + var.getName());
+                            return true;
+                        case MODE_HIDE:
+                            return false;
+                    }
+                }
+            }
+            return true;
         }
     }
 }

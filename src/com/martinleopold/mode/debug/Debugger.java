@@ -793,7 +793,7 @@ public class Debugger implements VMEventListener {
                     //System.out.println("local var: " + lv.name());
                     Value val = sf.getValue(lv);
                     VariableNode var = new VariableNode(lv.name(), lv.typeName(), val);
-                    System.out.println("local: " + var.name);
+                    System.out.println("local: " + var.getName());
                     if (depth > 0) {
                         System.out.println("getting children");
                         var.addChildren(getFields(val, depth - 1, true));

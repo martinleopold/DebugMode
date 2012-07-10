@@ -123,6 +123,15 @@ public class VariableNode implements MutableTreeNode {
         return TYPE_OBJECT;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+
     public void addChild(VariableNode c) {
         children.add(c);
         c.setParent(this);
