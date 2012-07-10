@@ -50,6 +50,7 @@ import org.netbeans.swing.outline.RowModel;
  * @author Martin Leopold <m@martinleopold.com>
  */
 public class VariableInspector extends javax.swing.JFrame implements TreeWillExpandListener {
+
     protected DefaultMutableTreeNode rootNode;
     protected OutlineModel outlineModel;
 //    protected DefaultMutableTreeNode callStackNode;
@@ -74,7 +75,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         // setup Outline
         rootNode = new DefaultMutableTreeNode();
-        outlineModel = DefaultOutlineModel.createOutlineModel(new DefaultTreeModel(rootNode), new VariableRowModel(), true);
+        outlineModel = DefaultOutlineModel.createOutlineModel(new DefaultTreeModel(rootNode), new VariableRowModel(), true, "Name");
         tree.setModel(outlineModel);
 
         tree.setRootVisible(false);
@@ -91,25 +92,39 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         this.setTitle("Variable Inspector");
     }
 
-    protected class VariableRowModel implements RowModel {
+    protected static class VariableRowModel implements RowModel {
+        protected String[] columnNames = {"Value", "Type"};
+
         @Override
         public int getColumnCount() {
-            return 0;
+            return 2;
         }
 
         @Override
         public Object getValueFor(Object o, int i) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            if (o instanceof VariableNode) {
+                VariableNode var = (VariableNode) o;
+                switch (i) {
+                    case 0:
+                        return var.getStringValue();
+                    case 1:
+                        return var.getTypeName();
+                    default:
+                        return "";
+                }
+            } else {
+                return "";
+            }
         }
 
         @Override
         public Class getColumnClass(int i) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return String.class;
         }
 
         @Override
         public boolean isCellEditable(Object o, int i) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return false;
         }
 
         @Override
@@ -119,9 +134,9 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         @Override
         public String getColumnName(int i) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return columnNames[i];
         }
-}
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.

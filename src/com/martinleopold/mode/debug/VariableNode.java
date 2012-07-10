@@ -79,6 +79,20 @@ public class VariableNode implements MutableTreeNode {
         return value;
     }
 
+    public String getStringValue() {
+        String str ;
+        if (value != null) {
+            if (getType() == TYPE_OBJECT) {
+                str = "instance of " + type;
+            } else {
+                str = value.toString();
+            }
+        } else {
+            str = "null";
+        }
+        return str;
+    }
+
     public String getTypeName() {
         return type;
     }
@@ -207,20 +221,13 @@ public class VariableNode implements MutableTreeNode {
 
     @Override
     public String toString() {
-        String str = name;
+        return name;
+//        String str = name;
 //        if (type != null) {
 //            str += " (" + type + ")";
 //        }
-        if (value != null) {
-            if (getType() == TYPE_OBJECT) {
-                str += ": instance of " + type;
-            } else {
-                str += ": " + value.toString();
-            }
-        } else {
-            str += ": null";
-        }
-        return str;
+//        str += ": " + getStringValue();
+//        return str;
     }
 
     @Override
