@@ -518,8 +518,8 @@ public class Debugger implements VMEventListener {
                 paused = true;
 
                 // disallow stepping into invisible lines
-                if (locationToLineID(se.location()) == null) {
-                    continueDebug();
+                if (!locationIsVisible(se.location())) {
+                    stepIntoView(currentThread);
                 }
             } else if (e instanceof VMDisconnectEvent) {
 //                started = false;
@@ -529,6 +529,35 @@ public class Debugger implements VMEventListener {
             } else if (e instanceof VMDeathEvent) {
                 started = false;
             }
+        }
+    }
+
+    protected boolean locationIsVisible(Location l) {
+        return locationToLineID(l) != null;
+    }
+
+    // step out to the next visible location on the stackframe or continue
+    protected void stepIntoView(ThreadReference thread) {
+        try {
+            List<StackFrame> frames = thread.frames();
+            if (frames.size() > 1) {
+                if (locationIsVisible(frames.get(1).location())) {
+                    System.out.println("stepping out to: " + locationToString(frames.get(1).location()));
+                    stepOut();
+                    return;
+                }
+            }
+            continueDebug();
+
+//            if (thread.frames(i, i1))
+//            for (StackFrame f : thread.frames()) {
+//                    Location l = f.location();
+//                    if (locationIsVisible(l)) {
+//                        System.out.println("need to step out to: " + locationToString(l));
+//                    }
+//                }
+        } catch (IncompatibleThreadStateException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
