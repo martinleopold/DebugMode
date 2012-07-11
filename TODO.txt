@@ -363,7 +363,7 @@ x remove auto breakpoints
 * can't set breakpoint in a classes constructor?
 3.7.2012
 x can i make a modular Editor? (no matter how ugly?) -> no
-* gutter fg color, bg color, per line. general bg color, trennlinie?
+x gutter fg color, bg color, per line. general bg color, trennlinie?
 ! stepping out of println() returns to the same line, leads to NullPointerException when done multiple times. + VMMismatchException when restarting dbg
 * change logger console format to something more readable
 x allow setting log-level

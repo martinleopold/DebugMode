@@ -431,11 +431,12 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
             addAllNodes(builtins, filterNodes(thisFields, new P5BuiltinsFilter()));
             rootNode.add(builtins);
 
-            tree.expandPath(new TreePath(new Object[]{rootNode, builtins}));
-
             // notify tree (using model) changed a node and its children
-            //http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
+            // http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
+            // needs to be done before expanding the path!
             treeModel.nodeStructureChanged(rootNode);
+
+            tree.expandPath(new TreePath(new Object[]{rootNode, builtins}));
 
             //System.out.println("shown fields: " + rootNode.getChildCount());
 
