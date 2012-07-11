@@ -819,7 +819,7 @@ public class Debugger implements VMEventListener {
                 for (LocalVariable lv : sf.visibleVariables()) {
                     //System.out.println("local var: " + lv.name());
                     Value val = sf.getValue(lv);
-                    VariableNode var = new VariableNode(lv.name(), lv.typeName(), val);
+                    VariableNode var = new LocalVariableNode(lv.name(), lv.typeName(), val, lv, sf);
                     if (depth > 0) {
                         var.addChildren(getFields(val, depth - 1, true));
                     }
@@ -909,7 +909,7 @@ public class Debugger implements VMEventListener {
                 List<Field> fields = includeInherited ? obj.referenceType().visibleFields() : obj.referenceType().fields();
                 for (Field field : fields) {
                     Value val = obj.getValue(field); // get the value, may be null
-                    VariableNode var = new VariableNode(field.name(), field.typeName(), val);
+                    VariableNode var = new FieldNode(field.name(), field.typeName(), val, field, obj);
                     // recursively add children
                     if (val != null) {
                         var.addChildren(getFields(val, depth + 1, maxDepth, includeInherited));
@@ -943,7 +943,8 @@ public class Debugger implements VMEventListener {
             }
             int i = 0;
             for (Value val : array.getValues()) {
-                fields.add(new VariableNode("[" + i + "]", arrayType, val));
+                VariableNode var = new ArrayFieldNode("[" + i + "]", arrayType, val, array, i);
+                fields.add(var);
                 i++;
             }
         }

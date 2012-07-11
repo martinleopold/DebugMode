@@ -71,9 +71,10 @@ public class VariableNode implements MutableTreeNode {
         this.value = value;
     }
 
-//    public void setValue(Value value) {
-//        this.value = value;
-//    }
+    public void setValue(Value value) {
+        this.value = value;
+    }
+
     public Value getValue() {
         return value;
     }

@@ -17,6 +17,9 @@
  */
 package com.martinleopold.mode.debug;
 
+import com.sun.jdi.BooleanValue;
+import com.sun.jdi.IntegerValue;
+import com.sun.jdi.Value;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -27,8 +30,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.DefaultCellEditor;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JTextField;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -79,6 +84,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         tree.setRootVisible(false);
         tree.setRenderDataProvider(new OutlineRenderer());
         tree.setColumnHidingAllowed(false); // disable visible columns button (shows by default when right scroll bar is visible)
+        //tree.setCellEditor(new DefaultCellEditor(new JTextField()));
 
         callStack = new ArrayList();
         locals = new ArrayList();
@@ -95,6 +101,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     protected class VariableRowModel implements RowModel {
 
         protected String[] columnNames = {"Value", "Type"};
+        protected int[] editableTypes = {VariableNode.TYPE_BOOLEAN, VariableNode.TYPE_FLOAT, VariableNode.TYPE_INTEGER, VariableNode.TYPE_STRING, VariableNode.TYPE_FLOAT, VariableNode.TYPE_DOUBLE, VariableNode.TYPE_LONG, VariableNode.TYPE_SHORT, VariableNode.TYPE_CHAR};
 
         @Override
         public int getColumnCount() {
@@ -129,12 +136,64 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         @Override
         public boolean isCellEditable(Object o, int i) {
+            if (i == 0 && o instanceof VariableNode) {
+                VariableNode var = (VariableNode) o;
+                //System.out.println("type: " + var.getTypeName());
+                for (int type : editableTypes) {
+                    if (var.getType() == type) {
+                        return true;
+                    }
+                }
+            }
             return false;
         }
 
         @Override
         public void setValueFor(Object o, int i, Object o1) {
-            // do nothing
+            VariableNode var = (VariableNode) o;
+            String stringValue = (String) o1;
+
+            Value value = null;
+            try {
+                switch (var.getType()) {
+                    case VariableNode.TYPE_INTEGER:
+                        value = dbg.vm().mirrorOf(Integer.parseInt(stringValue));
+                        break;
+                    case VariableNode.TYPE_BOOLEAN:
+                        value = dbg.vm().mirrorOf(Boolean.parseBoolean(stringValue));
+                        break;
+                    case VariableNode.TYPE_FLOAT:
+                        value = dbg.vm().mirrorOf(Float.parseFloat(stringValue));
+                        break;
+                    case VariableNode.TYPE_STRING:
+                        value = dbg.vm().mirrorOf(stringValue);
+                        break;
+                    case VariableNode.TYPE_LONG:
+                        value = dbg.vm().mirrorOf(Long.parseLong(stringValue));
+                        break;
+                    case VariableNode.TYPE_BYTE:
+                        value = dbg.vm().mirrorOf(Byte.parseByte(stringValue));
+                        break;
+                    case VariableNode.TYPE_DOUBLE:
+                        value = dbg.vm().mirrorOf(Double.parseDouble(stringValue));
+                        break;
+                    case VariableNode.TYPE_SHORT:
+                        value = dbg.vm().mirrorOf(Short.parseShort(stringValue));
+                        break;
+                    case VariableNode.TYPE_CHAR:
+                        // TODO: better char support
+                        if (stringValue.length() > 0) {
+                            value = dbg.vm().mirrorOf(stringValue.charAt(0));
+                        }
+                        break;
+                }
+            } catch (NumberFormatException ex) {
+                Logger.getLogger(VariableRowModel.class.getName()).log(Level.INFO, "invalid value entered for {0}: {1}", new Object[]{var.getName(), stringValue});
+            }
+            if (value != null) {
+                var.setValue(value);
+                Logger.getLogger(VariableRowModel.class.getName()).log(Level.INFO, "new value set: {0}", var.getStringValue());
+            }
         }
 
         @Override
@@ -466,6 +525,8 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     protected void addAllNodes(DefaultMutableTreeNode root, List<? extends MutableTreeNode> nodes) {
         for (MutableTreeNode node : nodes) {
             root.add(node);
+
+
         }
     }
 
@@ -499,7 +560,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         }
     }
 
-    // filter implicit this reference
+// filter implicit this reference
     public class ThisFilter implements VariableNodeFilter {
 
         @Override

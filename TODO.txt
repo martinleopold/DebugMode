@@ -199,7 +199,7 @@ x forward debuggee streams
 x disallow stepping into invisible code
 x rethink line translation
 	x dynamic translation at runtime (track all line changes when debugging)
-! fix critical bugs
+~ fix critical bugs
 
 
 PROTOTYPE 5:
@@ -365,6 +365,8 @@ x remove auto breakpoints
 x can i make a modular Editor? (no matter how ugly?) -> no
 x gutter fg color, bg color, per line. general bg color, trennlinie?
 ! stepping out of println() returns to the same line, leads to NullPointerException when done multiple times. + VMMismatchException when restarting dbg
+! stepping out of print(), println() doesn't work (returns to same line)
+	--> NullPointer, AbsentInformation
 * change logger console format to something more readable
 x allow setting log-level
 5.7.2012
@@ -379,7 +381,7 @@ java.lang.ArrayIndexOutOfBoundsException: 344
 	at com.martinleopold.mode.debug.TextAreaPainter.paintLine(Unknown Source)
 6.7.
 * implicit stepping (invisible code) updates var inspector
-* scrolling in vi when debugger stopped: com.sun.jdi.VMDisconnectedException:
+! scrolling in vi when debugger stopped: com.sun.jdi.VMDisconnectedException:
 	-> possible error in VariableNode implementation
 ! second debug session doesn't work in some cases(VMEventReader quit on VM disconnect)
 	happens when completely stepping out of setup()
@@ -387,6 +389,9 @@ java.lang.ArrayIndexOutOfBoundsException: 344
 x breakpoint marker remains, when opening new file
 x contents of Animal a show up double (dbg_test)
 * stepping out of setup doesn't stop in draw()
+11.7.
+* VMEventReader should reset things too, on disconnect? (to avoid invalid states…)
+* stepping into constructors, lands at closing bracket of constructor first
 
 
 QUESTIONS:
