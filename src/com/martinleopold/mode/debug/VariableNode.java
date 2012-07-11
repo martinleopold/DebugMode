@@ -68,13 +68,12 @@ public class VariableNode implements MutableTreeNode {
 
     public VariableNode(String name, String type, Value value) {
         this(name, type);
-        setValue(value);
-    }
-
-    public void setValue(Value value) {
         this.value = value;
     }
 
+//    public void setValue(Value value) {
+//        this.value = value;
+//    }
     public Value getValue() {
         return value;
     }
@@ -265,7 +264,7 @@ public class VariableNode implements MutableTreeNode {
     @Override
     public void setUserObject(Object o) {
         if (o instanceof Value) {
-            setValue((Value) o);
+            value = (Value) o;
         }
     }
 
