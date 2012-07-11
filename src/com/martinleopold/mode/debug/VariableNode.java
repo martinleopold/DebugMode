@@ -84,6 +84,9 @@ public class VariableNode implements MutableTreeNode {
         if (value != null) {
             if (getType() == TYPE_OBJECT) {
                 str = "instance of " + type;
+            } else if (getType() == TYPE_ARRAY) {
+                //instance of int[5] (id=998) --> instance of int[5]
+                str = value.toString().substring(0, value.toString().lastIndexOf(" "));
             } else {
                 str = value.toString();
             }
