@@ -519,8 +519,7 @@ public class Debugger implements VMEventListener {
 
                 // disallow stepping into invisible lines
                 if (locationToLineID(se.location()) == null) {
-                    //continueDebug();
-                    stepOut();
+                    continueDebug();
                 }
             } else if (e instanceof VMDisconnectEvent) {
 //                started = false;
