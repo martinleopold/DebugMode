@@ -25,24 +25,57 @@ import processing.mode.java.JavaToolbar;
 
 /**
  * Custom toolbar for the editor window.
+ * TODO: explain id and index
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
 public class DebugToolbar extends JavaToolbar {
+    /*
+     static protected final int RUN    = 0;
+     static protected final int STOP   = 1;
 
-    static protected final int DEBUG = 0;
-    static protected final int CONTINUE = 1;
-    static protected final int STEP = 2;
-    static protected final int STOP = 3;
-    static protected final int TOGGLE_BREAKPOINT = 4;
-    static protected final int TOGGLE_VAR_INSPECTOR = 5;
-    static protected final int NEW = 6;
-    static protected final int OPEN = 7;
-    static protected final int SAVE = 8;
-    static protected final int EXPORT = 9;
+     static protected final int NEW    = 2;
+     static protected final int OPEN   = 3;
+     static protected final int SAVE   = 4;
+     static protected final int EXPORT = 5;
+     */
+
+    // preserve original button id's
+    static protected final int DEBUG = RUN;
+    static protected final int CONTINUE = 101;
+    static protected final int STEP = 102;
+    //static protected final int STOP = 1;
+    static protected final int TOGGLE_BREAKPOINT = 103;
+    static protected final int TOGGLE_VAR_INSPECTOR = 104;
+    //static protected final int NEW = 6;
+    //static protected final int OPEN = 7;
+    //static protected final int SAVE = 8;
+    //static protected final int EXPORT = 9;
 
     public DebugToolbar(Editor editor, Base base) {
         super(editor, base);
+    }
+    static protected final int[] buttonSequence = {
+        DEBUG, CONTINUE, STEP, STOP, TOGGLE_BREAKPOINT, TOGGLE_VAR_INSPECTOR, NEW, OPEN, SAVE, EXPORT
+    };
+
+    protected int translateButton(int button) {
+        switch (button) {
+            case JavaToolbar.RUN:
+                return DEBUG;
+            case JavaToolbar.STOP:
+                return STOP;
+            case JavaToolbar.NEW:
+                return NEW;
+            case JavaToolbar.OPEN:
+                return OPEN;
+            case JavaToolbar.SAVE:
+                return SAVE;
+            case JavaToolbar.EXPORT:
+                return EXPORT;
+            default:
+                return button;
+        }
     }
 
     /**
@@ -51,8 +84,9 @@ public class DebugToolbar extends JavaToolbar {
     @Override
     public void init() {
         Image[][] images = loadImages();
-        for (int i = 0; i < 10; i++) {
-            addButton(getTitle(i, false), getTitle(i, true), images[i], i == NEW || i == TOGGLE_BREAKPOINT);
+        for (int idx = 0; idx < buttonSequence.length; idx++) {
+            int id = buttonId(idx);
+            addButton(getTitle(id, false), getTitle(id, true), images[idx], id == NEW || id == TOGGLE_BREAKPOINT);
         }
     }
 
@@ -60,12 +94,12 @@ public class DebugToolbar extends JavaToolbar {
      * Get the title for a toolbar button. Displayed in the toolbar when
      * hovering over a button.
      *
-     * @param index index of the toolbar button
+     * @param id id of the toolbar button
      * @param shift true if shift is pressed
      * @return the title
      */
-    public static String getTitle(int index, boolean shift) {
-        switch (index) {
+    public static String getTitle(int id, boolean shift) {
+        switch (id) {
 //            case RUN:
 //                return JavaToolbar.getTitle(JavaToolbar.RUN, shift);
             case STOP:
@@ -104,14 +138,15 @@ public class DebugToolbar extends JavaToolbar {
      * Event handler called when a toolbar button is clicked.
      *
      * @param e the mouse event
-     * @param sel index of the toolbar button clicked
+     * @param idx index of the toolbar button clicked
      */
     @Override
-    public void handlePressed(MouseEvent e, int sel) {
+    public void handlePressed(MouseEvent e, int idx) {
         boolean shift = e.isShiftDown();
         DebugEditor deditor = (DebugEditor) editor;
+        int id = buttonId(idx);
 
-        switch (sel) {
+        switch (id) {
 //            case RUN:
 //                super.handlePressed(e, JavaToolbar.RUN);
 //                break;
@@ -163,33 +198,29 @@ public class DebugToolbar extends JavaToolbar {
     }
 
     @Override
-    public void activate(int what) {
-        System.out.println("activate: " + what + " / " + translateButton(what));
-        super.activate(translateButton(what));
+    public void activate(int id) {
+        //System.out.println("activate: " + id);
+        super.activate(buttonIndex(id));
     }
 
     @Override
-    public void deactivate(int what) {
-        System.out.println("deactivate: " + what + " / " + translateButton(what));
-        super.deactivate(translateButton(what));
+    public void deactivate(int id) {
+        //System.out.println("deactivate: " + id);
+        super.deactivate(buttonIndex(id));
     }
 
-    protected int translateButton(int button) {
-        switch (button) {
-            case JavaToolbar.RUN:
-                return DEBUG;
-            case JavaToolbar.STOP:
-                return STOP;
-            case JavaToolbar.NEW:
-                return NEW;
-            case JavaToolbar.OPEN:
-                return OPEN;
-            case JavaToolbar.SAVE:
-                return SAVE;
-            case JavaToolbar.EXPORT:
-                return EXPORT;
-            default:
-                return button;
+    // get button position (index) from it's id (RUN, DEBUG, CONTINUE, STEP, ...)
+    protected int buttonIndex(int buttonId) {
+        for (int i=0; i<buttonSequence.length; i++) {
+            if (buttonSequence[i] == buttonId) {
+                return i;
+            }
         }
+        return -1;
+    }
+
+    // get the button id from its position (index)
+    protected int buttonId(int buttonIdx) {
+        return buttonSequence[buttonIdx];
     }
 }

@@ -407,6 +407,9 @@ x contents of Animal a show up double (dbg_test)
 	* or: remove quotes when going into edit mode
 12.7.
 x save and export highlight the wrong buttons
+* debug button highlight not working
+	-> removes highlight when mouse moved (rollover event, p5 bug?)
+
 
 QUESTIONS:
 * p5 alpha errors
