@@ -183,7 +183,7 @@ PROTOTYPE 4:
 	x icon symbols, choice, placement
 		/ variants
 	? icon and menu locking
-	! var insp: p5 mode
+	x var insp: p5 mode
 		x hide non-processing vars
 		x handle p5 types
                 x handle arrays
@@ -191,9 +191,9 @@ PROTOTYPE 4:
 		x grey out when not current
 		x handle this fields hidden by locals
 		x clear on open/new
-		~ columnized interface
-			* sorting
-			* edit values
+		x columnized interface
+			x sorting
+			x edit values
 x handle debug output -> use logging
 x forward debuggee streams
 x disallow stepping into invisible code
@@ -211,8 +211,8 @@ iteration
 	* automatically show when relevant
 	* dock to main window
 	* support p5 types
-		color
-		PImage
+		color: show rgb
+		PImage: 
 		etc
 * bug fixes
 * update docs
@@ -392,6 +392,19 @@ x contents of Animal a show up double (dbg_test)
 11.7.
 * VMEventReader should reset things too, on disconnect? (to avoid invalid states…)
 * stepping into constructors, lands at closing bracket of constructor first
+* sorting of processing node (appears first)
+* folder icon not greyed out
+! stepping out of println() returns to the same line, leads to NullPointerException when done multiple times. + VMMismatchException when restarting dbg
+! stepping out of print(), println() doesn't work (returns to same line)
+	--> NullPointer, AbsentInformation
+* implicit stepping (invisible code) updates var inspector
+! scrolling in vi when debugger stopped: com.sun.jdi.VMDisconnectedException:
+	-> possible error in VariableNode implementation
+* make editing values fail safe.
+	* fails when things happen while editing
+* handle String quotes
+	* show strings without quotes
+	* or: remove quotes when going into edit mode
 
 
 QUESTIONS:

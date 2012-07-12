@@ -31,14 +31,15 @@ import processing.mode.java.JavaToolbar;
 public class DebugToolbar extends JavaToolbar {
 
     static protected final int DEBUG = 0;
-    static protected final int STEP = 1;
-    static protected final int STOP = 2;
-    static protected final int TOGGLE_BREAKPOINT = 3;
-    static protected final int TOGGLE_VAR_INSPECTOR = 4;
-    static protected final int NEW = 5;
-    static protected final int OPEN = 6;
-    static protected final int SAVE = 7;
-    static protected final int EXPORT = 8;
+    static protected final int CONTINUE = 1;
+    static protected final int STEP = 2;
+    static protected final int STOP = 3;
+    static protected final int TOGGLE_BREAKPOINT = 4;
+    static protected final int TOGGLE_VAR_INSPECTOR = 5;
+    static protected final int NEW = 6;
+    static protected final int OPEN = 7;
+    static protected final int SAVE = 8;
+    static protected final int EXPORT = 9;
 
     public DebugToolbar(Editor editor, Base base) {
         super(editor, base);
@@ -50,7 +51,7 @@ public class DebugToolbar extends JavaToolbar {
     @Override
     public void init() {
         Image[][] images = loadImages();
-        for (int i = 0; i < 9; i++) {
+        for (int i = 0; i < 10; i++) {
             addButton(getTitle(i, false), getTitle(i, true), images[i], i == NEW || i == TOGGLE_BREAKPOINT);
         }
     }
@@ -81,8 +82,10 @@ public class DebugToolbar extends JavaToolbar {
                 if (shift) {
                     return "Run";
                 } else {
-                    return "Debug/Continue";
+                    return "Debug";
                 }
+            case CONTINUE:
+                return "Continue";
             case TOGGLE_BREAKPOINT:
                 return "Toggle Breakpoint";
             case STEP:
@@ -131,8 +134,11 @@ public class DebugToolbar extends JavaToolbar {
                 if (shift) {
                     deditor.handleRun();
                 } else {
-                    deditor.dbg.continueDebug();
+                    deditor.dbg.startDebug();
                 }
+                break;
+            case CONTINUE:
+                deditor.dbg.continueDebug();
                 break;
             case TOGGLE_BREAKPOINT:
                 deditor.dbg.toggleBreakpoint();
