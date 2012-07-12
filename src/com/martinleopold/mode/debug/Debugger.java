@@ -139,6 +139,8 @@ public class Debugger implements VMEventListener {
         // load edits into sketch obj, etc...
         editor.prepareRun();
 
+        editor.toolbar().activate(DebugToolbar.DEBUG); // after prepareRun, since this removes highlights
+
         try {
             Sketch sketch = editor.getSketch();
             build = new DebugBuild(sketch);
@@ -211,12 +213,14 @@ public class Debugger implements VMEventListener {
         stopTrackingLineChanges();
         started = false;
         editor.variableInspector().lock();
+        editor.toolbar().deactivate(DebugToolbar.DEBUG);
     }
 
     /**
      * Resume paused debugging session. Resumes VM.
      */
     public synchronized void continueDebug() {
+        editor.toolbar().activate(DebugToolbar.CONTINUE);
         //editor.clearSelection();
         //clearHighlight();
         editor.clearCurrentLine();
@@ -238,13 +242,15 @@ public class Debugger implements VMEventListener {
      */
     protected void step(int stepDepth) {
         if (isPaused()) {
+            editor.variableInspector().lock();
+            editor.toolbar().activate(DebugToolbar.STEP);
+
             // use global to mark that there is a step request pending
             requestedStep = runtime.vm().eventRequestManager().createStepRequest(currentThread, StepRequest.STEP_LINE, stepDepth);
             requestedStep.addCountFilter(1); // valid for one step only
             requestedStep.enable();
             paused = false;
             runtime.vm().resume();
-            editor.variableInspector().lock();
         }
     }
 
@@ -489,8 +495,9 @@ public class Debugger implements VMEventListener {
 
                 //printSourceLocation(currentThread);
                 editor.setCurrentLine(locationToLineID(be.location()));
-
                 updateVariableInspector(currentThread);
+                editor.toolbar().deactivate(DebugToolbar.STEP);
+                editor.toolbar().deactivate(DebugToolbar.CONTINUE);
 
                 // hit a breakpoint during a step, need to cancel the step.
                 if (requestedStep != null) {
@@ -510,6 +517,8 @@ public class Debugger implements VMEventListener {
                 //printSourceLocation(currentThread);
                 editor.setCurrentLine(locationToLineID(se.location()));
                 updateVariableInspector(currentThread);
+                editor.toolbar().deactivate(DebugToolbar.STEP);
+                editor.toolbar().deactivate(DebugToolbar.CONTINUE);
 
                 // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
                 EventRequestManager mgr = runtime.vm().eventRequestManager();

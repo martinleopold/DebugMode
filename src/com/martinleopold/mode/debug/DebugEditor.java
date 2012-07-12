@@ -382,6 +382,10 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         return vi;
     }
 
+    public DebugToolbar toolbar() {
+        return (DebugToolbar) toolbar;
+    }
+
     /**
      * Show the variable inspector window.
      */

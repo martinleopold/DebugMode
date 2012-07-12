@@ -164,11 +164,13 @@ public class DebugToolbar extends JavaToolbar {
 
     @Override
     public void activate(int what) {
+        System.out.println("activate: " + what + " / " + translateButton(what));
         super.activate(translateButton(what));
     }
 
     @Override
     public void deactivate(int what) {
+        System.out.println("deactivate: " + what + " / " + translateButton(what));
         super.deactivate(translateButton(what));
     }
 
