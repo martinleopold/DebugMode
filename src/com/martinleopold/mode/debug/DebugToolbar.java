@@ -161,4 +161,33 @@ public class DebugToolbar extends JavaToolbar {
                 break;
         }
     }
+
+    @Override
+    public void activate(int what) {
+        super.activate(translateButton(what));
+    }
+
+    @Override
+    public void deactivate(int what) {
+        super.deactivate(translateButton(what));
+    }
+
+    protected int translateButton(int button) {
+        switch (button) {
+            case JavaToolbar.RUN:
+                return DEBUG;
+            case JavaToolbar.STOP:
+                return STOP;
+            case JavaToolbar.NEW:
+                return NEW;
+            case JavaToolbar.OPEN:
+                return OPEN;
+            case JavaToolbar.SAVE:
+                return SAVE;
+            case JavaToolbar.EXPORT:
+                return EXPORT;
+            default:
+                return button;
+        }
+    }
 }

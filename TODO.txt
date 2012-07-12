@@ -51,14 +51,14 @@ Icons
   (R)(S)  (DBG)(CNT)(ST)(STI)(STO)  (N)(O)(Sv)(Ex)
 – (VAR) Knopf braucht man nicht, da man den Inspektor einfach immer zeigen sollte wenn man die Session startet
 – "Set Breakpoint" Knopf würde ich über einen Kurzbefehl machen wie Kommentieren (cmd-B ?)
-– "BRK" ist ge-highlighted beim Sichern
+x "BRK" ist ge-highlighted beim Sichern
 – Sollten die nicht benutzbaren Icons deaktiviert sein wenn man im DebugMode ist?
 – DBG sollte gehighlighted sein wenn man in der Session ist
 – (CNT)(ST)(STI)(STO) sollten erst aktiv werden wenn man an einem Breakpoint hängt
 
 Variable Inspector
-– Order- und File-Icons? Icon nach Datentyp? Primitive jeweils und generisch für Objekte?
-– Kann man die internen und default Vars verstecken?
+x Order- und File-Icons? Icon nach Datentyp? Primitive jeweils und generisch für Objekte?
+x Kann man die internen und default Vars verstecken?
 x "this" -> Sketch-Name
 x "Locals" -> "Locals at breakpoint #4"? ... "at line #123"?
 
@@ -328,9 +328,9 @@ x line highlight interference with other line coloring methods
 	x current line highlight
 	x selecting
 x we need a call stack window! (to know where we are)
-* var inspector
+x var inspector
 	x tree icons
-	* grey out when info not current (i.e. vm not suspended)
+	x grey out when info not current (i.e. vm not suspended)
 x line highlighting
 	x DebugEditor should provide the functions for setting the current line, not Debugger
 	x LineID is a design mess, need to restructure
@@ -405,7 +405,8 @@ x contents of Animal a show up double (dbg_test)
 * handle String quotes
 	* show strings without quotes
 	* or: remove quotes when going into edit mode
-
+12.7.
+x save and export highlight the wrong buttons
 
 QUESTIONS:
 * p5 alpha errors
