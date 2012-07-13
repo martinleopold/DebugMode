@@ -214,6 +214,8 @@ public class Debugger implements VMEventListener {
         started = false;
         editor.variableInspector().lock();
         editor.toolbar().deactivate(DebugToolbar.DEBUG);
+        editor.toolbar().deactivate(DebugToolbar.CONTINUE);
+        editor.toolbar().deactivate(DebugToolbar.STEP);
     }
 
     /**
@@ -241,7 +243,9 @@ public class Debugger implements VMEventListener {
      * {@link StepRequest}{@code .STEP_OUT})
      */
     protected void step(int stepDepth) {
-        if (isPaused()) {
+        if (!isStarted()) {
+            startDebug();
+        } else if (isPaused()) {
             editor.variableInspector().lock();
             editor.toolbar().activate(DebugToolbar.STEP);
 
