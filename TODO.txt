@@ -396,8 +396,8 @@ x contents of Animal a show up double (dbg_test)
 * sorting of processing node (appears first)
 * folder icon not greyed out
 * implicit stepping (invisible code) updates var inspector
-! make editing values fail safe.
-	* fails when things happen while editing
+x make editing values fail safe.
+	-> fails when things happen while editing
 ! handle String quotes
 	* show strings without quotes
 	* or: remove quotes when going into edit mode

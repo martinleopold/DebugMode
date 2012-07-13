@@ -199,13 +199,13 @@ public class DebugToolbar extends JavaToolbar {
 
     @Override
     public void activate(int id) {
-        System.out.println("activate button idx: " + buttonIndex(id));
+        //System.out.println("activate button idx: " + buttonIndex(id));
         super.activate(buttonIndex(id));
     }
 
     @Override
     public void deactivate(int id) {
-        System.out.println("deactivate button idx: " + buttonIndex(id));
+        //System.out.println("deactivate button idx: " + buttonIndex(id));
         super.deactivate(buttonIndex(id));
     }
 

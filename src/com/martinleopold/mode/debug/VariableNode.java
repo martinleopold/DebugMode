@@ -19,6 +19,7 @@ package com.martinleopold.mode.debug;
 
 import com.sun.jdi.ArrayReference;
 import com.sun.jdi.ObjectReference;
+import com.sun.jdi.StringReference;
 import com.sun.jdi.Value;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,6 +88,8 @@ public class VariableNode implements MutableTreeNode {
             } else if (getType() == TYPE_ARRAY) {
                 //instance of int[5] (id=998) --> instance of int[5]
                 str = value.toString().substring(0, value.toString().lastIndexOf(" "));
+            } else if (getType() == TYPE_STRING) {
+                str = ((StringReference) value).value(); // use original string value (without quotes)
             } else {
                 str = value.toString();
             }
