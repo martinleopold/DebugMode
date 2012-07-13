@@ -182,6 +182,7 @@ PROTOTYPE 4:
 		x line
 	x icon symbols, choice, placement
 		/ variants
+		~ highlighting
 	? icon and menu locking
 	x var insp: p5 mode
 		x hide non-processing vars
@@ -394,12 +395,7 @@ x contents of Animal a show up double (dbg_test)
 * stepping into constructors, lands at closing bracket of constructor first
 * sorting of processing node (appears first)
 * folder icon not greyed out
-! stepping out of println() returns to the same line, leads to NullPointerException when done multiple times. + VMMismatchException when restarting dbg
-! stepping out of print(), println() doesn't work (returns to same line)
-	--> NullPointer, AbsentInformation
 * implicit stepping (invisible code) updates var inspector
-! scrolling in vi when debugger stopped: com.sun.jdi.VMDisconnectedException:
-	-> possible error in VariableNode implementation
 * make editing values fail safe.
 	* fails when things happen while editing
 * handle String quotes
