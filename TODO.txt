@@ -182,8 +182,8 @@ PROTOTYPE 4:
 		x line
 	x icon symbols, choice, placement
 		/ variants
-		~ highlighting
-	? icon and menu locking
+		x highlighting
+	/ icon and menu locking
 	x var insp: p5 mode
 		x hide non-processing vars
 		x handle p5 types
@@ -200,7 +200,7 @@ x forward debuggee streams
 x disallow stepping into invisible code
 x rethink line translation
 	x dynamic translation at runtime (track all line changes when debugging)
-~ fix critical bugs
+x fix critical bugs
 
 
 PROTOTYPE 5:
@@ -365,9 +365,8 @@ x remove auto breakpoints
 3.7.2012
 x can i make a modular Editor? (no matter how ugly?) -> no
 x gutter fg color, bg color, per line. general bg color, trennlinie?
-! stepping out of println() returns to the same line, leads to NullPointerException when done multiple times. + VMMismatchException when restarting dbg
-! stepping out of print(), println() doesn't work (returns to same line)
-	--> NullPointer, AbsentInformation
+! stepping out of print(), println() returns to the same line
+	-> NullPointerException, AbsentInformation + VMMismatchException when restarting dbg
 * change logger console format to something more readable
 x allow setting log-level
 5.7.2012
@@ -389,7 +388,7 @@ x second debug session doesn't work in some cases(VMEventReader quit on VM disco
 	happens when completely stepping out of setup()
 x breakpoint marker remains, when opening new file
 x contents of Animal a show up double (dbg_test)
-* stepping out of setup doesn't stop in draw()
+* stepping out of setup doesn't stop in draw() (should it?)
 11.7.
 * VMEventReader should reset things too, on disconnect? (to avoid invalid states…)
 * stepping into constructors, lands at closing bracket of constructor first
@@ -398,13 +397,15 @@ x contents of Animal a show up double (dbg_test)
 * implicit stepping (invisible code) updates var inspector
 x make editing values fail safe.
 	-> fails when things happen while editing
-! handle String quotes
-	* show strings without quotes
-	* or: remove quotes when going into edit mode
+x handle String quotes
+	x show strings without quotes
+	/ or: remove quotes when going into edit mode
 12.7.
 x save and export highlight the wrong buttons
 * debug button highlight not working
 	-> removes highlight when mouse moved (rollover event, p5 bug?)
+13.7.
+* current line hides underlying breakpoint
 
 
 QUESTIONS:
