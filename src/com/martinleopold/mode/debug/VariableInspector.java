@@ -17,8 +17,6 @@
  */
 package com.martinleopold.mode.debug;
 
-import com.sun.jdi.BooleanValue;
-import com.sun.jdi.IntegerValue;
 import com.sun.jdi.Value;
 import java.awt.Color;
 import java.awt.Graphics;
@@ -30,10 +28,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.DefaultCellEditor;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JTextField;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -296,6 +292,9 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     }
 
     public void lock() {
+        if (tree.getCellEditor() != null) {
+            tree.getCellEditor().stopCellEditing(); // force quit open edit
+        }
         tree.setEnabled(false);
     }
 

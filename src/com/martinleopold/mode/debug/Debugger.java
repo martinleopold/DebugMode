@@ -200,6 +200,7 @@ public class Debugger implements VMEventListener {
      * VMDisconnectEvent.
      */
     public synchronized void stopDebug() {
+        editor.variableInspector().lock();
         if (runtime != null) {
             Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "closing runtime");
             runtime.close();
@@ -212,7 +213,6 @@ public class Debugger implements VMEventListener {
         }
         stopTrackingLineChanges();
         started = false;
-        editor.variableInspector().lock();
         editor.toolbar().deactivate(DebugToolbar.DEBUG);
         editor.toolbar().deactivate(DebugToolbar.CONTINUE);
         editor.toolbar().deactivate(DebugToolbar.STEP);
@@ -223,10 +223,10 @@ public class Debugger implements VMEventListener {
      */
     public synchronized void continueDebug() {
         editor.toolbar().activate(DebugToolbar.CONTINUE);
+        editor.variableInspector().lock();
         //editor.clearSelection();
         //clearHighlight();
         editor.clearCurrentLine();
-        editor.variableInspector().lock();
         if (!isStarted()) {
             startDebug();
         } else if (isPaused()) {

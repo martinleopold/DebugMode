@@ -382,11 +382,11 @@ java.lang.ArrayIndexOutOfBoundsException: 344
 	at com.martinleopold.mode.debug.TextAreaPainter.paintLine(Unknown Source)
 6.7.
 * implicit stepping (invisible code) updates var inspector
-! scrolling in vi when debugger stopped: com.sun.jdi.VMDisconnectedException:
+x scrolling in vi when debugger stopped: com.sun.jdi.VMDisconnectedException:
 	-> possible error in VariableNode implementation
-! second debug session doesn't work in some cases(VMEventReader quit on VM disconnect)
+	-> not occuring anymore (13.7.)
+x second debug session doesn't work in some cases(VMEventReader quit on VM disconnect)
 	happens when completely stepping out of setup()
-	-> VMEventReader should reset things too, on disconnect?
 x breakpoint marker remains, when opening new file
 x contents of Animal a show up double (dbg_test)
 * stepping out of setup doesn't stop in draw()
@@ -396,9 +396,9 @@ x contents of Animal a show up double (dbg_test)
 * sorting of processing node (appears first)
 * folder icon not greyed out
 * implicit stepping (invisible code) updates var inspector
-* make editing values fail safe.
+! make editing values fail safe.
 	* fails when things happen while editing
-* handle String quotes
+! handle String quotes
 	* show strings without quotes
 	* or: remove quotes when going into edit mode
 12.7.
