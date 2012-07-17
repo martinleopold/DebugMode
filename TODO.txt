@@ -46,14 +46,14 @@ x add interface elements to the editor window as needed (line numbers, setting b
 x sketch and add additional interfaces (windows) as needed
 
 Icons
-– Bilder wären besser als die Abkürzungen
-– nachdem "run" und "debug" ja nun getrennt sind, sollten die in einen eigenen Block, änhlich wie "new"/"open"/...
+x Bilder wären besser als die Abkürzungen
+x nachdem "run" und "debug" ja nun getrennt sind, sollten die in einen eigenen Block, änhlich wie "new"/"open"/...
   (R)(S)  (DBG)(CNT)(ST)(STI)(STO)  (N)(O)(Sv)(Ex)
 – (VAR) Knopf braucht man nicht, da man den Inspektor einfach immer zeigen sollte wenn man die Session startet
 – "Set Breakpoint" Knopf würde ich über einen Kurzbefehl machen wie Kommentieren (cmd-B ?)
 x "BRK" ist ge-highlighted beim Sichern
 – Sollten die nicht benutzbaren Icons deaktiviert sein wenn man im DebugMode ist?
-– DBG sollte gehighlighted sein wenn man in der Session ist
+x DBG sollte gehighlighted sein wenn man in der Session ist
 – (CNT)(ST)(STI)(STO) sollten erst aktiv werden wenn man an einem Breakpoint hängt
 
 Variable Inspector
@@ -79,16 +79,16 @@ Wenn man steppt (step in) und die Zeile ist in einem anderen Tab, dann stimmt zw
 2)
 Wir sollten unbedingt Tutorials einplanen gegen Ende des Projekts
 
-3)
+x 3)
 Ich finde "Call stack" und die Variablen sollten sich nicht so mischen, können wir das Fenster nur "Inspector" nennen und "Call stack" und "Variables" splitten? .. in zwei Felder?
 
-4)
+x 4)
 Die Var Liste ist sehr unübersichtlich ..
 xxxxx (java.lang.String): "blah blah"
 könnte sein:
 (String icon) xxxxx: "blah blah"
 
-5)
+x 5)
 ... selbe Stelle:
 XXXXX (blub$Klasse): instance of blub$Klasse
 ... den "instance of" Kram braucht man nur wenn es nicht die selbe Klasse ist wie der Var-Typus
@@ -96,19 +96,86 @@ XXXXX (blub$Klasse): instance of blub$Klasse
 6)
 Wenn keine Locals da sind, sollte das Icon trotzdem ein Folder sein ...
 
-7)
+x 7)
 "Leere" Objekt-Variablen haben im Inspektor ein "Öffner-Dreieck" ... wenn man das klickt verschwindet es einfach nur. Klar, du lädst den Inhalt nach dem Klick, aber es ist für den User unbefriedigend wenn man die Dinger dauernd klickt und dann nichts passiert. ... können wir anzeigen ob die leer sind, oder zumindest das Dreieckchen behalten?
 
-8)
+x 8)
 Variablen sind sortiert? ... ginge das alphabetisch?
 
-9)
+x 9)
 Könnten wir Name / Wert als Kolumnen anlegen damit es leichter zu lesen ist?
 
 10)
 könnte man einen Knopf bei DBG machen, der es erlaubt für eine Weile laufen zu lassen ohne zu breaken? .. manchmal dauert es ja eine Weile bis sich die Dinge im Sketch entwickeln.
 
 
+2012-07-14
+x 1) UX
+Wenn man im DBGM ist (läuft) und einen Breakpoint toggln will passiert nichts. Klar daß das einfach nicht geht, könnte aber entweder der Button inaktiv sein und bei hover sagen "erst stoppen", oder es müsste eine andere Meldung geben.
+> Stimmt.
+> Ich kann keine Breakpoints setzen / toggeln wenn im draw() loop beim Starten noch keine waren ...
+
+2) UX
+Könnte man das toggln von Breakpoints auch direkt auf dem Margin links machen? Klick die zu beobachtende Zeile?
+
+3) Bug
+Wenn man einen Breakpoint auf eine leere Zeile setzt passiert einfach nichts ... stoppt dort nicht.
+
+4) Bug
+Ist ein String null und man doppel-klickt im Inspektor erhält man dort den String "null" als Inhalt, sollte besser leer sein? Könnte/sollte man null für null-Objekte in kursiv machen?
+
+5) Bug?
+Wenn man Zeilen mit Breakpoints löscht bleiben diese erhalten.
+
+x 6) Bug
+Der Inspektor bekommt nicht mit wenn man Variablen umbenennt.
+
+7) Bug
+Sketches mit P3D-Renderer laufen nicht: "package processing.opengl does not exist. …"
+Probier eines hier: Standard mode->Examples->Libraries->opengl
+7b)
+Gleiches gilt auch für PDF Beispiele … kann es sein daß dir die "included Libraries" im Classpath fehlen?
+
+8) Bug
+Wenn man den Mode umschaltet bleibt der Inspektor offen
+
+9) UX / Bug?
+Der Zusammenhang von Updates der Info im Inspektor und dem Setzen von Breakpoints / Laufen lassen ist unklar. Ich nehme an die Info wird nur upgedated wenn man einen Breakpoint setzt und den Sketch gerade debugged? … daß die Info dann immer noch in grau sichtbar ist wenn man editiert ist verwirrend (aber ich verstehe daß sie auch nützlich sein kann). Könnte man irgendwie / irgendwo im Inspektor darauf hinweisen daß sich das nur erneuert wenn man gerade debugged?
+Betrifft auch Punkt 6)
+
+10) UX
+Ich denke das "Debug"-Icon sollte einfach nur der "Run" Pfeil sein, so wie im Standard Modus. Das ist einfach und jeder versteht es sofort.
+Die Breakpoints könnten ein Diamant/Raute sein und dann in der Margin als "<>" dargestellt werden. Hätte etwas mehr Volumen und ist leichter zu sehen von der Form/Leserichtung. … und es sieht ein wenig wie ein Auge aus.
+Inspektor-Icon würde ich einfach ein "i" machen.
+
+10b) UX
+Die zwei Icons von "Set Breakpoint" / "Show Inspector" können ruhig richtig rund sein, gehören ja irgendwie zum Debugging-Vorgang. Die räumliche Trennung nach links/rechts finde ich gut.
+
+11) UX
+Befehl-R sollte "Debug" sein? … analog zu "Run"?
+
+x 12) Bug
+Breakpoints in Funktionen gehen nicht?
+
+void setup () {
+test();
+}
+void test () {
+float xx = 1; // breakpoint hier
+}
+
+x 13) Bug
+Beim Editieren von Array-Einträgen im Inspektor wird immer der erste Eintrag gesetzt, die anderen behalten ihre alten Werte.
+String[] test = {
+   "a", "b", "c"
+};
+void setup () {
+   size( 200, 200 ); // breakpoint hier
+   println( test );
+}
+
+14) Bug?
+Sortierung im Inspektor auch innerhalb der Objekte ("Processing") möglich?
 
 
 PROTOTYPE 1 (v0.1):
@@ -203,7 +270,16 @@ x rethink line translation
 x fix critical bugs
 
 
+
 PROTOTYPE 5:
+stability, bug fixes
+
+
+
+
+
+
+PROTOTYPE 6:
 iteration
 
 * variable inspector

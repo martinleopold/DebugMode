@@ -36,6 +36,7 @@ public class ArrayFieldNode extends VariableNode {
     public ArrayFieldNode(String name, String type, Value value, ArrayReference array, int index) {
         super(name, type, value);
         this.array = array;
+        this.index = index;
     }
 
     @Override
