@@ -22,6 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import processing.app.Base;
 import processing.app.EditorState;
+import processing.app.Mode;
 import processing.mode.java.JavaMode;
 
 /**
@@ -37,6 +38,17 @@ public class DebugMode extends JavaMode {
     // protected Base base;
     public DebugMode(Base base, File folder) {
         super(base, folder);
+
+        // use libraries folder from javamode. will make sketches using core libraries work, as well as import libraries and examples menus
+        for (Mode m : base.getModeList()) {
+            if (m.getClass() == JavaMode.class) {
+                JavaMode jMode = (JavaMode) m;
+                librariesFolder = jMode.getLibrariesFolder();
+                rebuildLibraryList();
+                break;
+            }
+        }
+
         // output version from manifest file
         Package p = DebugMode.class.getPackage();
         System.out.println(p.getImplementationTitle() + " (v" + p.getImplementationVersion() + ")");

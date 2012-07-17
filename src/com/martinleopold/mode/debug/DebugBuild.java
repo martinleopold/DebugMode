@@ -59,6 +59,9 @@ public class DebugBuild extends JavaBuild {
 //    Compiler compiler = new Compiler(this);
 //    String bootClasses = System.getProperty("sun.boot.class.path");
 //    if (compiler.compile(this, srcFolder, binFolder, primaryClassName, getClassPath(), bootClasses)) {
+
+
+        System.out.println(getClassPath());
         if (Compiler.compile(this)) { // use compiler with debug info enabled (-g switch flicked)
             sketchClassName = classNameFound;
             return classNameFound;
