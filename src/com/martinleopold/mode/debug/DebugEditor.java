@@ -56,7 +56,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     //public static final Color BREAKPOINT_MARKER_COLOR = new Color(150, 150, 150);
     public static final Color BREAKPOINT_MARKER_COLOR = new Color(74, 84, 94);
     public static final Color CURRENT_LINE_MARKER_COLOR = new Color(226, 117, 0);
-
     protected List<LineHighlight> breakpointedLines = new ArrayList(); // breakpointed lines
     protected LineHighlight currentLine; // line the debugger is currently suspended at
     // menus
@@ -104,26 +103,40 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         ta = (TextArea) textarea;
 
         // set action on frame close
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                onWindowClosing(e);
-            }
-        });
+//        addWindowListener(new WindowAdapter() {
+//            @Override
+//            public void windowClosing(WindowEvent e) {
+//                onWindowClosing(e);
+//            }
+//        });
     }
 
+//    /**
+//     * Event handler called when closing the editor window. Kills the variable
+//     * inspector window.
+//     *
+//     * @param e the event object
+//     */
+//    protected void onWindowClosing(WindowEvent e) {
+//        // remove var.inspector
+//        vi.dispose();
+//        // quit running debug session
+//        dbg.stopDebug();
+//    }
     /**
-     * Event handler called when closing the editor window. Kills the variable
-     * inspector window.
-     *
-     * @param e the event object
+     * Used instead of the windowClosing event handler, since it's not called on
+     * mode switch. Called when closing the editor window. Stops running debug
+     * sessions and kills the variable inspector window.
      */
-    protected void onWindowClosing(WindowEvent e) {
-        System.out.println("closing window");
-        // remove var.inspector
-        vi.dispose();
+    @Override
+    public void dispose() {
+        System.out.println("window dispose");
         // quit running debug session
         dbg.stopDebug();
+        // remove var.inspector
+        vi.dispose();
+        // original dispose
+        super.dispose();
     }
 
     /**
