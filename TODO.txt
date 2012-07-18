@@ -121,7 +121,7 @@ Könnte man das toggln von Breakpoints auch direkt auf dem Margin links machen? 
 3) Bug
 Wenn man einen Breakpoint auf eine leere Zeile setzt passiert einfach nichts ... stoppt dort nicht.
 
-4) Bug
+x 4) Bug
 Ist ein String null und man doppel-klickt im Inspektor erhält man dort den String "null" als Inhalt, sollte besser leer sein? Könnte/sollte man null für null-Objekte in kursiv machen?
 
 5) Bug?
@@ -136,7 +136,7 @@ Probier eines hier: Standard mode->Examples->Libraries->opengl
 7b)
 Gleiches gilt auch für PDF Beispiele … kann es sein daß dir die "included Libraries" im Classpath fehlen?
 
-8) Bug
+x 8) Bug
 Wenn man den Mode umschaltet bleibt der Inspektor offen
 
 9) UX / Bug?
@@ -176,6 +176,7 @@ void setup () {
 
 14) Bug?
 Sortierung im Inspektor auch innerhalb der Objekte ("Processing") möglich?
+--> ?
 
 
 PROTOTYPE 1 (v0.1):
@@ -273,8 +274,7 @@ x fix critical bugs
 
 PROTOTYPE 5:
 stability, bug fixes
-
-
+list of knows issues, upcoming features
 
 
 
@@ -482,6 +482,15 @@ x save and export highlight the wrong buttons
 	-> removes highlight when mouse moved (rollover event, p5 bug?)
 13.7.
 * current line hides underlying breakpoint
+17.7.
+* keyboard shortcuts
+	set breakpoints
+x null value in italics
+* continue, step should do nothing when no dbg session is active
+* debug button should do nothing while debugging
+x debug mode has no core libraries…, examples
+18.7.
+x override buildModeMenu() in Editor, instead of manual menu creation.
 
 
 QUESTIONS:

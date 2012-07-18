@@ -19,6 +19,7 @@ package com.martinleopold.mode.debug;
 
 import com.sun.jdi.Value;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -29,15 +30,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.DefaultCellEditor;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreePath;
 import org.netbeans.swing.outline.DefaultOutlineCellRenderer;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.OutlineModel;
@@ -75,16 +80,21 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         // setup Outline
         rootNode = new DefaultMutableTreeNode();
-        treeModel = (new DefaultTreeModel(rootNode));
-        OutlineModel model = DefaultOutlineModel.createOutlineModel(treeModel, new VariableRowModel(), true, "Name");
+        treeModel = new DefaultTreeModel(rootNode); // model for the tree column
+        OutlineModel model = DefaultOutlineModel.createOutlineModel(treeModel, new VariableRowModel(), true, "Name"); // model for all columns
         model.getTreePathSupport().addTreeWillExpandListener(this);
         tree.setModel(model);
         tree.setRootVisible(false);
         tree.setRenderDataProvider(new OutlineRenderer());
         tree.setColumnHidingAllowed(false); // disable visible columns button (shows by default when right scroll bar is visible)
-        //tree.setCellEditor(new DefaultCellEditor(new JTextField()));
 
-        tree.setDefaultRenderer(VariableNode.class, new VariableCellRenderer());
+        // set custom renderer and editor for value column, since we are using a custom class for values (VariableNode)
+        TableColumn valueColumn = tree.getColumnModel().getColumn(1);
+        valueColumn.setCellRenderer(new ValueCellRenderer());
+        valueColumn.setCellEditor(new ValueCellEditor());
+
+        //System.out.println("renderer: " + tree.getDefaultRenderer(String.class).getClass());
+        //System.out.println("editor: " + tree.getDefaultEditor(String.class).getClass());
 
         callStack = new ArrayList();
         locals = new ArrayList();
@@ -98,45 +108,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 //        }
     }
 
-    // will
-    protected class VariableCellRenderer extends DefaultOutlineCellRenderer {
-
-        public VariableCellRenderer() {
-            super();
-        }
-//        protected void setItalic(boolean on) {
-//            if (on) {
-//                setFont(new Font(getFont().getName(), Font.ITALIC, getFont().getSize()));
-//            } else {
-//                setFont(new Font(getFont().getName(), Font.PLAIN, getFont().getSize()));
-//            }
-//        }
-//
-//        @Override
-//        public void setValue(Object value) {
-//            if (!(value instanceof VariableNode)) {
-//                super.setValue(value);
-//                return;
-//            }
-//
-//            VariableNode var = (VariableNode) value;
-//
-//            if (var.getValue() == null) {
-//                super.setValue("null");
-//                setItalic(true);
-//                return;
-//            }
-//
-//            if (var.getType() == VariableNode.TYPE_OBJECT) {
-//                setItalic(true);
-//            } else {
-//                setItalic(false);
-//            }
-//
-//            super.setValue(var.getStringValue());
-//        }
-    }
-
+    // model for a table row (excluding the tree column)
     protected class VariableRowModel implements RowModel {
 
         protected String[] columnNames = {"Value", "Type"};
@@ -157,7 +129,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
                 VariableNode var = (VariableNode) o;
                 switch (i) {
                     case 0:
-                        return var.getStringValue();
+                        return var; // will be converted to an appropriate text by ValueCellRenderer
                     case 1:
                         return var.getTypeName();
                     default:
@@ -170,9 +142,9 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         @Override
         public Class getColumnClass(int i) {
-//            if (i == 0) {
-//                return VariableNode.class;
-//            }
+            if (i == 0) {
+                return VariableNode.class;
+            }
             return String.class;
         }
 
@@ -245,141 +217,9 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     }
 
     /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
+     * Renderer for the tree portion of the outline component. icons, text
+     * color, tooltips. TODO: better doc
      */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
-
-        scrollPane = new javax.swing.JScrollPane();
-        tree = new org.netbeans.swing.outline.Outline();
-
-        scrollPane.setViewportView(tree);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(scrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(scrollPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE))
-        );
-
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
-
-//    /**
-//     * @param args the command line arguments
-//     */
-//    public static void main(String args[]) {
-//        /*
-//         * Set the Nimbus look and feel
-//         */
-//        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-//        /*
-//         * If Nimbus (introduced in Java SE 6) is not available, stay with the
-//         * default look and feel. For details see
-//         * http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
-//         */
-//        try {
-//            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
-//        } catch (ClassNotFoundException ex) {
-//            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        } catch (InstantiationException ex) {
-//            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        } catch (IllegalAccessException ex) {
-//            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-//            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        }
-//        //</editor-fold>
-//
-//        /*
-//         * Create and display the form
-//         */
-//        run(new VariableInspector());
-//    }
-    protected static void run(final VariableInspector vi) {
-        /*
-         * Create and display the form
-         */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                vi.setVisible(true);
-            }
-        });
-    }
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JScrollPane scrollPane;
-    protected org.netbeans.swing.outline.Outline tree;
-    // End of variables declaration//GEN-END:variables
-
-    /**
-     * Access the root node of the JTree.
-     *
-     * @return the root node
-     */
-    public DefaultMutableTreeNode getRootNode() {
-        return rootNode;
-    }
-
-    // rebuild after this to avoid these ... dots
-    public void unlock() {
-        tree.setEnabled(true);
-    }
-
-    public void lock() {
-        if (tree.getCellEditor() != null) {
-            tree.getCellEditor().stopCellEditing(); // force quit open edit
-        }
-        tree.setEnabled(false);
-    }
-
-    public void clear() {
-        rootNode.removeAllChildren();
-        // clear local data for good measure (in case someone rebuilds)
-        callStack.clear();
-        locals.clear();
-        thisFields.clear();
-        declaredThisFields.clear();
-        // update
-        treeModel.nodeStructureChanged(rootNode);
-    }
-
-    @Override
-    public void treeWillExpand(TreeExpansionEvent tee) throws ExpandVetoException {
-        //System.out.println("tree expansion: " + tee.getPath());
-        Object last = tee.getPath().getLastPathComponent();
-        if (!(last instanceof VariableNode)) {
-            return;
-        }
-        VariableNode var = (VariableNode) last;
-        // load children
-        if (!dbg.isPaused()) {
-            throw new ExpandVetoException(tee, "Debugger busy");
-        } else {
-            var.removeAllChildren(); // TODO: should we only load it once?
-            // TODO: don't filter in advanced mode
-            //System.out.println("loading children for: " + var);
-            // true means include inherited
-            var.addChildren(filterNodes(dbg.getFields(var.getValue(), 0, true), new ThisFilter()));
-        }
-    }
-
-    @Override
-    public void treeWillCollapse(TreeExpansionEvent tee) throws ExpandVetoException {
-        //throw new UnsupportedOperationException("Not supported yet.");
-    }
-
     protected class OutlineRenderer implements RenderDataProvider {
 
         protected Icon[][] icons;
@@ -481,10 +321,217 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
                     return getIcon(var.getType(), 1);
                 }
             } else {
-                return null;
+                return null; // use standard icon //TODO: use a gray standard icon if tree is not enabled..
                 //UIManager.getIcon(o);
             }
         }
+    }
+
+    // TODO: could probably extend the simpler javax.swing.table.DefaultTableCellRenderer here
+    /**
+     * Renderer for the value column. Uses an italic font for null values and
+     * Object values ("instance of ..."). Uses a gray color when tree is not
+     * enabled.
+     */
+    protected class ValueCellRenderer extends DefaultOutlineCellRenderer {
+
+        public ValueCellRenderer() {
+            super();
+        }
+
+        protected void setItalic(boolean on) {
+            if (on) {
+                setFont(new Font(getFont().getName(), Font.ITALIC, getFont().getSize()));
+            } else {
+                setFont(new Font(getFont().getName(), Font.PLAIN, getFont().getSize()));
+            }
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+            if (!tree.isEnabled()) {
+                setForeground(Color.GRAY);
+            } else {
+                setForeground(Color.BLACK);
+            }
+
+            if (value instanceof VariableNode) {
+                VariableNode var = (VariableNode) value;
+
+                if (var.getValue() == null || var.getType() == VariableNode.TYPE_OBJECT) {
+                    setItalic(true);
+                } else {
+                    setItalic(false);
+                }
+                value = var.getStringValue();
+            }
+
+            setValue(value);
+            return c;
+        }
+    }
+
+    /**
+     * Editor for the value column. Will show an empty string when editing
+     * String values that are null.
+     */
+    protected class ValueCellEditor extends DefaultCellEditor {
+
+        public ValueCellEditor() {
+            super(new JTextField());
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            if (!(value instanceof VariableNode)) {
+                return super.getTableCellEditorComponent(table, value, isSelected, row, column);
+            }
+            VariableNode var = (VariableNode) value;
+            if (var.getType() == VariableNode.TYPE_STRING && var.getValue() == null) {
+                return super.getTableCellEditorComponent(table, "", isSelected, row, column);
+            } else {
+                return super.getTableCellEditorComponent(table, var.getStringValue(), isSelected, row, column);
+            }
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        scrollPane = new javax.swing.JScrollPane();
+        tree = new org.netbeans.swing.outline.Outline();
+
+        scrollPane.setViewportView(tree);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(scrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(scrollPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE))
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+//    /**
+//     * @param args the command line arguments
+//     */
+//    public static void main(String args[]) {
+//        /*
+//         * Set the Nimbus look and feel
+//         */
+//        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+//        /*
+//         * If Nimbus (introduced in Java SE 6) is not available, stay with the
+//         * default look and feel. For details see
+//         * http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
+//         */
+//        try {
+//            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
+//        } catch (ClassNotFoundException ex) {
+//            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+//        } catch (InstantiationException ex) {
+//            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+//        } catch (IllegalAccessException ex) {
+//            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+//        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+//            java.util.logging.Logger.getLogger(VariableInspector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+//        }
+//        //</editor-fold>
+//
+//        /*
+//         * Create and display the form
+//         */
+//        run(new VariableInspector());
+//    }
+    protected static void run(final VariableInspector vi) {
+        /*
+         * Create and display the form
+         */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                vi.setVisible(true);
+            }
+        });
+    }
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JScrollPane scrollPane;
+    protected org.netbeans.swing.outline.Outline tree;
+    // End of variables declaration//GEN-END:variables
+
+    /**
+     * Access the root node of the JTree.
+     *
+     * @return the root node
+     */
+    public DefaultMutableTreeNode getRootNode() {
+        return rootNode;
+    }
+
+    // rebuild after this to avoid these ... dots
+    public void unlock() {
+        tree.setEnabled(true);
+    }
+
+    public void lock() {
+        if (tree.getCellEditor() != null) {
+            tree.getCellEditor().stopCellEditing(); // force quit open edit
+            //tree.getCellEditor().cancelCellEditing(); // TODO: better not to use the edited value?
+        }
+        tree.setEnabled(false);
+    }
+
+    public void clear() {
+        rootNode.removeAllChildren();
+        // clear local data for good measure (in case someone rebuilds)
+        callStack.clear();
+        locals.clear();
+        thisFields.clear();
+        declaredThisFields.clear();
+        // update
+        treeModel.nodeStructureChanged(rootNode);
+    }
+
+    @Override
+    public void treeWillExpand(TreeExpansionEvent tee) throws ExpandVetoException {
+        //System.out.println("tree expansion: " + tee.getPath());
+        Object last = tee.getPath().getLastPathComponent();
+        if (!(last instanceof VariableNode)) {
+            return;
+        }
+        VariableNode var = (VariableNode) last;
+        // load children
+        if (!dbg.isPaused()) {
+            throw new ExpandVetoException(tee, "Debugger busy");
+        } else {
+            var.removeAllChildren(); // TODO: should we only load it once?
+            // TODO: don't filter in advanced mode
+            //System.out.println("loading children for: " + var);
+            // true means include inherited
+            var.addChildren(filterNodes(dbg.getFields(var.getValue(), 0, true), new ThisFilter()));
+        }
+    }
+
+    @Override
+    public void treeWillCollapse(TreeExpansionEvent tee) throws ExpandVetoException {
+        //throw new UnsupportedOperationException("Not supported yet.");
     }
     protected static final int ICON_SIZE = 16;
     protected boolean p5mode = true;
@@ -557,6 +604,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 //            tree.expandPath(new TreePath(new Object[]{rootNode, thisNode}));
         }
 
+        //System.out.println(tree.getCellRenderer(0, 0).getClass());
         //System.out.println(tree.getCellRenderer(0, 1).getClass());
     }
 
