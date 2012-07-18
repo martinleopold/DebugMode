@@ -20,12 +20,9 @@ package com.martinleopold.mode.debug;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.text.Document;
 import processing.app.*;
@@ -88,9 +85,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     public DebugEditor(Base base, String path, EditorState state, Mode mode) {
         super(base, path, state, mode);
 
-        // add debug menu to editor frame
-        JMenuBar menuBar = getJMenuBar();
-        menuBar.add(buildDebugMenu());
+        // get mode
         dmode = (DebugMode) mode;
 
         // init controller class
@@ -203,6 +198,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         debugMenu.addSeparator();
         debugMenu.add(toggleVariableInspectorMenuItem);
         return debugMenu;
+    }
+
+    @Override
+    public JMenu buildModeMenu() {
+        return buildDebugMenu();
     }
 
     /**

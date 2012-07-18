@@ -502,7 +502,7 @@ REQUESTS:
 * JEditTextArea: make ComponentHandler, MouseHandler, DragHandler protected
 ! Editor.java: allow setting TextArea without overwriting class and copying/modifying constructor. copying the constructor is not easy due to protected/private fields..
     --> factory method
-
+* switching modes doesn't produce a windowClosing() event at the editor. (need to override dispose() instead)
 
 
 OBSERVATIONS:
