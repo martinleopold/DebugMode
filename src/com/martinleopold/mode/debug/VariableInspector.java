@@ -19,6 +19,7 @@ package com.martinleopold.mode.debug;
 
 import com.sun.jdi.Value;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -37,6 +38,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
+import org.netbeans.swing.outline.DefaultOutlineCellRenderer;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.OutlineModel;
 import org.netbeans.swing.outline.RenderDataProvider;
@@ -82,6 +84,8 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         tree.setColumnHidingAllowed(false); // disable visible columns button (shows by default when right scroll bar is visible)
         //tree.setCellEditor(new DefaultCellEditor(new JTextField()));
 
+        tree.setDefaultRenderer(VariableNode.class, new VariableCellRenderer());
+
         callStack = new ArrayList();
         locals = new ArrayList();
         thisFields = new ArrayList();
@@ -91,6 +95,46 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
 //        for (Entry<Object, Object> entry : UIManager.getDefaults().entrySet()) {
 //            System.out.println(entry.getKey());
+//        }
+    }
+
+    // will
+    protected class VariableCellRenderer extends DefaultOutlineCellRenderer {
+
+        public VariableCellRenderer() {
+            super();
+        }
+
+//        protected void setItalic(boolean on) {
+//            if (on) {
+//                setFont(new Font(getFont().getName(), Font.ITALIC, getFont().getSize()));
+//            } else {
+//                setFont(new Font(getFont().getName(), Font.PLAIN, getFont().getSize()));
+//            }
+//        }
+//
+//        @Override
+//        public void setValue(Object value) {
+//            if (!(value instanceof VariableNode)) {
+//                super.setValue(value);
+//                return;
+//            }
+//
+//            VariableNode var = (VariableNode) value;
+//
+//            if (var.getValue() == null) {
+//                super.setValue("null");
+//                setItalic(true);
+//                return;
+//            }
+//
+//            if (var.getType() == VariableNode.TYPE_OBJECT) {
+//                setItalic(true);
+//            } else {
+//                setItalic(false);
+//            }
+//
+//            super.setValue(var.getStringValue());
 //        }
     }
 
@@ -127,6 +171,9 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         @Override
         public Class getColumnClass(int i) {
+//            if (i == 0) {
+//                return VariableNode.class;
+//            }
             return String.class;
         }
 
@@ -509,6 +556,8 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 //            tree.expandPath(new TreePath(new Object[]{rootNode, localsNode}));
 //            tree.expandPath(new TreePath(new Object[]{rootNode, thisNode}));
         }
+
+        System.out.println(tree.getCellRenderer(0, 1).getClass());
     }
 
     protected List<VariableNode> filterNodes(List<VariableNode> nodes, VariableNodeFilter filter) {

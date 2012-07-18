@@ -130,7 +130,7 @@ Wenn man Zeilen mit Breakpoints löscht bleiben diese erhalten.
 x 6) Bug
 Der Inspektor bekommt nicht mit wenn man Variablen umbenennt.
 
-7) Bug
+x 7) Bug
 Sketches mit P3D-Renderer laufen nicht: "package processing.opengl does not exist. …"
 Probier eines hier: Standard mode->Examples->Libraries->opengl
 7b)
