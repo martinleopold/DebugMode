@@ -104,7 +104,6 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         public VariableCellRenderer() {
             super();
         }
-
 //        protected void setItalic(boolean on) {
 //            if (on) {
 //                setFont(new Font(getFont().getName(), Font.ITALIC, getFont().getSize()));
@@ -541,7 +540,8 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
             // needs to be done before expanding the path!
             treeModel.nodeStructureChanged(rootNode);
 
-            tree.expandPath(new TreePath(new Object[]{rootNode, builtins}));
+            // TODO: this expansion causes problems when sorted and stepping
+            //tree.expandPath(new TreePath(new Object[]{rootNode, builtins}));
 
             //System.out.println("shown fields: " + rootNode.getChildCount());
 
@@ -557,7 +557,7 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 //            tree.expandPath(new TreePath(new Object[]{rootNode, thisNode}));
         }
 
-        System.out.println(tree.getCellRenderer(0, 1).getClass());
+        //System.out.println(tree.getCellRenderer(0, 1).getClass());
     }
 
     protected List<VariableNode> filterNodes(List<VariableNode> nodes, VariableNodeFilter filter) {
@@ -573,8 +573,6 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
     protected void addAllNodes(DefaultMutableTreeNode root, List<? extends MutableTreeNode> nodes) {
         for (MutableTreeNode node : nodes) {
             root.add(node);
-
-
         }
     }
 
