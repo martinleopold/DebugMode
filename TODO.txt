@@ -273,9 +273,10 @@ x fix critical bugs
 
 
 PROTOTYPE 5:
-stability, bug fixes
+internal testing release. stability, bug fixes
 list of knows issues, upcoming features
-
+* fixed setting values in variable inspector (arrays, null)
+* support for core libraries (pdf, opengl, …)
 
 
 
@@ -487,10 +488,13 @@ x save and export highlight the wrong buttons
 	set breakpoints
 x null value in italics
 * continue, step should do nothing when no dbg session is active
-* debug button should do nothing while debugging
+x debug button should do nothing while debugging
 x debug mode has no core libraries…, examples
 18.7.
 x override buildModeMenu() in Editor, instead of manual menu creation.
+* when the variable inspector window is small, expanding a node by double click will make the selection jump.
+* debug doesn't properly restart the session. stopDebug() needs to wait for vmdisconnected
+
 
 
 QUESTIONS:

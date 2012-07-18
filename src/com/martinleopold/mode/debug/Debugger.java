@@ -33,7 +33,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import processing.app.Sketch;
 import processing.app.SketchCode;
@@ -131,7 +130,10 @@ public class Debugger implements VMEventListener {
      * VM starts suspended. Should produce a VMStartEvent.
      */
     public synchronized void startDebug() {
-        stopDebug(); // stop any running sessions
+        //stopDebug(); // stop any running sessions
+        if (isStarted()) {
+            return; // do nothing
+        }
 
         // clear console
         editor.clearConsole();
