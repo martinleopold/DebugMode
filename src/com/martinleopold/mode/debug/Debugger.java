@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import processing.app.Sketch;
 import processing.app.SketchCode;
