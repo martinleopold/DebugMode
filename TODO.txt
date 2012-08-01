@@ -281,20 +281,31 @@ list of knows issues, upcoming features
 
 
 PROTOTYPE 6:
-iteration
+iteration/final polish
+goal: 13.8.2012
 
-* variable inspector
-	* switch to advanced mode
-	* maintain expansions and scroll positions
-	* automatically show when relevant
-	* dock to main window
-	* support p5 types
-		color: show rgb
-		PImage: 
-		etc
+x loose core hack
+* UI
+	* maintain vi expansions and scroll positions
+	* clickable gutter
+	* icons
+* save bps with sketch (comment annotation, another file?)
+* keyboard shortcuts
+* support p5 types
+	color: show rgb
+	PImage: 
+	etc
 * bug fixes
-* update docs
 
+
+PROTOTYPE 7:
+wrap up
+goal: 20.8.2012
+
+* update docs
+* tutorial
+* project mini site
+? switch to advanced mode
 
 
 IMPLEMENTATION:
@@ -494,7 +505,13 @@ x debug mode has no core libraries…, examples
 x override buildModeMenu() in Editor, instead of manual menu creation.
 * when the variable inspector window is small, expanding a node by double click will make the selection jump.
 * debug doesn't properly restart the session. stopDebug() needs to wait for vmdisconnected
-
+1.8.
+! https://github.com/martinleopold/DebugMode/issues/3
+	Exception in thread "AWT-EventQueue-0" com.sun.jdi.ObjectCollectedException
+	at com.sun.tools.jdi.JDWPException.toJDIException(JDWPException.java:27)
+	at com.sun.tools.jdi.ObjectReferenceImpl.referenceType(ObjectReferenceImpl.java:139)
+	at com.martinleopold.mode.debug.VariableNode.getAllowsChildren(Unknown Source)
+	at com.martinleopold.mode.debug.VariableNode.isLeaf(Unknown Source)
 
 
 QUESTIONS:
