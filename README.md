@@ -40,3 +40,5 @@ KNOWN ISSUES:
 INSTALLATION:
 Put the dist/DebugMode folder into the modes folder of your sketchbook.
 This version depends on a (slightly) hacked version of processing.app.Editor, which is contained in dist/pde.jar. Replace the pde.jar in your Processing installation to make it work.
+
+Note: As of Processing SVN rev. 9943 the hacked version of processing.app.Editor is no longer needed.
