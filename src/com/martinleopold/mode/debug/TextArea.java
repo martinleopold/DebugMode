@@ -18,6 +18,7 @@
 package com.martinleopold.mode.debug;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -66,7 +67,9 @@ public class TextArea extends JEditTextArea {
             painter.addMouseMotionListener(mml);
         }
 
-        painter.addMouseListener(new MouseHandler());
+        MouseHandler mouseHandler = new MouseHandler();
+        painter.addMouseListener(mouseHandler);
+        painter.addMouseMotionListener(mouseHandler);
 
         add(CENTER, painter);
     }
@@ -168,7 +171,9 @@ public class TextArea extends JEditTextArea {
         return super.xToOffset(line, x - gutterWidth());
     }
 
-    protected class MouseHandler implements MouseListener {
+    protected class MouseHandler implements MouseListener, MouseMotionListener {
+
+        protected int lastX;
 
         @Override
         public void mouseClicked(MouseEvent me) {
@@ -183,8 +188,7 @@ public class TextArea extends JEditTextArea {
             if (me.getX() < gutterWidth()) {
                 if (me.getButton() == MouseEvent.BUTTON1 && me.getClickCount() == 2) {
                     int line = me.getY() / painter.getFontMetrics().getHeight() + firstLine;
-                    if (line >= 0 && line <= getLineCount()-1) {
-                        System.out.println("dbl click line: " + line);
+                    if (line >= 0 && line <= getLineCount() - 1) {
                         editor.gutterDblClicked(line);
                     }
                 }
@@ -215,6 +219,26 @@ public class TextArea extends JEditTextArea {
             for (MouseListener ml : mouseListeners) {
                 ml.mouseExited(me);
             }
+        }
+
+        @Override
+        public void mouseDragged(MouseEvent me) {
+            // nop
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent me) {
+            //System.out.println("moved");
+            if (me.getX() < gutterWidth()) {
+                if (lastX >= gutterWidth()) {
+                    painter.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                }
+            } else {
+                if (lastX < gutterWidth()) {
+                    painter.setCursor(new Cursor(Cursor.TEXT_CURSOR));
+                }
+            }
+            lastX = me.getX();
         }
     }
 }
