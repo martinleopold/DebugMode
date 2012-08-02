@@ -19,6 +19,7 @@ package com.martinleopold.mode.debug;
 
 import java.awt.Color;
 import java.awt.event.ComponentListener;
+import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.HashMap;
@@ -33,13 +34,18 @@ import processing.app.syntax.TextAreaDefaults;
  */
 public class TextArea extends JEditTextArea {
 
-    public TextArea(TextAreaDefaults defaults) {
+    protected MouseListener[] mouseListeners; // cached mouselisteners, these are wrapped by MouseHandler
+    protected DebugEditor editor;
+
+    public TextArea(TextAreaDefaults defaults, DebugEditor editor) {
         super(defaults);
+
+        this.editor = editor;
 
         // replace the painter:
         // first save listeners, these are package-private in JEditTextArea, so not accessible
         ComponentListener[] componentListeners = painter.getComponentListeners();
-        MouseListener[] mouseListeners = painter.getMouseListeners();
+        mouseListeners = painter.getMouseListeners();
         MouseMotionListener[] mouseMotionListeners = painter.getMouseMotionListeners();
 
         remove(painter);
@@ -52,13 +58,15 @@ public class TextArea extends JEditTextArea {
             painter.addComponentListener(cl);
         }
 
-        for (MouseListener ml : mouseListeners) {
-            painter.addMouseListener(ml);
-        }
+//        for (MouseListener ml : mouseListeners) {
+//            painter.addMouseListener(ml);
+//        }
 
         for (MouseMotionListener mml : mouseMotionListeners) {
             painter.addMouseMotionListener(mml);
         }
+
+        painter.addMouseListener(new MouseHandler());
 
         add(CENTER, painter);
     }
@@ -158,5 +166,55 @@ public class TextArea extends JEditTextArea {
     @Override
     public int xToOffset(int line, int x) {
         return super.xToOffset(line, x - gutterWidth());
+    }
+
+    protected class MouseHandler implements MouseListener {
+
+        @Override
+        public void mouseClicked(MouseEvent me) {
+            for (MouseListener ml : mouseListeners) {
+                ml.mouseClicked(me);
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent me) {
+            // check if this happened in the gutter area
+            if (me.getX() < gutterWidth()) {
+                if (me.getButton() == MouseEvent.BUTTON1 && me.getClickCount() == 2) {
+                    int line = me.getY() / painter.getFontMetrics().getHeight() + firstLine;
+                    if (line >= 0 && line <= getLineCount()-1) {
+                        System.out.println("dbl click line: " + line);
+                        editor.gutterDblClicked(line);
+                    }
+                }
+            } else {
+                // invoke standard listeners
+                for (MouseListener ml : mouseListeners) {
+                    ml.mousePressed(me);
+                }
+            }
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent me) {
+            for (MouseListener ml : mouseListeners) {
+                ml.mouseReleased(me);
+            }
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent me) {
+            for (MouseListener ml : mouseListeners) {
+                ml.mouseEntered(me);
+            }
+        }
+
+        @Override
+        public void mouseExited(MouseEvent me) {
+            for (MouseListener ml : mouseListeners) {
+                ml.mouseExited(me);
+            }
+        }
     }
 }

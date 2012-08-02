@@ -284,28 +284,30 @@ PROTOTYPE 6:
 iteration/final polish
 goal: 13.8.2012
 
-x loose core hack
+x loose dependency on core hack
 * UI
-	* maintain vi expansions and scroll positions
-	* clickable gutter
-	* icons
+	* maintain node expansions and scroll position in variable inspector
+	x clickable left gutter (toggle breakpoints)
+	* rework toolbar icons
 * save bps with sketch (comment annotation, another file?)
-* keyboard shortcuts
-* support p5 types
-	color: show rgb
-	PImage: 
-	etc
-* bug fixes
+* fix known bugs
+
 
 
 PROTOTYPE 7:
 wrap up
 goal: 20.8.2012
 
+* keyboard shortcuts
 * update docs
 * tutorial
-* project mini site
+* project mini site. download, infos, tutorials
 ? switch to advanced mode
+? support p5 types
+	color: show rgb values
+	PImage: 
+	etc
+
 
 
 IMPLEMENTATION:

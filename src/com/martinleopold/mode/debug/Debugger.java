@@ -33,7 +33,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import processing.app.Sketch;
 import processing.app.SketchCode;
@@ -323,26 +322,33 @@ public class Debugger implements VMEventListener {
      * Set a breakpoint on the current line.
      */
     public synchronized void setBreakpoint() {
+        setBreakpoint(editor.getCurrentLineID().lineIdx());
+    }
+
+    public synchronized void setBreakpoint(int lineIdx) {
         // do nothing if we are kinda busy
         if (isStarted() && !isPaused()) {
             return;
         }
-        LineID line = editor.getCurrentLineID();
+        LineID line = editor.getLineIDInCurrentTab(lineIdx);
         breakpoints.add(new LineBreakpoint(line.lineIdx, this));
         Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "set breakpoint on line {0}", line);
-        //System.out.println("note: breakpoints on method declarations will not work, use first line of method instead");
     }
 
     /**
      * Remove a breakpoint from the current line (if set).
      */
     public synchronized void removeBreakpoint() {
+        removeBreakpoint(editor.getCurrentLineID().lineIdx());
+    }
+
+    public synchronized void removeBreakpoint(int lineIdx) {
         // do nothing if we are kinda busy
         if (isBusy()) {
             return;
         }
 
-        LineBreakpoint bp = breakpointOnLine(editor.getCurrentLineID());
+        LineBreakpoint bp = breakpointOnLine(editor.getLineIDInCurrentTab(lineIdx));
         if (bp != null) {
             bp.remove();
             breakpoints.remove(bp);
@@ -386,14 +392,21 @@ public class Debugger implements VMEventListener {
      * Toggle the breakpoint on the current line.
      */
     public synchronized void toggleBreakpoint() {
-        LineID line = editor.getCurrentLineID();
+        toggleBreakpoint(editor.getCurrentLineID().lineIdx());
+    }
 
-        LineBreakpoint bp = breakpointOnLine(line);
-        if (bp == null) {
-            setBreakpoint();
+    public synchronized void toggleBreakpoint(int lineIdx) {
+        LineID line = editor.getLineIDInCurrentTab(lineIdx);
+        if (!hasBreakpoint(line)) {
+            setBreakpoint(line.lineIdx());
         } else {
-            removeBreakpoint();
+            removeBreakpoint(line.lineIdx());
         }
+    }
+
+    protected boolean hasBreakpoint(LineID line) {
+        LineBreakpoint bp = breakpointOnLine(line);
+        return bp != null;
     }
 
     /**

@@ -439,7 +439,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     @Override
     protected JEditTextArea createTextArea() {
         //System.out.println("overriding creation of text area");
-        return new TextArea(new PdeTextAreaDefaults(mode));
+        return new TextArea(new PdeTextAreaDefaults(mode), this);
     }
 
     /**
@@ -647,5 +647,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     @Override
     public EditorToolbar createToolbar() {
         return new DebugToolbar(this, base);
+    }
+
+    public void gutterDblClicked(int lineIdx) {
+        if (dbg != null) {
+            dbg.toggleBreakpoint(lineIdx);
+        }
     }
 }
