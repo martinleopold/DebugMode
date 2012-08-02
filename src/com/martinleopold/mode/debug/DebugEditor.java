@@ -125,7 +125,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     @Override
     public void dispose() {
-        System.out.println("window dispose");
+        //System.out.println("window dispose");
         // quit running debug session
         dbg.stopDebug();
         // remove var.inspector
