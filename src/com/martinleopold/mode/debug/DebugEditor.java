@@ -325,7 +325,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
                 //System.out.println(line);
                 if (line.endsWith(marker) && dbg != null) {
                     LineID lineID = new LineID(tab.getFileName(), lineIdx);
-                    System.out.println("found breakpoint: " + lineID);
+                    //System.out.println("found breakpoint: " + lineID);
                     // got a breakpoint
                     dbg.setBreakpoint(lineID);
                 }

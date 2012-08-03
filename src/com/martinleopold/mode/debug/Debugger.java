@@ -341,7 +341,6 @@ public class Debugger implements VMEventListener {
         if (isStarted() && !isPaused()) {
             return;
         }
-        System.out.println("setting breakpoint: " + line);
         breakpoints.add(new LineBreakpoint(line, this));
         Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "set breakpoint on line {0}", line);
     }
