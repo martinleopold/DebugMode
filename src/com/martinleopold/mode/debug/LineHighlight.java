@@ -40,12 +40,17 @@ public class LineHighlight implements LineListener {
      * @param editor the {@link DebugEditor}
      */
     public LineHighlight(int lineIdx, Color bgColor, DebugEditor editor) {
-        lineID = editor.getLineIDInCurrentTab(lineIdx);
+        this(editor.getLineIDInCurrentTab(lineIdx), bgColor, editor);
+    }
+
+    // TODO: doc
+    public LineHighlight(LineID lineID, Color bgColor, DebugEditor editor) {
+        this.lineID = lineID;
         this.bgColor = bgColor;
         this.editor = editor;
         lineID.addListener(this);
-        lineID.startTracking(editor.currentDocument()); // todo: overwrite a previous doc?
-        paint();
+        lineID.startTracking(editor.getTab(lineID.fileName()).getDocument()); // todo: overwrite a previous doc?
+        paint(); // already checks if on current tab
     }
 
     public void setMarker(String marker) {

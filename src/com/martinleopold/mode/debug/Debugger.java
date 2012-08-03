@@ -336,6 +336,16 @@ public class Debugger implements VMEventListener {
         Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "set breakpoint on line {0}", line);
     }
 
+    public synchronized void setBreakpoint(LineID line) {
+        // do nothing if we are kinda busy
+        if (isStarted() && !isPaused()) {
+            return;
+        }
+        System.out.println("setting breakpoint: " + line);
+        breakpoints.add(new LineBreakpoint(line, this));
+        Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "set breakpoint on line {0}", line);
+    }
+
     /**
      * Remove a breakpoint from the current line (if set).
      */
@@ -343,7 +353,7 @@ public class Debugger implements VMEventListener {
         removeBreakpoint(editor.getCurrentLineID().lineIdx());
     }
 
-    public synchronized void removeBreakpoint(int lineIdx) {
+    protected void removeBreakpoint(int lineIdx) {
         // do nothing if we are kinda busy
         if (isBusy()) {
             return;

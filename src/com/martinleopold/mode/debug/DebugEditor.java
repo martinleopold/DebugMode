@@ -104,6 +104,8 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 //                onWindowClosing(e);
 //            }
 //        });
+
+        loadBreakpointsFromComments();
     }
 
 //    /**
@@ -292,15 +294,44 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     @Override
     protected boolean handleOpenInternal(String path) {
-        //System.out.println("handleOpen");
         boolean didOpen = super.handleOpenInternal(path);
         if (didOpen && dbg != null) {
             // should already been stopped (open calls handleStop)
             dbg.clearBreakpoints();
             clearBreakpointedLines(); // force clear breakpoint highlights
             variableInspector().clear(); // clear contents of variable inspector
+
+            // load breakpoint comments
+            loadBreakpointsFromComments();
         }
+
         return didOpen;
+    }
+
+    protected void loadBreakpointsFromComments() {
+        final String marker = "//--";
+
+        // iterate over all tabs
+        Sketch sketch = getSketch();
+        for (int i=0; i<sketch.getCodeCount(); i++) {
+            SketchCode tab = sketch.getCode(i);
+            String code = tab.getProgram();
+            //System.out.println(code);
+
+            // scan code for breakpoint comments
+            String lines[] = code.split("\\r?\\n"); // newlines not included
+            int lineIdx = 0;
+            for (String line : lines) {
+                //System.out.println(line);
+                if (line.endsWith(marker) && dbg != null) {
+                    LineID lineID = new LineID(tab.getFileName(), lineIdx);
+                    System.out.println("found breakpoint: " + lineID);
+                    // got a breakpoint
+                    dbg.setBreakpoint(lineID);
+                }
+                lineIdx++;
+            }
+        }
     }
 
     /**
@@ -488,11 +519,15 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      * breakpointed
      */
     public void addBreakpointedLine(int lineIdx) {
-        LineHighlight hl = new LineHighlight(lineIdx, BREAKPOINT_COLOR, this);
+        addBreakpointedLine(getLineIDInCurrentTab(lineIdx));
+    }
+
+    public void addBreakpointedLine(LineID lineID) {
+        LineHighlight hl = new LineHighlight(lineID, BREAKPOINT_COLOR, this);
         hl.setMarker(BREAKPOINT_MARKER, BREAKPOINT_MARKER_COLOR);
         breakpointedLines.add(hl);
         // repaint current line if it's on this line
-        if (currentLine != null && currentLine.lineID().equals(getLineIDInCurrentTab(lineIdx))) {
+        if (currentLine != null && currentLine.lineID().equals(lineID)) {
             currentLine.paint();
         }
     }
@@ -629,13 +664,18 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         return null;
     }
 
+    public SketchCode getCurrentTab() {
+        return getSketch().getCurrentCode();
+    }
+
     /**
      * Access the currently edited document.
      *
      * @return the document object
      */
     public Document currentDocument() {
-        return ta.getDocument();
+        //return ta.getDocument();
+        return getCurrentTab().getDocument();
     }
 
     /**

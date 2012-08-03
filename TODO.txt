@@ -514,7 +514,8 @@ x override buildModeMenu() in Editor, instead of manual menu creation.
 	at com.sun.tools.jdi.ObjectReferenceImpl.referenceType(ObjectReferenceImpl.java:139)
 	at com.martinleopold.mode.debug.VariableNode.getAllowsChildren(Unknown Source)
 	at com.martinleopold.mode.debug.VariableNode.isLeaf(Unknown Source)
-
+2.8.
+* standard examples do not appear in debug mode
 
 QUESTIONS:
 * p5 alpha errors

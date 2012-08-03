@@ -49,11 +49,16 @@ public class LineBreakpoint implements ClassLoadListener {
      * @param dbg the debugger
      */
     public LineBreakpoint(int lineIdx, Debugger dbg) {
-        this.line = dbg.editor().getLineIDInCurrentTab(lineIdx);
-        line.startTracking(dbg.editor().currentDocument());
+        this(dbg.editor().getLineIDInCurrentTab(lineIdx), dbg);
+    }
+
+    // breakpoint on arbitrary line
+    public LineBreakpoint(LineID line, Debugger dbg) {
+        this.line = line;
+        line.startTracking(dbg.editor().getTab(line.fileName()).getDocument());
         this.dbg = dbg;
         theClass = dbg.getClass(className()); // try to get the class immediately, may return null if not yet loaded
-        set(); // activate the breakpoint (show highlight, attach if debugger is running)
+            set(); // activate the breakpoint (show highlight, attach if debugger is running)
     }
 
     /**
@@ -128,7 +133,7 @@ public class LineBreakpoint implements ClassLoadListener {
      */
     protected void set() {
         dbg.addClassLoadListener(this); // class may not yet be loaded
-        dbg.editor().addBreakpointedLine(line.lineIdx());
+        dbg.editor().addBreakpointedLine(line);
         if (theClass != null && dbg.isPaused()) { // class is loaded
             // immediately activate the breakpoint
             attach();
