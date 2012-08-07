@@ -302,6 +302,9 @@ goal: 20.8.2012
 * update docs
 * tutorial
 * project mini site. download, infos, tutorials
+
+
+FUTURE:
 ? switch to advanced mode
 ? support p5 types
 	color: show rgb values

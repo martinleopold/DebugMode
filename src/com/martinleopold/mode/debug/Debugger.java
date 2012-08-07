@@ -27,6 +27,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -382,6 +383,25 @@ public class Debugger implements VMEventListener {
         breakpoints.clear();
     }
 
+    // TODO: doc
+    // clear breakpoints in a specific tab
+    public synchronized void clearBreakpoints(String tabFilename) {
+        //TODO: handle busy-ness correctly
+        if (isBusy()) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.WARNING, "busy");
+            return;
+        }
+
+        Iterator<LineBreakpoint> i = breakpoints.iterator();
+        while (i.hasNext()) {
+            LineBreakpoint bp = i.next();
+            if (bp.lineID().fileName().equals(tabFilename)) {
+                bp.remove();
+                i.remove();
+            }
+        }
+    }
+
     /**
      * Get the breakpoint on a certain line, if set.
      *
@@ -431,6 +451,16 @@ public class Debugger implements VMEventListener {
                 System.out.println(bp);
             }
         }
+    }
+
+    public synchronized List<LineBreakpoint> getBreakpoints(String tabFilename) {
+        List<LineBreakpoint> list = new ArrayList();
+        for (LineBreakpoint bp : breakpoints) {
+            if (bp.lineID().fileName().equals(tabFilename)) {
+                list.add(bp);
+            }
+        }
+        return list;
     }
 
     /**

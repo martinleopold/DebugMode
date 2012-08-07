@@ -18,16 +18,22 @@
 package com.martinleopold.mode.debug;
 
 import java.awt.Color;
+import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.text.Document;
 import processing.app.*;
 import processing.app.syntax.JEditTextArea;
 import processing.app.syntax.PdeTextAreaDefaults;
+import processing.core.PApplet;
 import processing.mode.java.JavaEditor;
 
 /**
@@ -105,7 +111,18 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 //            }
 //        });
 
-        loadBreakpointsFromComments();
+        //loadBreakpointsFromComments();
+        //stripBreakpointComments();
+
+        // set breakpoints
+        System.out.println("setting breakpoints");
+        // load breakpoint comments
+
+        for (LineID lineID : stripBreakpointComments()) {
+            System.out.println("setting: " + lineID);
+            dbg.setBreakpoint(lineID);
+        }
+        getSketch().setModified(false); // setting breakpoints will flag sketch as modified, so override this here
     }
 
 //    /**
@@ -300,38 +317,146 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             dbg.clearBreakpoints();
             clearBreakpointedLines(); // force clear breakpoint highlights
             variableInspector().clear(); // clear contents of variable inspector
-
-            // load breakpoint comments
-            loadBreakpointsFromComments();
         }
-
         return didOpen;
     }
+    protected final String breakpointCommentMarker = "//--";
 
-    protected void loadBreakpointsFromComments() {
-        final String marker = "//--";
-
+    protected List<LineID> stripBreakpointComments() {
+        List<LineID> bps = new ArrayList();
         // iterate over all tabs
         Sketch sketch = getSketch();
-        for (int i=0; i<sketch.getCodeCount(); i++) {
+        for (int i = 0; i < sketch.getCodeCount(); i++) {
             SketchCode tab = sketch.getCode(i);
             String code = tab.getProgram();
+            String lines[] = code.split("\\r?\\n"); // newlines not included
             //System.out.println(code);
 
             // scan code for breakpoint comments
-            String lines[] = code.split("\\r?\\n"); // newlines not included
             int lineIdx = 0;
             for (String line : lines) {
                 //System.out.println(line);
-                if (line.endsWith(marker) && dbg != null) {
+                if (line.endsWith(breakpointCommentMarker)) {
                     LineID lineID = new LineID(tab.getFileName(), lineIdx);
-                    //System.out.println("found breakpoint: " + lineID);
+                    bps.add(lineID);
+                    System.out.println("found breakpoint: " + lineID);
                     // got a breakpoint
-                    dbg.setBreakpoint(lineID);
+                    //dbg.setBreakpoint(lineID);
+                    int index = line.lastIndexOf(breakpointCommentMarker);
+                    lines[lineIdx] = line.substring(0, index);
                 }
                 lineIdx++;
             }
+            //tab.setProgram(code);
+            code = PApplet.join(lines, "\n");
+            setTabContents(tab.getFileName(), code);
         }
+        return bps;
+    }
+
+    protected void addBreakpointComments(String tabFilename) {
+        SketchCode tab = getTab(tabFilename);
+        List<LineBreakpoint> bps = dbg.getBreakpoints(tab.getFileName());
+
+        // load the source file
+        File sourceFile = new File(sketch.getFolder(), tab.getFileName());
+        System.out.println("file: " + sourceFile);
+        try {
+            String code = base.loadFile(sourceFile);
+            System.out.println("code: " + code);
+            String lines[] = code.split("\\r?\\n"); // newlines not included
+            for (LineBreakpoint bp : bps) {
+                System.out.println("adding bp: " + bp.lineID());
+                lines[bp.lineID().lineIdx()] += breakpointCommentMarker;
+            }
+            code = PApplet.join(lines, "\n");
+            System.out.println("new code: " + code);
+            base.saveFile(code, sourceFile);
+        } catch (IOException ex) {
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Override
+    public boolean handleSave(boolean immediately) {
+        System.out.println("handleSave " + immediately);
+
+        // note modified tabs
+        final List<String> modified = new ArrayList();
+        for (int i = 0; i < getSketch().getCodeCount(); i++) {
+            SketchCode tab = getSketch().getCode(i);
+            if (tab.isModified()) {
+                modified.add(tab.getFileName());
+            }
+        }
+
+        boolean saved = super.handleSave(immediately);
+        if (saved) {
+            if (immediately) {
+                for (String tabFilename : modified) {
+                    addBreakpointComments(tabFilename);
+                }
+            } else {
+                EventQueue.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (String tabFilename : modified) {
+                            addBreakpointComments(tabFilename);
+                        }
+                    }
+                });
+            }
+        }
+        return saved;
+    }
+
+    @Override
+    public boolean handleSaveAs() {
+        System.out.println("handleSaveAs");
+        String oldName = getSketch().getCode(0).getFileName();
+        System.out.println("old name: " + oldName);
+        boolean saved = super.handleSaveAs();
+        if (saved) {
+            // re-set breakpoints in first tab (name has changed)
+            List<LineBreakpoint> bps = dbg.getBreakpoints(oldName);
+            dbg.clearBreakpoints(oldName);
+            String newName = getSketch().getCode(0).getFileName();
+            System.out.println("new name: " + newName);
+            for (LineBreakpoint bp : bps) {
+                LineID line = new LineID(newName, bp.lineID().lineIdx());
+                System.out.println("setting: " + line);
+                dbg.setBreakpoint(line);
+            }
+            // add breakpoint marker comments to source file
+            for (int i = 0; i < getSketch().getCodeCount(); i++) {
+                addBreakpointComments(getSketch().getCode(i).getFileName());
+            }
+        }
+        return saved;
+    }
+
+    // TODO: does this have any negative effects? (setting the doc to null)
+    protected void setTabContents(String tabFilename, String code) {
+        // remove all breakpoints of this tab
+        dbg.clearBreakpoints(tabFilename);
+
+        SketchCode currentTab = getCurrentTab();
+
+        // set code of tab
+        SketchCode tab = getTab(tabFilename);
+        if (tab != null) {
+            tab.setProgram(code);
+            // this updates document and text area
+            tab.setDocument(null);
+            setCode(tab);
+
+            // switch back to original tab
+            setCode(currentTab);
+        }
+
+        // update Document
+        //Document oldDocument = tab.getDocument();
+        //SyntaxDocument document = new SyntaxDocument();
     }
 
     /**
