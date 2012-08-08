@@ -68,8 +68,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     protected JMenuItem continueMenuItem;
     protected JMenuItem stopMenuItem;
     // breakpoints
-    protected JMenuItem setBreakpointMenuItem;
-    protected JMenuItem removeBreakpointMenuItem;
+//    protected JMenuItem setBreakpointMenuItem;
+//    protected JMenuItem removeBreakpointMenuItem;
+    protected JMenuItem toggleBreakpointMenuItem;
     protected JMenuItem listBreakpointsMenuItem;
     // stepping
     protected JMenuItem stepOverMenuItem;
@@ -163,40 +164,43 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         stopMenuItem = new JMenuItem("Stop");
         stopMenuItem.addActionListener(this);
 
-        setBreakpointMenuItem = new JMenuItem("Set Breakpoint");
-        setBreakpointMenuItem.addActionListener(this);
-        removeBreakpointMenuItem = new JMenuItem("Remove Breakpoint");
-        removeBreakpointMenuItem.addActionListener(this);
+//        setBreakpointMenuItem = new JMenuItem("Set Breakpoint");
+//        setBreakpointMenuItem.addActionListener(this);
+//        removeBreakpointMenuItem = new JMenuItem("Remove Breakpoint");
+//        removeBreakpointMenuItem.addActionListener(this);
+        toggleBreakpointMenuItem = new JMenuItem("Toggle Breakpoint");
+        toggleBreakpointMenuItem.addActionListener(this);
         listBreakpointsMenuItem = new JMenuItem("List Breakpoints");
         listBreakpointsMenuItem.addActionListener(this);
 
-        stepOverMenuItem = new JMenuItem("Step Over");
+        stepOverMenuItem = new JMenuItem("Step");
         stepOverMenuItem.addActionListener(this);
         stepIntoMenuItem = new JMenuItem("Step Into");
         stepIntoMenuItem.addActionListener(this);
         stepOutMenuItem = new JMenuItem("Step Out");
         stepOutMenuItem.addActionListener(this);
 
-        printStackTraceMenuItem = new JMenuItem("Print Stack trace");
+        printStackTraceMenuItem = new JMenuItem("Print Stack Trace");
         printStackTraceMenuItem.addActionListener(this);
         printLocalsMenuItem = new JMenuItem("Print Locals");
         printLocalsMenuItem.addActionListener(this);
-        printThisMenuItem = new JMenuItem("Print this fields");
+        printThisMenuItem = new JMenuItem("Print Fields");
         printThisMenuItem.addActionListener(this);
         printSourceMenuItem = new JMenuItem("Print Source Location");
         printSourceMenuItem.addActionListener(this);
         printThreads = new JMenuItem("Print Threads");
         printThreads.addActionListener(this);
 
-        toggleVariableInspectorMenuItem = new JMenuItem("Show/Hide Variable Inspector");
+        toggleVariableInspectorMenuItem = new JMenuItem("Toggle Variable Inspector");
         toggleVariableInspectorMenuItem.addActionListener(this);
 
         debugMenu.add(debugMenuItem);
         debugMenu.add(continueMenuItem);
         debugMenu.add(stopMenuItem);
         debugMenu.addSeparator();
-        debugMenu.add(setBreakpointMenuItem);
-        debugMenu.add(removeBreakpointMenuItem);
+//        debugMenu.add(setBreakpointMenuItem);
+//        debugMenu.add(removeBreakpointMenuItem);
+        debugMenu.add(toggleBreakpointMenuItem);
         debugMenu.add(listBreakpointsMenuItem);
         debugMenu.addSeparator();
         debugMenu.add(stepOverMenuItem);
@@ -264,17 +268,20 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         } else if (source == printThreads) {
             System.out.println("# clicked print threads menu item");
             dbg.printThreads();
-        } else if (source == setBreakpointMenuItem) {
-            System.out.println("# clicked set breakpoint menu item");
-            dbg.setBreakpoint();
-        } else if (source == removeBreakpointMenuItem) {
-            System.out.println("# clicked remove breakpoint menu item");
-            dbg.removeBreakpoint();
+//        } else if (source == setBreakpointMenuItem) {
+//            System.out.println("# clicked set breakpoint menu item");
+//            dbg.setBreakpoint();
+//        } else if (source == removeBreakpointMenuItem) {
+//            System.out.println("# clicked remove breakpoint menu item");
+//            dbg.removeBreakpoint();
+        } else if (source == toggleBreakpointMenuItem) {
+            System.out.println("# clicked toggle breakpoint menu item");
+            dbg.toggleBreakpoint();
         } else if (source == listBreakpointsMenuItem) {
             System.out.println("# clicked list breakpoints menu item");
             dbg.listBreakpoints();
         } else if (source == toggleVariableInspectorMenuItem) {
-            System.out.println("# clicked show/hide variable inspector menu item");
+            System.out.println("# clicked toggle variable inspector menu item");
             toggleVariableInspector();
         }
     }
@@ -314,8 +321,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         }
         return didOpen;
     }
-    protected final String breakpointCommentMarker = "//--";
+    protected final String breakpointMarkerComment = "//--";
 
+    // extract and return breakpointed lines from source code marker comments
     protected List<LineID> stripBreakpointComments() {
         List<LineID> bps = new ArrayList();
         // iterate over all tabs
@@ -330,13 +338,13 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             int lineIdx = 0;
             for (String line : lines) {
                 //System.out.println(line);
-                if (line.endsWith(breakpointCommentMarker)) {
+                if (line.endsWith(breakpointMarkerComment)) {
                     LineID lineID = new LineID(tab.getFileName(), lineIdx);
                     bps.add(lineID);
                     //System.out.println("found breakpoint: " + lineID);
                     // got a breakpoint
                     //dbg.setBreakpoint(lineID);
-                    int index = line.lastIndexOf(breakpointCommentMarker);
+                    int index = line.lastIndexOf(breakpointMarkerComment);
                     lines[lineIdx] = line.substring(0, index);
                 }
                 lineIdx++;
@@ -348,6 +356,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         return bps;
     }
 
+    // add breakpoint marker comments to the source file of a specific tab
     protected void addBreakpointComments(String tabFilename) {
         SketchCode tab = getTab(tabFilename);
         List<LineBreakpoint> bps = dbg.getBreakpoints(tab.getFileName());
@@ -361,7 +370,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             String lines[] = code.split("\\r?\\n"); // newlines not included
             for (LineBreakpoint bp : bps) {
                 //System.out.println("adding bp: " + bp.lineID());
-                lines[bp.lineID().lineIdx()] += breakpointCommentMarker;
+                lines[bp.lineID().lineIdx()] += breakpointMarkerComment;
             }
             code = PApplet.join(lines, "\n");
             //System.out.println("new code: " + code);
@@ -430,6 +439,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     }
 
     // TODO: does this have any negative effects? (setting the doc to null)
+    // set text contents of a specific tab, updates underlying document and text area. removes breakpoints
     protected void setTabContents(String tabFilename, String code) {
         // remove all breakpoints of this tab
         dbg.clearBreakpoints(tabFilename);
