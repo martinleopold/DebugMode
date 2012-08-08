@@ -27,7 +27,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultCellEditor;
@@ -36,6 +38,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeExpansionListener;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -43,6 +46,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 import org.netbeans.swing.outline.DefaultOutlineCellRenderer;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.OutlineModel;
@@ -54,7 +59,7 @@ import org.netbeans.swing.outline.RowModel;
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
-public class VariableInspector extends javax.swing.JFrame implements TreeWillExpandListener {
+public class VariableInspector extends javax.swing.JFrame {
 
     protected DefaultMutableTreeNode rootNode;
     protected DefaultTreeModel treeModel;
@@ -79,10 +84,12 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         initComponents();
 
         // setup Outline
-        rootNode = new DefaultMutableTreeNode();
+        rootNode = new DefaultMutableTreeNode("root");
         treeModel = new DefaultTreeModel(rootNode); // model for the tree column
         OutlineModel model = DefaultOutlineModel.createOutlineModel(treeModel, new VariableRowModel(), true, "Name"); // model for all columns
-        model.getTreePathSupport().addTreeWillExpandListener(this);
+        ExpansionHandler expansionHandler = new ExpansionHandler();
+        model.getTreePathSupport().addTreeWillExpandListener(expansionHandler);
+        model.getTreePathSupport().addTreeExpansionListener(expansionHandler);
         tree.setModel(model);
         tree.setRootVisible(false);
         tree.setRenderDataProvider(new OutlineRenderer());
@@ -498,40 +505,70 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
         tree.setEnabled(false);
     }
 
-    public void clear() {
+    public void reset() {
         rootNode.removeAllChildren();
         // clear local data for good measure (in case someone rebuilds)
         callStack.clear();
         locals.clear();
         thisFields.clear();
         declaredThisFields.clear();
+        expandedNodes.clear();
         // update
         treeModel.nodeStructureChanged(rootNode);
     }
 
-    @Override
-    public void treeWillExpand(TreeExpansionEvent tee) throws ExpandVetoException {
-        //System.out.println("tree expansion: " + tee.getPath());
-        Object last = tee.getPath().getLastPathComponent();
-        if (!(last instanceof VariableNode)) {
-            return;
-        }
-        VariableNode var = (VariableNode) last;
-        // load children
-        if (!dbg.isPaused()) {
-            throw new ExpandVetoException(tee, "Debugger busy");
-        } else {
-            var.removeAllChildren(); // TODO: should we only load it once?
-            // TODO: don't filter in advanced mode
-            //System.out.println("loading children for: " + var);
-            // true means include inherited
-            var.addChildren(filterNodes(dbg.getFields(var.getValue(), 0, true), new ThisFilter()));
-        }
-    }
+    Set<TreePath> expandedNodes = new HashSet();
+    TreePath expandedLast;
 
-    @Override
-    public void treeWillCollapse(TreeExpansionEvent tee) throws ExpandVetoException {
-        //throw new UnsupportedOperationException("Not supported yet.");
+    protected class ExpansionHandler implements TreeWillExpandListener, TreeExpansionListener {
+
+        @Override
+        public void treeWillExpand(TreeExpansionEvent tee) throws ExpandVetoException {
+            Object last = tee.getPath().getLastPathComponent();
+            if (!(last instanceof VariableNode)) {
+                return;
+            }
+            VariableNode var = (VariableNode) last;
+            // load children
+            if (!dbg.isPaused()) {
+                throw new ExpandVetoException(tee, "Debugger busy");
+            } else {
+                var.removeAllChildren(); // TODO: should we only load it once?
+                // TODO: don't filter in advanced mode
+                //System.out.println("loading children for: " + var);
+                // true means include inherited
+                var.addChildren(filterNodes(dbg.getFields(var.getValue(), 0, true), new ThisFilter()));
+            }
+        }
+
+        @Override
+        public void treeWillCollapse(TreeExpansionEvent tee) throws ExpandVetoException {
+            //throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public void treeExpanded(TreeExpansionEvent tee) {
+            //System.out.println("expanded: " + tee.getPath());
+            //System.out.println("hash: " + tee.getPath().getLastPathComponent().hashCode());
+            expandedNodes.add(tee.getPath());
+
+//            TreePath newPath = tee.getPath();
+//            if (expandedLast != null) {
+//                // test each node of the path for equality
+//                for (int i=0; i<expandedLast.getPathCount(); i++) {
+//                    if (i<newPath.getPathCount()) {
+//                        System.out.println(expandedLast.getPathComponent(i) + " =? " + newPath.getPathComponent(i) + ": " + expandedLast.getPathComponent(i).equals(newPath.getPathComponent(i)));
+//                    }
+//                }
+//            }
+//            expandedLast = newPath;
+        }
+
+        @Override
+        public void treeCollapsed(TreeExpansionEvent tee) {
+            //System.out.println("collapsed: " + tee.getPath());
+            expandedNodes.remove(tee.getPath());
+        }
     }
     protected static final int ICON_SIZE = 16;
     protected boolean p5mode = true;
@@ -587,6 +624,12 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
             // needs to be done before expanding the path!
             treeModel.nodeStructureChanged(rootNode);
 
+            // handle node expansions
+            for (TreePath path : expandedNodes) {
+                System.out.println("re-expanding: " + synthesizePath(path));
+                tree.expandPath(synthesizePath(path));
+            }
+
             // TODO: this expansion causes problems when sorted and stepping
             //tree.expandPath(new TreePath(new Object[]{rootNode, builtins}));
 
@@ -606,6 +649,26 @@ public class VariableInspector extends javax.swing.JFrame implements TreeWillExp
 
         //System.out.println(tree.getCellRenderer(0, 0).getClass());
         //System.out.println(tree.getCellRenderer(0, 1).getClass());
+    }
+
+    protected TreePath synthesizePath(TreePath path) {
+        if (path.getPathCount() == 0 || !rootNode.equals(path.getPathComponent(0)) ) {
+            return null;
+        }
+        Object[] newPath = new Object[path.getPathCount()];
+        newPath[0] = rootNode;
+        TreeNode currentNode = rootNode;
+        for (int i=0; i<path.getPathCount()-1; i++) {
+            // get next node
+            for (int j=0; j<currentNode.getChildCount(); j++) {
+                TreeNode nextNode = currentNode.getChildAt(j);
+                if (nextNode.equals(path.getPathComponent(i+1))) {
+                    currentNode = nextNode;
+                    newPath[i+1] = nextNode;
+                }
+            }
+        }
+        return new TreePath(newPath);
     }
 
     protected List<VariableNode> filterNodes(List<VariableNode> nodes, VariableNodeFilter filter) {

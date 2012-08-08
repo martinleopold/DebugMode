@@ -317,7 +317,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             // should already been stopped (open calls handleStop)
             dbg.clearBreakpoints();
             clearBreakpointedLines(); // force clear breakpoint highlights
-            variableInspector().clear(); // clear contents of variable inspector
+            variableInspector().reset(); // clear contents of variable inspector
         }
         return didOpen;
     }
