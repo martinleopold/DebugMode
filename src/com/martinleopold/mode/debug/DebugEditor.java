@@ -111,15 +111,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 //            }
 //        });
 
-        //loadBreakpointsFromComments();
-        //stripBreakpointComments();
-
-        // set breakpoints
-        System.out.println("setting breakpoints");
-        // load breakpoint comments
-
+        // set breakpoints from marker comments
         for (LineID lineID : stripBreakpointComments()) {
-            System.out.println("setting: " + lineID);
+            //System.out.println("setting: " + lineID);
             dbg.setBreakpoint(lineID);
         }
         getSketch().setModified(false); // setting breakpoints will flag sketch as modified, so override this here
@@ -339,7 +333,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
                 if (line.endsWith(breakpointCommentMarker)) {
                     LineID lineID = new LineID(tab.getFileName(), lineIdx);
                     bps.add(lineID);
-                    System.out.println("found breakpoint: " + lineID);
+                    //System.out.println("found breakpoint: " + lineID);
                     // got a breakpoint
                     //dbg.setBreakpoint(lineID);
                     int index = line.lastIndexOf(breakpointCommentMarker);
@@ -360,17 +354,17 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
         // load the source file
         File sourceFile = new File(sketch.getFolder(), tab.getFileName());
-        System.out.println("file: " + sourceFile);
+        //System.out.println("file: " + sourceFile);
         try {
             String code = base.loadFile(sourceFile);
-            System.out.println("code: " + code);
+            //System.out.println("code: " + code);
             String lines[] = code.split("\\r?\\n"); // newlines not included
             for (LineBreakpoint bp : bps) {
-                System.out.println("adding bp: " + bp.lineID());
+                //System.out.println("adding bp: " + bp.lineID());
                 lines[bp.lineID().lineIdx()] += breakpointCommentMarker;
             }
             code = PApplet.join(lines, "\n");
-            System.out.println("new code: " + code);
+            //System.out.println("new code: " + code);
             base.saveFile(code, sourceFile);
         } catch (IOException ex) {
             Logger.getLogger(DebugEditor.class.getName()).log(Level.SEVERE, null, ex);
@@ -379,7 +373,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
     @Override
     public boolean handleSave(boolean immediately) {
-        System.out.println("handleSave " + immediately);
+        //System.out.println("handleSave " + immediately);
 
         // note modified tabs
         final List<String> modified = new ArrayList();
@@ -412,19 +406,19 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
     @Override
     public boolean handleSaveAs() {
-        System.out.println("handleSaveAs");
+        //System.out.println("handleSaveAs");
         String oldName = getSketch().getCode(0).getFileName();
-        System.out.println("old name: " + oldName);
+        //System.out.println("old name: " + oldName);
         boolean saved = super.handleSaveAs();
         if (saved) {
             // re-set breakpoints in first tab (name has changed)
             List<LineBreakpoint> bps = dbg.getBreakpoints(oldName);
             dbg.clearBreakpoints(oldName);
             String newName = getSketch().getCode(0).getFileName();
-            System.out.println("new name: " + newName);
+            //System.out.println("new name: " + newName);
             for (LineBreakpoint bp : bps) {
                 LineID line = new LineID(newName, bp.lineID().lineIdx());
-                System.out.println("setting: " + line);
+                //System.out.println("setting: " + line);
                 dbg.setBreakpoint(line);
             }
             // add breakpoint marker comments to source file
@@ -453,10 +447,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             // switch back to original tab
             setCode(currentTab);
         }
-
-        // update Document
-        //Document oldDocument = tab.getDocument();
-        //SyntaxDocument document = new SyntaxDocument();
     }
 
     /**

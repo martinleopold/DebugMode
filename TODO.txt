@@ -519,6 +519,10 @@ x override buildModeMenu() in Editor, instead of manual menu creation.
 	at com.martinleopold.mode.debug.VariableNode.isLeaf(Unknown Source)
 2.8.
 * standard examples do not appear in debug mode
+8.8.
+set breakpoint (menu item) -> can produce duplicate breakpoints
+
+
 
 QUESTIONS:
 * p5 alpha errors
@@ -539,6 +543,12 @@ REQUESTS:
 ! Editor.java: allow setting TextArea without overwriting class and copying/modifying constructor. copying the constructor is not easy due to protected/private fields..
     --> factory method
 * switching modes doesn't produce a windowClosing() event at the editor. (need to override dispose() instead)
+* multiple tabs, selecting, fast switching… (not clearly reproducible)
+Exception in thread "AWT-EventQueue-0" java.lang.StringIndexOutOfBoundsException: String index out of range: 46
+	at java.lang.String.charAt(String.java:686)
+	at processing.app.syntax.Brackets.findMatchingBracket(Brackets.java:69)
+	at processing.app.syntax.JEditTextArea.updateBracketHighlight(JEditTextArea.java:2002)
+	at processing.app.syntax.JEditTextArea.select(JEditTextArea.java:1211)
 
 
 OBSERVATIONS:
