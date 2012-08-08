@@ -324,22 +324,20 @@ public class Debugger implements VMEventListener {
      * Set a breakpoint on the current line.
      */
     public synchronized void setBreakpoint() {
-        setBreakpoint(editor.getCurrentLineID().lineIdx());
+        setBreakpoint(editor.getCurrentLineID());
     }
 
     public synchronized void setBreakpoint(int lineIdx) {
-        // do nothing if we are kinda busy
-        if (isStarted() && !isPaused()) {
-            return;
-        }
-        LineID line = editor.getLineIDInCurrentTab(lineIdx);
-        breakpoints.add(new LineBreakpoint(line.lineIdx, this));
-        Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "set breakpoint on line {0}", line);
+        setBreakpoint(editor.getLineIDInCurrentTab(lineIdx));
     }
 
     public synchronized void setBreakpoint(LineID line) {
         // do nothing if we are kinda busy
         if (isStarted() && !isPaused()) {
+            return;
+        }
+        // do nothing if there already is a breakpoint on this line
+        if (hasBreakpoint(line)) {
             return;
         }
         breakpoints.add(new LineBreakpoint(line, this));
