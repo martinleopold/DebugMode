@@ -27,6 +27,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,9 +51,11 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import org.netbeans.swing.outline.DefaultOutlineCellRenderer;
 import org.netbeans.swing.outline.DefaultOutlineModel;
+import org.netbeans.swing.outline.ExtTreeWillExpandListener;
 import org.netbeans.swing.outline.OutlineModel;
 import org.netbeans.swing.outline.RenderDataProvider;
 import org.netbeans.swing.outline.RowModel;
+import org.netbeans.swing.outline.TreePathSupport;
 
 /**
  * Variable Inspector window.
@@ -73,6 +76,7 @@ public class VariableInspector extends javax.swing.JFrame {
     protected List<VariableNode> declaredThisFields;
     protected DebugEditor editor;
     protected Debugger dbg;
+    protected OutlineModel model;
 
     /**
      * Creates new form NewJFrame
@@ -86,7 +90,8 @@ public class VariableInspector extends javax.swing.JFrame {
         // setup Outline
         rootNode = new DefaultMutableTreeNode("root");
         treeModel = new DefaultTreeModel(rootNode); // model for the tree column
-        OutlineModel model = DefaultOutlineModel.createOutlineModel(treeModel, new VariableRowModel(), true, "Name"); // model for all columns
+        model = DefaultOutlineModel.createOutlineModel(treeModel, new VariableRowModel(), true, "Name"); // model for all columns
+
         ExpansionHandler expansionHandler = new ExpansionHandler();
         model.getTreePathSupport().addTreeWillExpandListener(expansionHandler);
         model.getTreePathSupport().addTreeExpansionListener(expansionHandler);
@@ -94,6 +99,7 @@ public class VariableInspector extends javax.swing.JFrame {
         tree.setRootVisible(false);
         tree.setRenderDataProvider(new OutlineRenderer());
         tree.setColumnHidingAllowed(false); // disable visible columns button (shows by default when right scroll bar is visible)
+        tree.setAutoscrolls(false);
 
         // set custom renderer and editor for value column, since we are using a custom class for values (VariableNode)
         TableColumn valueColumn = tree.getColumnModel().getColumn(1);
@@ -520,25 +526,27 @@ public class VariableInspector extends javax.swing.JFrame {
     Set<TreePath> expandedNodes = new HashSet();
     TreePath expandedLast;
 
-    protected class ExpansionHandler implements TreeWillExpandListener, TreeExpansionListener {
+    protected class ExpansionHandler implements ExtTreeWillExpandListener, TreeExpansionListener {
 
         @Override
         public void treeWillExpand(TreeExpansionEvent tee) throws ExpandVetoException {
+            System.out.println("will expand");
             Object last = tee.getPath().getLastPathComponent();
             if (!(last instanceof VariableNode)) {
                 return;
             }
             VariableNode var = (VariableNode) last;
             // load children
-            if (!dbg.isPaused()) {
-                throw new ExpandVetoException(tee, "Debugger busy");
-            } else {
+//            if (!dbg.isPaused()) {
+//                System.out.println("throwing veto");
+//                //throw new ExpandVetoException(tee, "Debugger busy");
+//            } else {
                 var.removeAllChildren(); // TODO: should we only load it once?
                 // TODO: don't filter in advanced mode
                 //System.out.println("loading children for: " + var);
                 // true means include inherited
                 var.addChildren(filterNodes(dbg.getFields(var.getValue(), 0, true), new ThisFilter()));
-            }
+//            }
         }
 
         @Override
@@ -548,7 +556,7 @@ public class VariableInspector extends javax.swing.JFrame {
 
         @Override
         public void treeExpanded(TreeExpansionEvent tee) {
-            //System.out.println("expanded: " + tee.getPath());
+            System.out.println("expanded: " + tee.getPath());
             //System.out.println("hash: " + tee.getPath().getLastPathComponent().hashCode());
             expandedNodes.add(tee.getPath());
 
@@ -568,6 +576,11 @@ public class VariableInspector extends javax.swing.JFrame {
         public void treeCollapsed(TreeExpansionEvent tee) {
             //System.out.println("collapsed: " + tee.getPath());
             expandedNodes.remove(tee.getPath());
+        }
+
+        @Override
+        public void treeExpansionVetoed(TreeExpansionEvent tee, ExpandVetoException eve) {
+            System.out.println("expansion vetoed");
         }
     }
     protected static final int ICON_SIZE = 16;
@@ -626,9 +639,34 @@ public class VariableInspector extends javax.swing.JFrame {
 
             // handle node expansions
             for (TreePath path : expandedNodes) {
-                System.out.println("re-expanding: " + synthesizePath(path));
-                tree.expandPath(synthesizePath(path));
+                System.out.println("re-expanding: " + path);
+                tree.expandPath(path);
             }
+
+            // expand the a2 node
+//            TreePath path = null;
+//            for (Enumeration e = rootNode.children(); e.hasMoreElements(); ) {
+//                Object element = e.nextElement();
+//                if (element instanceof VariableNode) {
+//                    VariableNode node = (VariableNode)element;
+//                    if (node.getName().equals("a2")) {
+//                        System.out.println("found a2: " + node);
+//                        System.out.println("isleaf: " + node.isLeaf());
+//                        path = new TreePath(new Object[] {rootNode, element});
+//                        break;
+//                    }
+//                }
+//            }
+//
+//            if (path != null) {
+//                System.out.println("expanding:");
+//                //TreePathSupport tps = model.getTreePathSupport();
+//                //tps.clear();
+//                //tps.expandPath(path);
+//                tree.expandPath(path);
+//                //tps.expandPath(new TreePath(new Object[]{rootNode, builtins}));
+//                //tree.expandPath(path);
+//            }
 
             // TODO: this expansion causes problems when sorted and stepping
             //tree.expandPath(new TreePath(new Object[]{rootNode, builtins}));
