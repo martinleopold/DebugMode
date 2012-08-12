@@ -114,11 +114,16 @@ public class VariableInspector extends javax.swing.JFrame {
         thisFields = new ArrayList();
         declaredThisFields = new ArrayList();
 
-        this.setTitle("Variable Inspector");
+        this.setTitle(editor.getSketch().getName());
 
 //        for (Entry<Object, Object> entry : UIManager.getDefaults().entrySet()) {
 //            System.out.println(entry.getKey());
 //        }
+    }
+
+    @Override
+    public void setTitle(String title) {
+        super.setTitle(title + " | Variable Inspector");
     }
 
     /**

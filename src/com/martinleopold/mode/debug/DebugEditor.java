@@ -434,6 +434,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             for (int i = 0; i < getSketch().getCodeCount(); i++) {
                 addBreakpointComments(getSketch().getCode(i).getFileName());
             }
+
+            // set new name of variable inspector
+            vi.setTitle(getSketch().getName());
         }
         return saved;
     }
