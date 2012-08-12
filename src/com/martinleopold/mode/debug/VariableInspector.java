@@ -79,7 +79,7 @@ public class VariableInspector extends javax.swing.JFrame {
     protected OutlineModel model;
 
     /**
-     * Creates new form NewJFrame
+     * Creates new form VariableInspector
      */
     public VariableInspector(DebugEditor editor) {
         this.editor = editor;
@@ -121,7 +121,10 @@ public class VariableInspector extends javax.swing.JFrame {
 //        }
     }
 
-    // model for a table row (excluding the tree column)
+    /**
+     * Model for a Outline Row (excluding the tree column). Column 0 is "Value".
+     * Column 1 is "Type". Handles setting and getting values.
+     */
     protected class VariableRowModel implements RowModel {
 
         protected String[] columnNames = {"Value", "Type"};
@@ -142,7 +145,7 @@ public class VariableInspector extends javax.swing.JFrame {
                 VariableNode var = (VariableNode) o;
                 switch (i) {
                     case 0:
-                        return var; // will be converted to an appropriate text by ValueCellRenderer
+                        return var; // will be converted to an appropriate String by ValueCellRenderer
                     case 1:
                         return var.getTypeName();
                     default:
@@ -230,8 +233,8 @@ public class VariableInspector extends javax.swing.JFrame {
     }
 
     /**
-     * Renderer for the tree portion of the outline component. icons, text
-     * color, tooltips. TODO: better doc
+     * Renderer for the tree portion of the outline component. Handles icons,
+     * text color and tool tips.
      */
     protected class OutlineRenderer implements RenderDataProvider {
 
@@ -522,10 +525,13 @@ public class VariableInspector extends javax.swing.JFrame {
         // update
         treeModel.nodeStructureChanged(rootNode);
     }
-
     Set<TreePath> expandedNodes = new HashSet();
     TreePath expandedLast;
 
+    /**
+     * Handler for expanding and collapsing tree nodes. Implements lazy loading
+     * of tree data (on expand).
+     */
     protected class ExpansionHandler implements ExtTreeWillExpandListener, TreeExpansionListener {
 
         @Override
@@ -541,11 +547,11 @@ public class VariableInspector extends javax.swing.JFrame {
 //                System.out.println("throwing veto");
 //                //throw new ExpandVetoException(tee, "Debugger busy");
 //            } else {
-                var.removeAllChildren(); // TODO: should we only load it once?
-                // TODO: don't filter in advanced mode
-                //System.out.println("loading children for: " + var);
-                // true means include inherited
-                var.addChildren(filterNodes(dbg.getFields(var.getValue(), 0, true), new ThisFilter()));
+            var.removeAllChildren(); // TODO: should we only load it once?
+            // TODO: don't filter in advanced mode
+            //System.out.println("loading children for: " + var);
+            // true means include inherited
+            var.addChildren(filterNodes(dbg.getFields(var.getValue(), 0, true), new ThisFilter()));
 //            }
         }
 
@@ -560,16 +566,16 @@ public class VariableInspector extends javax.swing.JFrame {
             //System.out.println("hash: " + tee.getPath().getLastPathComponent().hashCode());
             expandedNodes.add(tee.getPath());
 
-//            TreePath newPath = tee.getPath();
-//            if (expandedLast != null) {
-//                // test each node of the path for equality
-//                for (int i=0; i<expandedLast.getPathCount(); i++) {
-//                    if (i<newPath.getPathCount()) {
-//                        System.out.println(expandedLast.getPathComponent(i) + " =? " + newPath.getPathComponent(i) + ": " + expandedLast.getPathComponent(i).equals(newPath.getPathComponent(i)));
-//                    }
-//                }
-//            }
-//            expandedLast = newPath;
+            TreePath newPath = tee.getPath();
+            if (expandedLast != null) {
+                // test each node of the path for equality
+                for (int i = 0; i < expandedLast.getPathCount(); i++) {
+                    if (i < newPath.getPathCount()) {
+                        System.out.println(expandedLast.getPathComponent(i) + " =? " + newPath.getPathComponent(i) + ": " + expandedLast.getPathComponent(i).equals(newPath.getPathComponent(i)));
+                    }
+                }
+            }
+            expandedLast = newPath;
         }
 
         @Override
@@ -640,7 +646,7 @@ public class VariableInspector extends javax.swing.JFrame {
             // handle node expansions
             for (TreePath path : expandedNodes) {
                 System.out.println("re-expanding: " + path);
-                tree.expandPath(path);
+                tree.expandPath(synthesizePath(path));
             }
 
             // expand the a2 node
@@ -690,19 +696,19 @@ public class VariableInspector extends javax.swing.JFrame {
     }
 
     protected TreePath synthesizePath(TreePath path) {
-        if (path.getPathCount() == 0 || !rootNode.equals(path.getPathComponent(0)) ) {
+        if (path.getPathCount() == 0 || !rootNode.equals(path.getPathComponent(0))) {
             return null;
         }
         Object[] newPath = new Object[path.getPathCount()];
         newPath[0] = rootNode;
         TreeNode currentNode = rootNode;
-        for (int i=0; i<path.getPathCount()-1; i++) {
+        for (int i = 0; i < path.getPathCount() - 1; i++) {
             // get next node
-            for (int j=0; j<currentNode.getChildCount(); j++) {
+            for (int j = 0; j < currentNode.getChildCount(); j++) {
                 TreeNode nextNode = currentNode.getChildAt(j);
-                if (nextNode.equals(path.getPathComponent(i+1))) {
+                if (nextNode.equals(path.getPathComponent(i + 1))) {
                     currentNode = nextNode;
-                    newPath[i+1] = nextNode;
+                    newPath[i + 1] = nextNode;
                 }
             }
         }
