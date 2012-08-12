@@ -93,7 +93,7 @@ x 5)
 XXXXX (blub$Klasse): instance of blub$Klasse
 ... den "instance of" Kram braucht man nur wenn es nicht die selbe Klasse ist wie der Var-Typus
 
-6)
+x 6)
 Wenn keine Locals da sind, sollte das Icon trotzdem ein Folder sein ...
 
 x 7)
@@ -115,7 +115,7 @@ Wenn man im DBGM ist (läuft) und einen Breakpoint toggln will passiert nichts. 
 > Stimmt.
 > Ich kann keine Breakpoints setzen / toggeln wenn im draw() loop beim Starten noch keine waren ...
 
-2) UX
+x 2) UX
 Könnte man das toggln von Breakpoints auch direkt auf dem Margin links machen? Klick die zu beobachtende Zeile?
 
 3) Bug
@@ -139,16 +139,16 @@ Gleiches gilt auch für PDF Beispiele … kann es sein daß dir die "included Li
 x 8) Bug
 Wenn man den Mode umschaltet bleibt der Inspektor offen
 
-9) UX / Bug?
+x 9) UX / Bug?
 Der Zusammenhang von Updates der Info im Inspektor und dem Setzen von Breakpoints / Laufen lassen ist unklar. Ich nehme an die Info wird nur upgedated wenn man einen Breakpoint setzt und den Sketch gerade debugged? … daß die Info dann immer noch in grau sichtbar ist wenn man editiert ist verwirrend (aber ich verstehe daß sie auch nützlich sein kann). Könnte man irgendwie / irgendwo im Inspektor darauf hinweisen daß sich das nur erneuert wenn man gerade debugged?
 Betrifft auch Punkt 6)
 
-10) UX
+x 10) UX
 Ich denke das "Debug"-Icon sollte einfach nur der "Run" Pfeil sein, so wie im Standard Modus. Das ist einfach und jeder versteht es sofort.
 Die Breakpoints könnten ein Diamant/Raute sein und dann in der Margin als "<>" dargestellt werden. Hätte etwas mehr Volumen und ist leichter zu sehen von der Form/Leserichtung. … und es sieht ein wenig wie ein Auge aus.
 Inspektor-Icon würde ich einfach ein "i" machen.
 
-10b) UX
+x 10b) UX
 Die zwei Icons von "Set Breakpoint" / "Show Inspector" können ruhig richtig rund sein, gehören ja irgendwie zum Debugging-Vorgang. Die räumliche Trennung nach links/rechts finde ich gut.
 
 11) UX
@@ -176,7 +176,7 @@ void setup () {
 
 14) Bug?
 Sortierung im Inspektor auch innerhalb der Objekte ("Processing") möglich?
---> ?
+
 
 
 PROTOTYPE 1 (v0.1):
@@ -242,7 +242,7 @@ x update code documentation
 
 
 PROTOTYPE 4:
-* UI
+x UI
 	x gutter left / line annotation
 		x fg colors
 		/ bg colors
@@ -281,25 +281,28 @@ list of knows issues, upcoming features
 
 
 PROTOTYPE 6:
-iteration/final polish
+iteration/final polish/wrap up
 goal: 13.8.2012
 
 x loose dependency on core hack
-* UI
-	* maintain node expansions and scroll position in variable inspector
+x UI
+	x maintain node expansions and scroll position in variable inspector
 	x clickable left gutter (toggle breakpoints)
-	* rework toolbar icons
-* save bps with sketch (comment annotation, another file?)
-* fix known bugs
+	x rework toolbar icons
+x save bps with sketch (comment annotation, another file?)
 
-
-
-PROTOTYPE 7:
-wrap up
 goal: 20.8.2012
-
+* list of known bugs (open issues)
+	* prioritize
+	* fix if possible
 * keyboard shortcuts
-* update docs
+	* debug
+	* step
+	* continue
+* update javadocs
+* revise logging
+	* logfiles ?
+	* show fatal errors in p5 console?
 * tutorial
 * project mini site. download, infos, tutorials
 
@@ -520,8 +523,20 @@ x override buildModeMenu() in Editor, instead of manual menu creation.
 2.8.
 * standard examples do not appear in debug mode
 8.8.
-set breakpoint (menu item) -> can produce duplicate breakpoints
-
+x set breakpoint (menu item) -> can produce duplicate breakpoints
+12.8.
+* sorting by value doesn't work inside Processing folder
+* multiple steps when nodes expanded...
+	Exception in thread "AWT-EventQueue-0" java.lang.IndexOutOfBoundsException: Index: 8, Size: 3
+	at java.util.ArrayList.RangeCheck(ArrayList.java:547)
+	at java.util.ArrayList.get(ArrayList.java:322)
+	at com.martinleopold.mode.debug.VariableNode.getChildAt(Unknown Source)
+	at javax.swing.tree.DefaultTreeModel.getChild(DefaultTreeModel.java:156)
+	at org.netbeans.swing.outline.DefaultOutlineModel.getChild(DefaultOutlineModel.java:231)
+	at javax.swing.tree.FixedHeightLayoutCache$SearchInfo.getPath(FixedHeightLayoutCache.java:1448)
+	at javax.swing.tree.FixedHeightLayoutCache.getPathForRow(FixedHeightLayoutCache.java:193)
+	at org.netbeans.swing.outline.DefaultOutlineCellRenderer.getTableCellRendererComponent(DefaultOutlineCellRenderer.java:253)
+* indicate debugger status somewhere (off, busy, suspended)
 
 
 QUESTIONS:
