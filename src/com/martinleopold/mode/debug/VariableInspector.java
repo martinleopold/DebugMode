@@ -27,10 +27,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultCellEditor;
@@ -40,8 +37,6 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
-import javax.swing.event.TreeWillExpandListener;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
@@ -55,7 +50,6 @@ import org.netbeans.swing.outline.ExtTreeWillExpandListener;
 import org.netbeans.swing.outline.OutlineModel;
 import org.netbeans.swing.outline.RenderDataProvider;
 import org.netbeans.swing.outline.RowModel;
-import org.netbeans.swing.outline.TreePathSupport;
 
 /**
  * Variable Inspector window.
@@ -65,6 +59,7 @@ import org.netbeans.swing.outline.TreePathSupport;
 public class VariableInspector extends javax.swing.JFrame {
 
     protected DefaultMutableTreeNode rootNode;
+    protected DefaultMutableTreeNode builtins;
     protected DefaultTreeModel treeModel;
 //    protected DefaultMutableTreeNode callStackNode;
 //    protected DefaultMutableTreeNode localsNode;
@@ -89,6 +84,7 @@ public class VariableInspector extends javax.swing.JFrame {
 
         // setup Outline
         rootNode = new DefaultMutableTreeNode("root");
+        builtins = new DefaultMutableTreeNode("Processing");
         treeModel = new DefaultTreeModel(rootNode); // model for the tree column
         model = DefaultOutlineModel.createOutlineModel(treeModel, new VariableRowModel(), true, "Name"); // model for all columns
 
@@ -530,8 +526,9 @@ public class VariableInspector extends javax.swing.JFrame {
         // update
         treeModel.nodeStructureChanged(rootNode);
     }
-    Set<TreePath> expandedNodes = new HashSet();
-    TreePath expandedLast;
+
+    List<TreePath> expandedNodes = new ArrayList(); // using list to maintain the order of expansion
+    //TreePath expandedLast;
 
     /**
      * Handler for expanding and collapsing tree nodes. Implements lazy loading
@@ -541,7 +538,7 @@ public class VariableInspector extends javax.swing.JFrame {
 
         @Override
         public void treeWillExpand(TreeExpansionEvent tee) throws ExpandVetoException {
-            System.out.println("will expand");
+            //System.out.println("will expand");
             Object last = tee.getPath().getLastPathComponent();
             if (!(last instanceof VariableNode)) {
                 return;
@@ -567,31 +564,50 @@ public class VariableInspector extends javax.swing.JFrame {
 
         @Override
         public void treeExpanded(TreeExpansionEvent tee) {
-            System.out.println("expanded: " + tee.getPath());
-            //System.out.println("hash: " + tee.getPath().getLastPathComponent().hashCode());
-            expandedNodes.add(tee.getPath());
-
-            TreePath newPath = tee.getPath();
-            if (expandedLast != null) {
-                // test each node of the path for equality
-                for (int i = 0; i < expandedLast.getPathCount(); i++) {
-                    if (i < newPath.getPathCount()) {
-                        System.out.println(expandedLast.getPathComponent(i) + " =? " + newPath.getPathComponent(i) + ": " + expandedLast.getPathComponent(i).equals(newPath.getPathComponent(i)));
-                    }
-                }
+            //System.out.println("expanded: " + tee.getPath());
+            if (!expandedNodes.contains(tee.getPath())) {
+                expandedNodes.add(tee.getPath());
             }
-            expandedLast = newPath;
+
+//            TreePath newPath = tee.getPath();
+//            if (expandedLast != null) {
+//                // test each node of the path for equality
+//                for (int i = 0; i < expandedLast.getPathCount(); i++) {
+//                    if (i < newPath.getPathCount()) {
+//                        Object last = expandedLast.getPathComponent(i);
+//                        Object cur = newPath.getPathComponent(i);
+//                        System.out.println(last + " =? " + cur + ": " + last.equals(cur) + "/" + (last.hashCode() == cur.hashCode()));
+//                    }
+//                }
+//            }
+//            System.out.println("path equality: " + newPath.equals(expandedLast));
+//            expandedLast = newPath;
         }
 
         @Override
         public void treeCollapsed(TreeExpansionEvent tee) {
             //System.out.println("collapsed: " + tee.getPath());
+
+            // first remove all children of collapsed path
+            // this makes sure children do not appear before parents in the list.
+            // (children can't be expanded before their parents)
+            List<TreePath> removalList = new ArrayList();
+            for (TreePath path : expandedNodes) {
+                if (path.getParentPath().equals(tee.getPath())) {
+                    removalList.add(path);
+                }
+            }
+            for (TreePath path : removalList) {
+                expandedNodes.remove(path);
+            }
+            // remove collapsed path
             expandedNodes.remove(tee.getPath());
         }
 
         @Override
         public void treeExpansionVetoed(TreeExpansionEvent tee, ExpandVetoException eve) {
-            System.out.println("expansion vetoed");
+            //System.out.println("expansion vetoed");
+            // nop
         }
     }
     protected static final int ICON_SIZE = 16;
@@ -639,68 +655,38 @@ public class VariableInspector extends javax.swing.JFrame {
             addAllNodes(rootNode, filterNodes(declaredThisFields, new LocalHidesThisFilter(locals, LocalHidesThisFilter.MODE_PREFIX)));
 
             // add p5 builtins in a new folder
-            DefaultMutableTreeNode builtins = new DefaultMutableTreeNode("Processing");
+            builtins.removeAllChildren();
             addAllNodes(builtins, filterNodes(thisFields, new P5BuiltinsFilter()));
-            rootNode.add(builtins);
+            if (builtins.getChildCount() > 0) { // skip builtins in certain situations e.g. in pure java tabs.
+                rootNode.add(builtins);
+            }
 
             // notify tree (using model) changed a node and its children
             // http://stackoverflow.com/questions/2730851/how-to-update-jtree-elements
-            // needs to be done before expanding the path!
+            // needs to be done before expanding paths!
             treeModel.nodeStructureChanged(rootNode);
 
             // handle node expansions
             for (TreePath path : expandedNodes) {
-                System.out.println("re-expanding: " + path);
-                tree.expandPath(synthesizePath(path));
+                //System.out.println("re-expanding: " + path);
+                path = synthesizePath(path);
+                if (path != null) {
+                    tree.expandPath(path);
+                } else {
+                    //System.out.println("couldn't synthesize path");
+                }
             }
-
-            // expand the a2 node
-//            TreePath path = null;
-//            for (Enumeration e = rootNode.children(); e.hasMoreElements(); ) {
-//                Object element = e.nextElement();
-//                if (element instanceof VariableNode) {
-//                    VariableNode node = (VariableNode)element;
-//                    if (node.getName().equals("a2")) {
-//                        System.out.println("found a2: " + node);
-//                        System.out.println("isleaf: " + node.isLeaf());
-//                        path = new TreePath(new Object[] {rootNode, element});
-//                        break;
-//                    }
-//                }
-//            }
-//
-//            if (path != null) {
-//                System.out.println("expanding:");
-//                //TreePathSupport tps = model.getTreePathSupport();
-//                //tps.clear();
-//                //tps.expandPath(path);
-//                tree.expandPath(path);
-//                //tps.expandPath(new TreePath(new Object[]{rootNode, builtins}));
-//                //tree.expandPath(path);
-//            }
 
             // TODO: this expansion causes problems when sorted and stepping
             //tree.expandPath(new TreePath(new Object[]{rootNode, builtins}));
 
-            //System.out.println("shown fields: " + rootNode.getChildCount());
-
         } else {
             // TODO: implement advanced mode here
-//            rootNode.add(callStackNode);
-//            rootNode.add(localsNode);
-//            rootNode.add(thisNode);
-            // expand top level nodes
-            // needs to happen after nodeStructureChanged
-//            tree.expandPath(new TreePath(new Object[]{rootNode, callStackNode}));
-//            tree.expandPath(new TreePath(new Object[]{rootNode, localsNode}));
-//            tree.expandPath(new TreePath(new Object[]{rootNode, thisNode}));
         }
-
-        //System.out.println(tree.getCellRenderer(0, 0).getClass());
-        //System.out.println(tree.getCellRenderer(0, 1).getClass());
     }
 
     protected TreePath synthesizePath(TreePath path) {
+        //System.out.println("synthesizing: " + path);
         if (path.getPathCount() == 0 || !rootNode.equals(path.getPathComponent(0))) {
             return null;
         }
@@ -714,7 +700,13 @@ public class VariableInspector extends javax.swing.JFrame {
                 if (nextNode.equals(path.getPathComponent(i + 1))) {
                     currentNode = nextNode;
                     newPath[i + 1] = nextNode;
+                    //System.out.println("found node " + (i+1) + ": " + nextNode);
+                    break;
                 }
+            }
+            if (newPath[i+1] == null)  {
+                //System.out.println("didn't find node");
+                return null;
             }
         }
         return new TreePath(newPath);

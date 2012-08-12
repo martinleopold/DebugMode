@@ -140,6 +140,9 @@ public class Debugger implements VMEventListener {
         // clear console
         editor.clearConsole();
 
+        // clear variable inspector (also resets expanded states)
+        editor.variableInspector().reset();
+
         // load edits into sketch obj, etc...
         editor.prepareRun();
 

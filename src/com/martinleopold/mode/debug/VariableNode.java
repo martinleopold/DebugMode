@@ -292,20 +292,20 @@ public class VariableNode implements MutableTreeNode {
             return false;
         }
         final VariableNode other = (VariableNode) obj;
-//        if ((this.type == null) ? (other.type != null) : !this.type.equals(other.type)) {
-//            System.out.println("type not equal");
-//            return false;
-//        }
+        if ((this.type == null) ? (other.type != null) : !this.type.equals(other.type)) {
+            //System.out.println("type not equal");
+            return false;
+        }
         if ((this.name == null) ? (other.name != null) : !this.name.equals(other.name)) {
             //System.out.println("name not equal");
             return false;
         }
-//        if (this.value != other.value && (this.value == null || !this.value.equals(other.value))) {
-//            System.out.println("value not equal");
-//            return false;
-//        }
+        if (this.value != other.value && (this.value == null || !this.value.equals(other.value))) {
+            //System.out.println("value not equal");
+            return false;
+        }
 //        if (this.parent != other.parent && (this.parent == null || !this.parent.equals(other.parent))) {
-//            System.out.println("parent not equal");
+//            System.out.println("parent not equal: " + this.parent + "/" + other.parent);
 //            return false;
 //        }
         return true;
@@ -314,10 +314,10 @@ public class VariableNode implements MutableTreeNode {
     @Override
     public int hashCode() {
         int hash = 3;
-        //hash = 97 * hash + (this.type != null ? this.type.hashCode() : 0);
+        hash = 97 * hash + (this.type != null ? this.type.hashCode() : 0);
         hash = 97 * hash + (this.name != null ? this.name.hashCode() : 0);
-        //hash = 97 * hash + (this.value != null ? this.value.hashCode() : 0);
-        //hash = 97 * hash + (this.parent != null ? this.parent.hashCode() : 0);
+        hash = 97 * hash + (this.value != null ? this.value.hashCode() : 0);
+//        hash = 97 * hash + (this.parent != null ? this.parent.hashCode() : 0);
         return hash;
     }
 
