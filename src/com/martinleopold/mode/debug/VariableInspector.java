@@ -31,13 +31,17 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultCellEditor;
+import javax.swing.GrayFilter;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.UIDefaults;
+import javax.swing.UIManager;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
 import javax.swing.table.TableColumn;
+import javax.swing.tree.AbstractLayoutCache;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
@@ -124,7 +128,10 @@ public class VariableInspector extends javax.swing.JFrame {
 
     /**
      * Model for a Outline Row (excluding the tree column). Column 0 is "Value".
-     * Column 1 is "Type". Handles setting and getting values.
+     * Column 1 is "Type". Handles setting and getting values. TODO: Maybe use a
+     * TableCellRenderer instead of this to also have a different icon based on
+     * expanded state. See:
+     * http://kickjava.com/src/org/netbeans/swing/outline/DefaultOutlineCellRenderer.java.htm
      */
     protected class VariableRowModel implements RowModel {
 
@@ -288,6 +295,15 @@ public class VariableInspector extends javax.swing.JFrame {
             }
         }
 
+        protected Icon toGray(Icon icon) {
+            if (icon instanceof ImageIcon) {
+                Image grayImage = GrayFilter.createDisabledImage(((ImageIcon) icon).getImage());
+                return new ImageIcon(grayImage);
+            }
+            // Cannot convert
+            return icon;
+        }
+
         @Override
         public String getDisplayName(Object o) {
             return o.toString(); // VariableNode.toString() returns name; (for sorting)
@@ -338,9 +354,27 @@ public class VariableInspector extends javax.swing.JFrame {
                     return getIcon(var.getType(), 1);
                 }
             } else {
-                return null; // use standard icon //TODO: use a gray standard icon if tree is not enabled..
-                //UIManager.getIcon(o);
+                if (o instanceof TreeNode) {
+                    TreeNode node = (TreeNode) o;
+                    AbstractLayoutCache layout = tree.getLayoutCache();
+                    UIDefaults defaults = UIManager.getDefaults();
+
+                    boolean isLeaf = model.isLeaf(o);
+                    Icon icon;
+                    if (isLeaf) {
+                        icon = defaults.getIcon("Tree.leafIcon");
+                    } else {
+                        icon = defaults.getIcon("Tree.closedIcon");
+                    }
+
+                    if (!tree.isEnabled()) {
+                        return toGray(icon);
+                    }
+                    return icon;
+                }
             }
+            return null; // use standard icon //TODO: use a gray standard icon if tree is not enabled..
+            //UIManager.getIcon(o);
         }
     }
 
@@ -526,7 +560,6 @@ public class VariableInspector extends javax.swing.JFrame {
         // update
         treeModel.nodeStructureChanged(rootNode);
     }
-
     List<TreePath> expandedNodes = new ArrayList(); // using list to maintain the order of expansion
     //TreePath expandedLast;
 
@@ -704,7 +737,7 @@ public class VariableInspector extends javax.swing.JFrame {
                     break;
                 }
             }
-            if (newPath[i+1] == null)  {
+            if (newPath[i + 1] == null) {
                 //System.out.println("didn't find node");
                 return null;
             }
