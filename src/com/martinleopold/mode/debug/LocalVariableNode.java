@@ -26,6 +26,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Specialized {@link VariableNode} for representing local variables. Overrides
+ * {@link #setValue} to properly change the value of the encapsulated local
+ * variable.
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
@@ -34,6 +37,15 @@ public class LocalVariableNode extends VariableNode {
     protected LocalVariable var;
     protected StackFrame frame;
 
+    /**
+     * Construct a {@link LocalVariableNode}.
+     *
+     * @param name the name
+     * @param type the type
+     * @param value the value
+     * @param var the local variable
+     * @param frame the stack frame containing the local variable
+     */
     public LocalVariableNode(String name, String type, Value value, LocalVariable var, StackFrame frame) {
         super(name, type, value);
         this.var = var;

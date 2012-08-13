@@ -321,89 +321,90 @@ x Class Design (MVC)
 	x Model: Backend, JDI
 	x View: Editor
 	x Controller
-* Build
-	* Preprocessor
-		* Investigate Sketch Assembly, Inverse Process?
-		* Line Number Mapping (Sketch <-> Java)
-	* Build with Debugging Info (-g flag)
-* Launch / Run debuggee VM
-	* in/err forwarding to console
-	* Know when finished
+x Build
+	x Preprocessor
+		x Investigate Sketch Assembly, Inverse Process?
+		x Line Number Mapping (Sketch <-> Java)
+	x Build with Debugging Info (-g flag)
+x Launch / Run debuggee VM
+	x in/err forwarding to console
+	/ Know when finished
 		* change UI state (buttons, menu)
 	x Event thread Synchronization
 	x VM States
 		x started+mainclassloaded
 		x paused
-	* Commands
-		* Start
-		* Continue
-		* Stop
-	* Other kill conditions
-		* editor close
-		* p5 close
-	* Multiple Editors
-* Breakpoints
-	* Line Management (deletion, insertion)
-	! Compile time vs. Runtime (paused) setting
-	? enable, disable
+	x Commands
+		x Start
+		x Continue
+		x Stop
+	x Other kill conditions
+		x editor close
+		x p5 close
+	x Multiple Editors
+x Breakpoints
+	x Line Management (deletion, insertion)
+	x Compile time vs. Runtime (paused) setting
+	/ enable, disable
 	* context sensitive
                 * disallow
                         * commented lines
                         * empty lines
 		* method declarations
                         * need to be handled separately
-* Stepping
-	* only allow when paused
+x Stepping
+	x only allow when paused
 	x over/in/out
-* State Inquiry
-	* Only when paused
-	* Locals
-	* this (inherited)
-	* Stack trace
-	* common datatype
-		* nested/recursive
-		* lazy loading support
+x State Inquiry
+	x Only when paused
+	x Locals
+	x this (inherited)
+	x Stack trace
+	x common datatype
+		x nested/recursive
+		x lazy loading support
         ? threads
-* User Interface
+x User Interface
 	x Interaction design
 		x toggle breakpoints
-		* how to highlight breakpointed lines
-		* how to highlight current line
-                * which toolbar buttons are necessary
+		x how to highlight breakpointed lines
+		x how to highlight current line
+                x which toolbar buttons are necessary
                 ? right click menu
-	* console
+	x console
 		x clear
 		? use colors
-	* toolbar
+	x toolbar
 		x new buttons
-	* menu
-		* order
-                * condense items (e.g. one toggle instead of on and off items)
-                * context sensitive items
+	x menu
+		x order
+                x condense items (e.g. one toggle instead of on and off items)
+                / context sensitive items
                     * change names depending on state
                     * enable/disbale depending on state
-	* switch to tab (by name or idx)
-	* editor
+	x switch to tab (by name or idx)
+	x editor
 		x line background color
-		* line annotation (paint symbols in left margin area)
+		x line annotation (paint symbols in left margin area)
 		x breakpoint tracking
 		x current line highlight
-	* variable inspector
-		* design
+	x variable inspector
+		x design
 			x collapsing list
 			x new window vs column
 			? toolbar
-			* processing vs. advanced modes
-			* type symbols
-			* columnized
+			/ processing vs. advanced modes
+			x type symbols
+			x columnized
 		x lazy loading (otherwise way too much to load, due to circular refs)
-		* support p5 variables
+		/ support p5 variables
 		x array support
-		* color support
+		/ color support
 		/ loop detection
-		* sorting
-		* click interaction
-		* remember scroll position & expansions
+		x sorting
+		x click interaction
+			x setting values
+		x remember scroll position & expansions
 
 ISSUES:
 * on debug quit running sketch
@@ -435,14 +436,15 @@ x line highlighting
 * use resources/theme/theme.txt for highlight colors (current, breakpoint)
 16.6.2012
 x fast stepping exception: Only one step request allowed per thread
-* toggling var insp. focuses var insp. window
+* toggling var insp. shouldn't focus var insp. window
 19.6.2012
 x NullPointerException when stepping into println (dbg_test.foo()) --> thisObject() was null (native or static mehthod)
 20.6.2012
 x sketch output window shows up after several draw() cycles, canvas updated even later
 x fast continue: com.sun.jdi.IncompatibleThreadStateException
 x fast continue: sometimes restarts debugger
-* debug button lights up, until moused over
+* debug button highlight not working
+	-> removes highlight when mouse moved (rollover event, p5 bug?)
 x stepping from draw() ouside of visible code util draw() is hit again: com.sun.jdi.request.DuplicateRequestException
 x hitting a breakpoint during a step + stepping again: DuplicateRequestException
 -> policy: when breakpoint hit during step: cancel step, cause we stopped anyway (only finer grained)
@@ -463,7 +465,7 @@ x can i make a modular Editor? (no matter how ugly?) -> no
 x gutter fg color, bg color, per line. general bg color, trennlinie?
 ! stepping out of print(), println() returns to the same line
 	-> NullPointerException, AbsentInformation + VMMismatchException when restarting dbg
-* change logger console format to something more readable
+/ change logger console format to something more readable
 x allow setting log-level
 5.7.2012
 * sporadic while switching tabs (breakpoint hits,…):
@@ -489,8 +491,7 @@ x contents of Animal a show up double (dbg_test)
 * VMEventReader should reset things too, on disconnect? (to avoid invalid states…)
 * stepping into constructors, lands at closing bracket of constructor first
 * sorting of processing node (appears first)
-* folder icon not greyed out
-* implicit stepping (invisible code) updates var inspector
+x folder icon not greyed out
 x make editing values fail safe.
 	-> fails when things happen while editing
 x handle String quotes
@@ -498,8 +499,6 @@ x handle String quotes
 	/ or: remove quotes when going into edit mode
 12.7.
 x save and export highlight the wrong buttons
-* debug button highlight not working
-	-> removes highlight when mouse moved (rollover event, p5 bug?)
 13.7.
 * current line hides underlying breakpoint
 17.7.
@@ -511,7 +510,8 @@ x debug button should do nothing while debugging
 x debug mode has no core libraries…, examples
 18.7.
 x override buildModeMenu() in Editor, instead of manual menu creation.
-* when the variable inspector window is small, expanding a node by double click will make the selection jump.
+/ when the variable inspector window is small, expanding a node by double click will make the selection jump.
+	-> this is a feature (auto scroll on expand)
 * debug doesn't properly restart the session. stopDebug() needs to wait for vmdisconnected
 1.8.
 ! https://github.com/martinleopold/DebugMode/issues/3
@@ -537,6 +537,10 @@ x set breakpoint (menu item) -> can produce duplicate breakpoints
 	at javax.swing.tree.FixedHeightLayoutCache.getPathForRow(FixedHeightLayoutCache.java:193)
 	at org.netbeans.swing.outline.DefaultOutlineCellRenderer.getTableCellRendererComponent(DefaultOutlineCellRenderer.java:253)
 * indicate debugger status somewhere (off, busy, suspended)
+13.8.
+* deleting a line doesn't remove a breakpoint
+
+
 
 
 QUESTIONS:

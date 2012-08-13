@@ -26,6 +26,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Specialized {@link VariableNode} for representing fields. Overrides
+ * {@link #setValue} to properly change the value of the encapsulated field.
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
@@ -34,6 +36,15 @@ public class FieldNode extends VariableNode {
     protected Field field;
     protected ObjectReference obj;
 
+    /**
+     * Construct a {@link FieldNode}.
+     *
+     * @param name the name
+     * @param type the type
+     * @param value the value
+     * @param field the field
+     * @param obj a reference to the object containing the field
+     */
     public FieldNode(String name, String type, Value value, Field field, ObjectReference obj) {
         super(name, type, value);
         this.field = field;

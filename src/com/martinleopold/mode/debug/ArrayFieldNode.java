@@ -25,6 +25,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Specialized {@link VariableNode} for representing single fields in an array.
+ * Overrides {@link #setValue} to properly change the value of the encapsulated
+ * array field.
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
@@ -33,6 +36,15 @@ public class ArrayFieldNode extends VariableNode {
     protected ArrayReference array;
     protected int index;
 
+    /**
+     * Construct an {@link ArrayFieldNode}.
+     *
+     * @param name the name
+     * @param type the type
+     * @param value the value
+     * @param array a reference to the array
+     * @param index the index inside the array
+     */
     public ArrayFieldNode(String name, String type, Value value, ArrayReference array, int index) {
         super(name, type, value);
         this.array = array;

@@ -62,20 +62,18 @@ import org.netbeans.swing.outline.RowModel;
  */
 public class VariableInspector extends javax.swing.JFrame {
 
-    protected DefaultMutableTreeNode rootNode;
-    protected DefaultMutableTreeNode builtins;
-    protected DefaultTreeModel treeModel;
-//    protected DefaultMutableTreeNode callStackNode;
-//    protected DefaultMutableTreeNode localsNode;
-//    protected DefaultMutableTreeNode thisNode;
-//    protected DefaultMutableTreeNode nonInheritedThisNode;
-    protected List<DefaultMutableTreeNode> callStack;
-    protected List<VariableNode> locals;
-    protected List<VariableNode> thisFields;
-    protected List<VariableNode> declaredThisFields;
-    protected DebugEditor editor;
-    protected Debugger dbg;
-    protected OutlineModel model;
+    protected DefaultMutableTreeNode rootNode; // the root node (invisible)
+    protected DefaultMutableTreeNode builtins; // node for Processing built-in variables
+    protected DefaultTreeModel treeModel; // data model for the tree column
+    protected OutlineModel model; // data model for the whole Outline (tree and other columns)
+    protected List<DefaultMutableTreeNode> callStack; // the call stack
+    protected List<VariableNode> locals; // current local variables
+    protected List<VariableNode> thisFields; // all fields of the current this-object
+    protected List<VariableNode> declaredThisFields; // declared i.e. non-inherited fields of this
+    protected DebugEditor editor; // the editor
+    protected Debugger dbg; // the debugger
+    protected List<TreePath> expandedNodes = new ArrayList(); // list of expanded tree paths. (using list to maintain the order of expansion)
+    protected boolean p5mode = true; // processing / "advanced" mode flag (currently not used
 
     /**
      * Creates new form VariableInspector
@@ -247,6 +245,7 @@ public class VariableInspector extends javax.swing.JFrame {
     protected class OutlineRenderer implements RenderDataProvider {
 
         protected Icon[][] icons;
+        protected static final int ICON_SIZE = 16; // icon size (square, size=width=height)
 
         public OutlineRenderer() {
             // load icons
@@ -254,7 +253,12 @@ public class VariableInspector extends javax.swing.JFrame {
         }
 
         /**
-         * Returns an ImageIcon, or null if the path was invalid.
+         * Load multiple icons (horizotal) with multiple states (vertical) from
+         * a single file.
+         *
+         * @param fileName file path in the mode folder.
+         * @return a nested array (first index: icon, second index: state) or
+         * null if the file wasn't found.
          */
         protected ImageIcon[][] loadIcons(String fileName) {
             DebugMode mode = editor.mode();
@@ -338,7 +342,7 @@ public class VariableInspector extends javax.swing.JFrame {
         public String getTooltipText(Object o) {
             VariableNode var = toVariableNode(o);
             if (var != null) {
-                return var.description();
+                return var.getDescription();
             } else {
                 return "";
             }
@@ -373,7 +377,7 @@ public class VariableInspector extends javax.swing.JFrame {
                     return icon;
                 }
             }
-            return null; // use standard icon //TODO: use a gray standard icon if tree is not enabled..
+            return null; // use standard icon
             //UIManager.getIcon(o);
         }
     }
@@ -445,6 +449,87 @@ public class VariableInspector extends javax.swing.JFrame {
             } else {
                 return super.getTableCellEditorComponent(table, var.getStringValue(), isSelected, row, column);
             }
+        }
+    }
+
+    /**
+     * Handler for expanding and collapsing tree nodes. Implements lazy loading
+     * of tree data (on expand).
+     */
+    protected class ExpansionHandler implements ExtTreeWillExpandListener, TreeExpansionListener {
+
+        @Override
+        public void treeWillExpand(TreeExpansionEvent tee) throws ExpandVetoException {
+            //System.out.println("will expand");
+            Object last = tee.getPath().getLastPathComponent();
+            if (!(last instanceof VariableNode)) {
+                return;
+            }
+            VariableNode var = (VariableNode) last;
+            // load children
+//            if (!dbg.isPaused()) {
+//                System.out.println("throwing veto");
+//                //throw new ExpandVetoException(tee, "Debugger busy");
+//            } else {
+            var.removeAllChildren(); // TODO: should we only load it once?
+            // TODO: don't filter in advanced mode
+            //System.out.println("loading children for: " + var);
+            // true means include inherited
+            var.addChildren(filterNodes(dbg.getFields(var.getValue(), 0, true), new ThisFilter()));
+//            }
+        }
+
+        @Override
+        public void treeWillCollapse(TreeExpansionEvent tee) throws ExpandVetoException {
+            //throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public void treeExpanded(TreeExpansionEvent tee) {
+            //System.out.println("expanded: " + tee.getPath());
+            if (!expandedNodes.contains(tee.getPath())) {
+                expandedNodes.add(tee.getPath());
+            }
+
+//            TreePath newPath = tee.getPath();
+//            if (expandedLast != null) {
+//                // test each node of the path for equality
+//                for (int i = 0; i < expandedLast.getPathCount(); i++) {
+//                    if (i < newPath.getPathCount()) {
+//                        Object last = expandedLast.getPathComponent(i);
+//                        Object cur = newPath.getPathComponent(i);
+//                        System.out.println(last + " =? " + cur + ": " + last.equals(cur) + "/" + (last.hashCode() == cur.hashCode()));
+//                    }
+//                }
+//            }
+//            System.out.println("path equality: " + newPath.equals(expandedLast));
+//            expandedLast = newPath;
+        }
+
+        @Override
+        public void treeCollapsed(TreeExpansionEvent tee) {
+            //System.out.println("collapsed: " + tee.getPath());
+
+            // first remove all children of collapsed path
+            // this makes sure children do not appear before parents in the list.
+            // (children can't be expanded before their parents)
+            List<TreePath> removalList = new ArrayList();
+            for (TreePath path : expandedNodes) {
+                if (path.getParentPath().equals(tee.getPath())) {
+                    removalList.add(path);
+                }
+            }
+            for (TreePath path : removalList) {
+                expandedNodes.remove(path);
+            }
+            // remove collapsed path
+            expandedNodes.remove(tee.getPath());
+        }
+
+        @Override
+        public void treeExpansionVetoed(TreeExpansionEvent tee, ExpandVetoException eve) {
+            //System.out.println("expansion vetoed");
+            // nop
         }
     }
 
@@ -528,7 +613,7 @@ public class VariableInspector extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
     /**
-     * Access the root node of the JTree.
+     * Access the root node of the tree.
      *
      * @return the root node
      */
@@ -536,19 +621,29 @@ public class VariableInspector extends javax.swing.JFrame {
         return rootNode;
     }
 
-    // rebuild after this to avoid these ... dots
+    /**
+     * Unlock the inspector window. Rebuild after this to avoid ... dots in the
+     * trees labels
+     */
     public void unlock() {
         tree.setEnabled(true);
     }
 
+    /**
+     * Lock the inspector window. Cancels open edits.
+     */
     public void lock() {
         if (tree.getCellEditor() != null) {
-            tree.getCellEditor().stopCellEditing(); // force quit open edit
-            //tree.getCellEditor().cancelCellEditing(); // TODO: better not to use the edited value?
+            //tree.getCellEditor().stopCellEditing(); // force quit open edit
+            tree.getCellEditor().cancelCellEditing(); // cancel an open edit
         }
         tree.setEnabled(false);
     }
 
+    /**
+     * Reset the inspector windows data. Rebuild after this to make changes
+     * visible.
+     */
     public void reset() {
         rootNode.removeAllChildren();
         // clear local data for good measure (in case someone rebuilds)
@@ -560,124 +655,74 @@ public class VariableInspector extends javax.swing.JFrame {
         // update
         treeModel.nodeStructureChanged(rootNode);
     }
-    List<TreePath> expandedNodes = new ArrayList(); // using list to maintain the order of expansion
-    //TreePath expandedLast;
 
+//    public void setAdvancedMode() {
+//        p5mode = false;
+//    }
+//
+//    public void setP5Mode() {
+//        p5mode = true;
+//    }
+//
+//    public void toggleMode() {
+//        if (p5mode) {
+//            setAdvancedMode();
+//        } else {
+//            setP5Mode();
+//        }
+//    }
     /**
-     * Handler for expanding and collapsing tree nodes. Implements lazy loading
-     * of tree data (on expand).
+     * Update call stack data.
+     *
+     * @param nodes a list of nodes that represent the call stack.
+     * @param title the title to be used when labeling or otherwise grouping
+     * call stack data.
      */
-    protected class ExpansionHandler implements ExtTreeWillExpandListener, TreeExpansionListener {
-
-        @Override
-        public void treeWillExpand(TreeExpansionEvent tee) throws ExpandVetoException {
-            //System.out.println("will expand");
-            Object last = tee.getPath().getLastPathComponent();
-            if (!(last instanceof VariableNode)) {
-                return;
-            }
-            VariableNode var = (VariableNode) last;
-            // load children
-//            if (!dbg.isPaused()) {
-//                System.out.println("throwing veto");
-//                //throw new ExpandVetoException(tee, "Debugger busy");
-//            } else {
-            var.removeAllChildren(); // TODO: should we only load it once?
-            // TODO: don't filter in advanced mode
-            //System.out.println("loading children for: " + var);
-            // true means include inherited
-            var.addChildren(filterNodes(dbg.getFields(var.getValue(), 0, true), new ThisFilter()));
-//            }
-        }
-
-        @Override
-        public void treeWillCollapse(TreeExpansionEvent tee) throws ExpandVetoException {
-            //throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public void treeExpanded(TreeExpansionEvent tee) {
-            //System.out.println("expanded: " + tee.getPath());
-            if (!expandedNodes.contains(tee.getPath())) {
-                expandedNodes.add(tee.getPath());
-            }
-
-//            TreePath newPath = tee.getPath();
-//            if (expandedLast != null) {
-//                // test each node of the path for equality
-//                for (int i = 0; i < expandedLast.getPathCount(); i++) {
-//                    if (i < newPath.getPathCount()) {
-//                        Object last = expandedLast.getPathComponent(i);
-//                        Object cur = newPath.getPathComponent(i);
-//                        System.out.println(last + " =? " + cur + ": " + last.equals(cur) + "/" + (last.hashCode() == cur.hashCode()));
-//                    }
-//                }
-//            }
-//            System.out.println("path equality: " + newPath.equals(expandedLast));
-//            expandedLast = newPath;
-        }
-
-        @Override
-        public void treeCollapsed(TreeExpansionEvent tee) {
-            //System.out.println("collapsed: " + tee.getPath());
-
-            // first remove all children of collapsed path
-            // this makes sure children do not appear before parents in the list.
-            // (children can't be expanded before their parents)
-            List<TreePath> removalList = new ArrayList();
-            for (TreePath path : expandedNodes) {
-                if (path.getParentPath().equals(tee.getPath())) {
-                    removalList.add(path);
-                }
-            }
-            for (TreePath path : removalList) {
-                expandedNodes.remove(path);
-            }
-            // remove collapsed path
-            expandedNodes.remove(tee.getPath());
-        }
-
-        @Override
-        public void treeExpansionVetoed(TreeExpansionEvent tee, ExpandVetoException eve) {
-            //System.out.println("expansion vetoed");
-            // nop
-        }
-    }
-    protected static final int ICON_SIZE = 16;
-    protected boolean p5mode = true;
-
-    public void setAdvancedMode() {
-        p5mode = false;
-    }
-
-    public void setP5Mode() {
-        p5mode = true;
-    }
-
-    public void toggleMode() {
-        if (p5mode) {
-            setAdvancedMode();
-        } else {
-            setP5Mode();
-        }
-    }
-
     public void updateCallStack(List<DefaultMutableTreeNode> nodes, String title) {
         callStack = nodes;
     }
 
+    /**
+     * Update locals data.
+     *
+     * @param nodes a list of {@link VariableNode} to be shown as local
+     * variables in the inspector.
+     * @param title the title to be used when labeling or otherwise grouping
+     * locals data.
+     */
     public void updateLocals(List<VariableNode> nodes, String title) {
         locals = nodes;
     }
 
+    /**
+     * Update this-fields data.
+     *
+     * @param nodes a list of {@link VariableNode}s to be shown as this-fields
+     * in the inspector.
+     * @param title the title to be used when labeling or otherwise grouping
+     * this-fields data.
+     */
     public void updateThisFields(List<VariableNode> nodes, String title) {
         thisFields = nodes;
     }
 
+    /**
+     * Update declared (non-inherited) this-fields data.
+     *
+     * @param nodes a list of {@link VariableNode}s to be shown as declared
+     * this-fields in the inspector.
+     * @param title the title to be used when labeling or otherwise grouping
+     * declared this-fields data.
+     */
     public void updateDeclaredThisFields(List<VariableNode> nodes, String title) {
         declaredThisFields = nodes;
     }
 
+    /**
+     * Rebuild the outline tree from current data. Uses the data provided by
+     * {@link #updateCallStack}, {@link #updateLocals}, {@link #updateThisFields}
+     * and {@link #updateDeclaredThisFields}
+     */
     public void rebuild() {
         rootNode.removeAllChildren();
         if (p5mode) {
@@ -710,7 +755,7 @@ public class VariableInspector extends javax.swing.JFrame {
                 }
             }
 
-            // TODO: this expansion causes problems when sorted and stepping
+            // this expansion causes problems when sorted and stepping
             //tree.expandPath(new TreePath(new Object[]{rootNode, builtins}));
 
         } else {
@@ -718,6 +763,14 @@ public class VariableInspector extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Re-build a {@link TreePath} from a previous path using equals-checks
+     * starting at the root node. This is used to use paths from previous trees
+     * for use on the current tree.
+     *
+     * @param path the path to synthesize.
+     * @return the rebuilt path, usable on the current tree.
+     */
     protected TreePath synthesizePath(TreePath path) {
         //System.out.println("synthesizing: " + path);
         if (path.getPathCount() == 0 || !rootNode.equals(path.getPathComponent(0))) {
@@ -745,6 +798,13 @@ public class VariableInspector extends javax.swing.JFrame {
         return new TreePath(newPath);
     }
 
+    /**
+     * Filter a list of nodes using a {@link VariableNodeFilter}.
+     *
+     * @param nodes the list of nodes to filter.
+     * @param filter the filter to be used.
+     * @return the filtered list.
+     */
     protected List<VariableNode> filterNodes(List<VariableNode> nodes, VariableNodeFilter filter) {
         List<VariableNode> filtered = new ArrayList();
         for (VariableNode node : nodes) {
@@ -755,17 +815,36 @@ public class VariableInspector extends javax.swing.JFrame {
         return filtered;
     }
 
+    /**
+     * Add all nodes in a list to a root node.
+     *
+     * @param root the root node to add to.
+     * @param nodes the list of nodes to add.
+     */
     protected void addAllNodes(DefaultMutableTreeNode root, List<? extends MutableTreeNode> nodes) {
         for (MutableTreeNode node : nodes) {
             root.add(node);
         }
     }
 
+    /**
+     * A filter for {@link VariableNode}s.
+     */
     public interface VariableNodeFilter {
 
+        /**
+         * Check whether the filter accepts a {@link VariableNode}.
+         *
+         * @param var the input node
+         * @return true when the filter accepts the input node otherwise false.
+         */
         public boolean accept(VariableNode var);
     }
 
+    /**
+     * A {@link VariableNodeFilter} that accepts Processing built-in variable
+     * names.
+     */
     public class P5BuiltinsFilter implements VariableNodeFilter {
 
         protected String[] p5Builtins = {
@@ -791,7 +870,10 @@ public class VariableInspector extends javax.swing.JFrame {
         }
     }
 
-// filter implicit this reference
+    /**
+     * A {@link VariableNodeFilter} that rejects implicit this references.
+     * (Names starting with "this$")
+     */
     public class ThisFilter implements VariableNodeFilter {
 
         @Override
@@ -800,13 +882,29 @@ public class VariableInspector extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * A {@link VariableNodeFilter} that either rejects this-fields if hidden by
+     * a local, or prefixes its name with "this."
+     */
     public class LocalHidesThisFilter implements VariableNodeFilter {
 
+        /**
+         * Reject a this-field if hidden by a local.
+         */
         public static final int MODE_HIDE = 0; // don't show hidden this fields
+        /**
+         * Prefix a this-fields name with "this." if hidden by a local.
+         */
         public static final int MODE_PREFIX = 1; // prefix hidden this fields with "this."
         protected List<VariableNode> locals;
         protected int mode;
 
+        /**
+         * Construct a {@link LocalHidesThisFilter}.
+         *
+         * @param locals a list of locals to check against
+         * @param mode either {@link #MODE_HIDE} or {@link #MODE_PREFIX}
+         */
         public LocalHidesThisFilter(List<VariableNode> locals, int mode) {
             this.locals = locals;
             this.mode = mode;

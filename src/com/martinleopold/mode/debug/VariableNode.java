@@ -56,19 +56,15 @@ public class VariableNode implements MutableTreeNode {
     protected List<MutableTreeNode> children = new ArrayList();
     protected MutableTreeNode parent;
 
-    private VariableNode(String name) {
-        this.name = name;
-        this.type = null;
-        this.value = null;
-    }
-
-    private VariableNode(String name, String type) {
-        this(name);
-        this.type = type;
-    }
-
+    /**
+     * Construct a {@link VariableNode}.
+     * @param name the name
+     * @param type the type
+     * @param value the value
+     */
     public VariableNode(String name, String type, Value value) {
-        this(name, type);
+        this.name = name;
+        this.type = type;
         this.value = value;
     }
 
@@ -80,6 +76,11 @@ public class VariableNode implements MutableTreeNode {
         return value;
     }
 
+    /**
+     * Get a String representation of this variable nodes value.
+     *
+     * @return a String representing the value.
+     */
     public String getStringValue() {
         String str;
         if (value != null) {
@@ -151,11 +152,21 @@ public class VariableNode implements MutableTreeNode {
         this.name = name;
     }
 
+    /**
+     * Add a {@link VariableNode} as child.
+     *
+     * @param c the {@link VariableNode} to add.
+     */
     public void addChild(VariableNode c) {
         children.add(c);
         c.setParent(this);
     }
 
+    /**
+     * Add multiple {@link VariableNode}s as children.
+     *
+     * @param children the list of {@link VariableNode}s to add.
+     */
     public void addChildren(List<VariableNode> children) {
         for (VariableNode child : children) {
             addChild(child);
@@ -224,12 +235,23 @@ public class VariableNode implements MutableTreeNode {
         return Collections.enumeration(children);
     }
 
+    /**
+     * Get a String representation of this {@link VariableNode}.
+     *
+     * @return the name of the variable (for sorting to work).
+     */
     @Override
     public String toString() {
         return getName(); // for sorting
     }
 
-    public String description() {
+    /**
+     * Get a String description of this {@link VariableNode}. Contains the type,
+     * name and value.
+     *
+     * @return the description
+     */
+    public String getDescription() {
         String str = "";
         if (type != null) {
             str += type + " ";
@@ -258,6 +280,9 @@ public class VariableNode implements MutableTreeNode {
         mtn.setParent(null);
     }
 
+    /**
+     * Remove all children from this {@link VariableNode}.
+     */
     public void removeAllChildren() {
         for (MutableTreeNode mtn : children) {
             mtn.setParent(null);
@@ -283,6 +308,13 @@ public class VariableNode implements MutableTreeNode {
         parent = mtn;
     }
 
+    /**
+     * Test for equality. To be equal, two {@link VariableNode}s need to have
+     * equal type, name and value.
+     *
+     * @param obj the object to test for equality with this {@link VariableNode}
+     * @return true if the given object is equal to this {@link VariableNode}
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -311,6 +343,9 @@ public class VariableNode implements MutableTreeNode {
         return true;
     }
 
+    /**
+     * Returns a hash code based on type, name and value.
+     */
     @Override
     public int hashCode() {
         int hash = 3;
@@ -320,5 +355,4 @@ public class VariableNode implements MutableTreeNode {
 //        hash = 97 * hash + (this.parent != null ? this.parent.hashCode() : 0);
         return hash;
     }
-
 }
