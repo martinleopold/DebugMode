@@ -39,26 +39,32 @@ public class LineBreakpoint implements ClassLoadListener {
     protected ReferenceType theClass; // the class containing this breakpoint, null when not yet loaded
 
     /**
-     * Create a breakpoint. Only allowed on current tab, since it needs to track
-     * the doc. If in a debug session, will try to immediately set the
-     * breakpoint. If not in a debug session or the corresponding class is not
-     * yet loaded the breakpoint will activate on class load.
+     * Create a {@link LineBreakpoint}. If in a debug session, will try to
+     * immediately set the breakpoint. If not in a debug session or the
+     * corresponding class is not yet loaded the breakpoint will activate on
+     * class load.
      *
-     * @param lineIdx the line index of the current tab to create the breakpoint
-     * on
-     * @param dbg the debugger
+     * @param line the line id to create the breakpoint on
+     * @param dbg the {@link Debugger}
      */
-    public LineBreakpoint(int lineIdx, Debugger dbg) {
-        this(dbg.editor().getLineIDInCurrentTab(lineIdx), dbg);
-    }
-
-    // breakpoint on arbitrary line
     public LineBreakpoint(LineID line, Debugger dbg) {
         this.line = line;
         line.startTracking(dbg.editor().getTab(line.fileName()).getDocument());
         this.dbg = dbg;
         theClass = dbg.getClass(className()); // try to get the class immediately, may return null if not yet loaded
         set(); // activate the breakpoint (show highlight, attach if debugger is running)
+    }
+
+    /**
+     * Create a {@link LineBreakpoint} on a line in the current tab.
+     *
+     * @param lineIdx the line index of the current tab to create the breakpoint
+     * on
+     * @param dbg the {@link Debugger}
+     */
+    // TODO: remove and replace by {@link #LineBreakpoint(LineID line, Debugger dbg)}
+    public LineBreakpoint(int lineIdx, Debugger dbg) {
+        this(dbg.editor().getLineIDInCurrentTab(lineIdx), dbg);
     }
 
     /**
@@ -180,11 +186,11 @@ public class LineBreakpoint implements ClassLoadListener {
     protected String className() {
         if (line.fileName().endsWith(".pde")) {
             // standard tab
-            ReferenceType mainClass = dbg.mainClass();
+            ReferenceType mainClass = dbg.getMainClass();
             if (mainClass == null) {
                 return null;
             }
-            return dbg.mainClass().name();
+            return dbg.getMainClass().name();
         }
 
         if (line.fileName().endsWith(".java")) {

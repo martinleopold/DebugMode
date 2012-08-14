@@ -36,7 +36,16 @@ import processing.app.syntax.TextAreaDefaults;
 public class TextArea extends JEditTextArea {
 
     protected MouseListener[] mouseListeners; // cached mouselisteners, these are wrapped by MouseHandler
-    protected DebugEditor editor;
+    protected DebugEditor editor; // the editor
+    // line properties
+    protected Map<Integer, Color> lineColors = new HashMap(); // contains line background colors
+    // left-hand gutter properties
+    protected final int gutterChars = 2; // # of gutter characters characters
+    protected final int gutterMargins = 3; // [px] space added to the left and right of gutter chars
+    protected final Color gutterBgColor = new Color(252, 252, 252); // gutter background color
+    protected final Color gutterLineColor = new Color(233, 233, 233); // color of vertical seperation line
+    protected Map<Integer, String> gutterText = new HashMap(); // maps line index to gutter text
+    protected Map<Integer, Color> gutterTextColors = new HashMap(); // maps line index to gutter text color
 
     public TextArea(TextAreaDefaults defaults, DebugEditor editor) {
         super(defaults);
@@ -59,51 +68,73 @@ public class TextArea extends JEditTextArea {
             painter.addComponentListener(cl);
         }
 
-//        for (MouseListener ml : mouseListeners) {
-//            painter.addMouseListener(ml);
-//        }
-
         for (MouseMotionListener mml : mouseMotionListeners) {
             painter.addMouseMotionListener(mml);
         }
 
+        // use a custom mouse handler instead of directly using mouseListeners
         MouseHandler mouseHandler = new MouseHandler();
         painter.addMouseListener(mouseHandler);
         painter.addMouseMotionListener(mouseHandler);
 
         add(CENTER, painter);
     }
-    // TODO: docs
-    protected int gutterChars = 2; // # characters
-    protected int gutterMargins = 3; // px, space added left and right
-    protected Color gutterBgColor = new Color(252, 252, 252);
-    protected Color gutterLineColor = new Color(233, 233, 233);
-    protected Map<Integer, String> gutterText = new HashMap();
-    protected Map<Integer, Color> gutterTextColors = new HashMap();
 
-    protected int gutterWidth() {
+    /**
+     * Retrieve the total width of the gutter area.
+     *
+     * @return gutter width in pixels
+     */
+    protected int getGutterWidth() {
         return gutterChars * painter.getFontMetrics().getMaxAdvance() + 2 * gutterMargins;
     }
 
-    protected int gutterBorder() {
+    /**
+     * Retrieve the width of margins applied to the left and right of the gutter
+     * text.
+     *
+     * @return margins in pixels
+     */
+    protected int getGutterMargins() {
         return gutterMargins;
     }
 
+    /**
+     * Set the gutter text of a specific line.
+     *
+     * @param lineIdx the line index (0-based)
+     * @param text the text
+     */
     public void setGutterText(int lineIdx, String text) {
         gutterText.put(lineIdx, text);
         painter.invalidateLine(lineIdx);
     }
 
+    /**
+     * Set the gutter text and color of a specific line.
+     *
+     * @param lineIdx the line index (0-based)
+     * @param text the text
+     * @param textColor the text colorÏ
+     */
     public void setGutterText(int lineIdx, String text, Color textColor) {
         gutterTextColors.put(lineIdx, textColor);
         setGutterText(lineIdx, text);
     }
 
+    /**
+     * Clear the gutter text of a specific line.
+     *
+     * @param lineIdx the line index (0-based)
+     */
     public void clearGutterText(int lineIdx) {
         gutterText.remove(lineIdx);
         painter.invalidateLine(lineIdx);
     }
 
+    /**
+     * Clear all gutter text.
+     */
     public void clearGutterText() {
         for (int lineIdx : gutterText.keySet()) {
             painter.invalidateLine(lineIdx);
@@ -111,14 +142,25 @@ public class TextArea extends JEditTextArea {
         gutterText.clear();
     }
 
+    /**
+     * Retrieve the gutter text of a specific line.
+     *
+     * @param lineIdx the line index (0-based)
+     * @return the gutter text
+     */
     public String getGutterText(int lineIdx) {
         return gutterText.get(lineIdx);
     }
 
+    /**
+     * Retrieve the gutter text color for a specific line.
+     *
+     * @param lineIdx the line index
+     * @return the gutter text color
+     */
     public Color getGutterTextColor(int lineIdx) {
         return gutterTextColors.get(lineIdx);
     }
-    protected Map<Integer, Color> lineColors = new HashMap(); // contains line background colors
 
     /**
      * Set the background color of a line.
@@ -161,22 +203,44 @@ public class TextArea extends JEditTextArea {
         return lineColors.get(lineIdx);
     }
 
+    /**
+     * Convert a character offset to a horizontal pixel position inside the text
+     * area. Overridden to take gutter width into account.
+     *
+     * @param line the 0-based line number
+     * @param offset the character offset (0 is the first character on a line)
+     * @return the horizontal position
+     */
     @Override
     public int _offsetToX(int line, int offset) {
-        return super._offsetToX(line, offset) + gutterWidth();
+        return super._offsetToX(line, offset) + getGutterWidth();
     }
 
+    /**
+     * Convert a horizontal pixel position to a character offset. Overridden to
+     * take gutter width into account.
+     *
+     * @param line the 0-based line number
+     * @param x the horizontal pixel position
+     * @return he character offset (0 is the first character on a line)
+     */
     @Override
     public int xToOffset(int line, int x) {
-        return super.xToOffset(line, x - gutterWidth());
+        return super.xToOffset(line, x - getGutterWidth());
     }
 
+    /**
+     * Custom mouse handler. Implements double clicking in the gutter area to
+     * toggle breakpoints, sets default cursor (instead of text cursor) in the
+     * gutter area.
+     */
     protected class MouseHandler implements MouseListener, MouseMotionListener {
 
-        protected int lastX;
+        protected int lastX; // previous horizontal positon of the mouse cursor
 
         @Override
         public void mouseClicked(MouseEvent me) {
+            // forward to standard listeners
             for (MouseListener ml : mouseListeners) {
                 ml.mouseClicked(me);
             }
@@ -185,7 +249,7 @@ public class TextArea extends JEditTextArea {
         @Override
         public void mousePressed(MouseEvent me) {
             // check if this happened in the gutter area
-            if (me.getX() < gutterWidth()) {
+            if (me.getX() < getGutterWidth()) {
                 if (me.getButton() == MouseEvent.BUTTON1 && me.getClickCount() == 2) {
                     int line = me.getY() / painter.getFontMetrics().getHeight() + firstLine;
                     if (line >= 0 && line <= getLineCount() - 1) {
@@ -193,7 +257,7 @@ public class TextArea extends JEditTextArea {
                     }
                 }
             } else {
-                // invoke standard listeners
+                // forward to standard listeners
                 for (MouseListener ml : mouseListeners) {
                     ml.mousePressed(me);
                 }
@@ -202,6 +266,7 @@ public class TextArea extends JEditTextArea {
 
         @Override
         public void mouseReleased(MouseEvent me) {
+            // forward to standard listeners
             for (MouseListener ml : mouseListeners) {
                 ml.mouseReleased(me);
             }
@@ -209,6 +274,7 @@ public class TextArea extends JEditTextArea {
 
         @Override
         public void mouseEntered(MouseEvent me) {
+            // forward to standard listeners
             for (MouseListener ml : mouseListeners) {
                 ml.mouseEntered(me);
             }
@@ -216,6 +282,7 @@ public class TextArea extends JEditTextArea {
 
         @Override
         public void mouseExited(MouseEvent me) {
+            // forward to standard listeners
             for (MouseListener ml : mouseListeners) {
                 ml.mouseExited(me);
             }
@@ -223,18 +290,19 @@ public class TextArea extends JEditTextArea {
 
         @Override
         public void mouseDragged(MouseEvent me) {
+            // No need to forward since the standard MouseMotionListeners are called anyway
             // nop
         }
 
         @Override
         public void mouseMoved(MouseEvent me) {
-            //System.out.println("moved");
-            if (me.getX() < gutterWidth()) {
-                if (lastX >= gutterWidth()) {
+            // No need to forward since the standard MouseMotionListeners are called anyway
+            if (me.getX() < getGutterWidth()) {
+                if (lastX >= getGutterWidth()) {
                     painter.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 }
             } else {
-                if (lastX < gutterWidth()) {
+                if (lastX < getGutterWidth()) {
                     painter.setCursor(new Cursor(Cursor.TEXT_CURSOR));
                 }
             }

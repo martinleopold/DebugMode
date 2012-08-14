@@ -37,9 +37,9 @@ import processing.core.PApplet;
 import processing.mode.java.JavaEditor;
 
 /**
- * Main View Class. Handles the editor window incl. toolbar and menu. Has access
- * to the Sketch. Provides line highlighting (for breakpoints and the debuggers
- * current line).
+ * Main View Class. Handles the editor window including tool bar and menu. Has
+ * access to the Sketch. Provides line highlighting (for breakpoints and the
+ * debuggers current line).
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
@@ -50,26 +50,21 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     //protected EditorToolbar toolbar;
 
     // highlighting
-    //public static final Color BREAKPOINT_COLOR = new Color(255, 170, 170); // the background color for highlighting lines
-    //public static final Color BREAKPOINT_COLOR = new Color(180, 210, 255); // the background color for highlighting lines
     public static final Color BREAKPOINT_COLOR = new Color(240, 240, 240); // the background color for highlighting lines
     public static final Color CURRENT_LINE_COLOR = new Color(255, 255, 150); // the background color for highlighting lines
-    public static final String BREAKPOINT_MARKER = "<>";
-    public static final String CURRENT_LINE_MARKER = "->";
-    //public static final Color BREAKPOINT_MARKER_COLOR = new Color(150, 150, 150);
-    public static final Color BREAKPOINT_MARKER_COLOR = new Color(74, 84, 94);
-    public static final Color CURRENT_LINE_MARKER_COLOR = new Color(226, 117, 0);
+    public static final String BREAKPOINT_MARKER = "<>"; // the text marker for highlighting breakpoints in the gutter
+    public static final String CURRENT_LINE_MARKER = "->"; // the text marker for highlighting the current line in the gutter
+    public static final Color BREAKPOINT_MARKER_COLOR = new Color(74, 84, 94); // the color of breakpoint gutter markers
+    public static final Color CURRENT_LINE_MARKER_COLOR = new Color(226, 117, 0); // the color of current line gutter markers
     protected List<LineHighlight> breakpointedLines = new ArrayList(); // breakpointed lines
     protected LineHighlight currentLine; // line the debugger is currently suspended at
     // menus
-    protected JMenu debugMenu;
+    protected JMenu debugMenu; // the debug menu
     // debugger control
     protected JMenuItem debugMenuItem;
     protected JMenuItem continueMenuItem;
     protected JMenuItem stopMenuItem;
     // breakpoints
-//    protected JMenuItem setBreakpointMenuItem;
-//    protected JMenuItem removeBreakpointMenuItem;
     protected JMenuItem toggleBreakpointMenuItem;
     protected JMenuItem listBreakpointsMenuItem;
     // stepping
@@ -84,10 +79,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     protected JMenuItem printThreads;
     // variable inspector
     protected JMenuItem toggleVariableInspectorMenuItem;
-    protected DebugMode dmode;
-    protected Debugger dbg;
-    protected VariableInspector vi;
-    protected TextArea ta;
+    // references
+    protected DebugMode dmode; // the mode
+    protected Debugger dbg; // the debugger
+    protected VariableInspector vi; // the variable inspector frame
+    protected TextArea ta; // the text area
 
     public DebugEditor(Base base, String path, EditorState state, Mode mode) {
         super(base, path, state, mode);
@@ -164,10 +160,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         stopMenuItem = new JMenuItem("Stop");
         stopMenuItem.addActionListener(this);
 
-//        setBreakpointMenuItem = new JMenuItem("Set Breakpoint");
-//        setBreakpointMenuItem.addActionListener(this);
-//        removeBreakpointMenuItem = new JMenuItem("Remove Breakpoint");
-//        removeBreakpointMenuItem.addActionListener(this);
         toggleBreakpointMenuItem = new JMenuItem("Toggle Breakpoint");
         toggleBreakpointMenuItem.addActionListener(this);
         listBreakpointsMenuItem = new JMenuItem("List Breakpoints");
@@ -198,8 +190,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         debugMenu.add(continueMenuItem);
         debugMenu.add(stopMenuItem);
         debugMenu.addSeparator();
-//        debugMenu.add(setBreakpointMenuItem);
-//        debugMenu.add(removeBreakpointMenuItem);
         debugMenu.add(toggleBreakpointMenuItem);
         debugMenu.add(listBreakpointsMenuItem);
         debugMenu.addSeparator();
@@ -268,12 +258,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         } else if (source == printThreads) {
             System.out.println("# clicked print threads menu item");
             dbg.printThreads();
-//        } else if (source == setBreakpointMenuItem) {
-//            System.out.println("# clicked set breakpoint menu item");
-//            dbg.setBreakpoint();
-//        } else if (source == removeBreakpointMenuItem) {
-//            System.out.println("# clicked remove breakpoint menu item");
-//            dbg.removeBreakpoint();
         } else if (source == toggleBreakpointMenuItem) {
             System.out.println("# clicked toggle breakpoint menu item");
             dbg.toggleBreakpoint();
@@ -323,7 +307,15 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     }
     protected final String breakpointMarkerComment = "//--";
 
-    // extract and return breakpointed lines from source code marker comments
+    /**
+     * Extract breakpointed lines from source code marker comments. This removes
+     * marker comments from the editor text. Intended to be called on loading a
+     * sketch, since re-setting the sketches contents after removing the markers
+     * will clear all breakpoints.
+     *
+     * @return the list of {@link LineID}s where breakpoint marker comments were
+     * removed from.
+     */
     protected List<LineID> stripBreakpointComments() {
         List<LineID> bps = new ArrayList();
         // iterate over all tabs
@@ -356,7 +348,13 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         return bps;
     }
 
-    // add breakpoint marker comments to the source file of a specific tab
+    /**
+     * Add breakpoint marker comments to the source file of a specific tab. This
+     * acts on the source file on disk, not the editor text. Intended to be
+     * called just after saving the sketch.
+     *
+     * @param tabFilename the tab file name
+     */
     protected void addBreakpointComments(String tabFilename) {
         SketchCode tab = getTab(tabFilename);
         List<LineBreakpoint> bps = dbg.getBreakpoints(tab.getFileName());
@@ -441,8 +439,13 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         return saved;
     }
 
-    // TODO: does this have any negative effects? (setting the doc to null)
-    // set text contents of a specific tab, updates underlying document and text area. removes breakpoints
+    /**
+     * Set text contents of a specific tab. Updates underlying document and text
+     * area. Clears Breakpoints.
+     *
+     * @param tabFilename the tab file name
+     * @param code the text to set
+     */
     protected void setTabContents(String tabFilename, String code) {
         // remove all breakpoints of this tab
         dbg.clearBreakpoints(tabFilename);
@@ -454,6 +457,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         if (tab != null) {
             tab.setProgram(code);
             // this updates document and text area
+            // TODO: does this have any negative effects? (setting the doc to null)
             tab.setDocument(null);
             setCode(tab);
 
@@ -641,15 +645,10 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     }
 
     /**
-     * Add highlight for a breakpointed line. Needs to be on the current tab.
+     * Add highlight for a breakpointed line.
      *
-     * @param lineIdx the line index on the current tab to highlight as
-     * breakpointed
+     * @param lineID the line id to highlight as breakpointed
      */
-    public void addBreakpointedLine(int lineIdx) {
-        addBreakpointedLine(getLineIDInCurrentTab(lineIdx));
-    }
-
     public void addBreakpointedLine(LineID lineID) {
         LineHighlight hl = new LineHighlight(lineID, BREAKPOINT_COLOR, this);
         hl.setMarker(BREAKPOINT_MARKER, BREAKPOINT_MARKER_COLOR);
@@ -658,6 +657,17 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         if (currentLine != null && currentLine.lineID().equals(lineID)) {
             currentLine.paint();
         }
+    }
+
+    /**
+     * Add highlight for a breakpointed line on the current tab.
+     *
+     * @param lineIdx the line index on the current tab to highlight as
+     * breakpointed
+     */
+    //TODO: remove and replace by {@link #addBreakpointedLine(LineID lineID)}
+    public void addBreakpointedLine(int lineIdx) {
+        addBreakpointedLine(getLineIDInCurrentTab(lineIdx));
     }
 
     /**
@@ -792,6 +802,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         return null;
     }
 
+    /**
+     * Retrieve the current tab.
+     *
+     * @return the {@link SketchCode} representing the current tab
+     */
     public SketchCode getCurrentTab() {
         return getSketch().getCurrentCode();
     }
@@ -817,6 +832,11 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         return new DebugToolbar(this, base);
     }
 
+    /**
+     * Event Handler for double clicking in the left hand gutter area.
+     *
+     * @param lineIdx the line (0-based) that was double clicked
+     */
     public void gutterDblClicked(int lineIdx) {
         if (dbg != null) {
             dbg.toggleBreakpoint(lineIdx);

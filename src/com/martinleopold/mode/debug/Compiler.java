@@ -36,16 +36,10 @@ public class Compiler extends processing.mode.java.Compiler {
     /**
      * Compile with ECJ. See http://j.mp/8paifz for documentation.
      *
-     * @param build
+     * @param build the java build
      * @return true on successful compilation, otherwise false
      * @throws SketchException
      */
-//  public boolean compile(Sketch sketch,
-//                         File srcFolder,
-//                         File binFolder,
-//                         String primaryClassName,
-//                         String sketchClassPath,
-//                         String bootClassPath) throws RunnerException {
     static public boolean compile(JavaBuild build) throws SketchException {
 
         // This will be filled in if anyone gets angry

@@ -25,7 +25,8 @@ import processing.app.syntax.TextAreaDefaults;
 import processing.app.syntax.TokenMarker;
 
 /**
- * Customized line painter. Adds support for background colors.
+ * Customized line painter. Adds support for background colors, left hand gutter
+ * area with background color and text.
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
@@ -39,12 +40,13 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
     }
 
     /**
-     * Paint a line.
+     * Paint a line. Paints the gutter (with background color and text) then the
+     * line (background color and text).
      *
      * @param gfx the graphics context
      * @param tokenMarker
      * @param line 0-based line number
-     * @param x
+     * @param x horizontal position
      */
     @Override
     protected void paintLine(Graphics gfx, TokenMarker tokenMarker,
@@ -53,29 +55,49 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
         // paint gutter
         paintGutterBg(gfx, line, x);
 
-        paintLineBgColor(gfx, line, x + ta.gutterWidth());
+        paintLineBgColor(gfx, line, x + ta.getGutterWidth());
 
         paintGutterLine(gfx, line, x);
 
         // paint gutter symbol
         paintGutterText(gfx, line, x);
 
-        super.paintLine(gfx, tokenMarker, line, x + ta.gutterWidth());
+        super.paintLine(gfx, tokenMarker, line, x + ta.getGutterWidth());
     }
 
-    // TODO: docs
+    /**
+     * Paint the gutter background (solid color).
+     *
+     * @param gfx the graphics context
+     * @param line 0-based line number
+     * @param x horizontal position
+     */
     protected void paintGutterBg(Graphics gfx, int line, int x) {
         gfx.setColor(ta.gutterBgColor);
         int y = ta.lineToY(line) + fm.getLeading() + fm.getMaxDescent();
-        gfx.fillRect(0, y, ta.gutterWidth(), fm.getHeight());
+        gfx.fillRect(0, y, ta.getGutterWidth(), fm.getHeight());
     }
 
+    /**
+     * Paint the vertical gutter separator line.
+     *
+     * @param gfx the graphics context
+     * @param line 0-based line number
+     * @param x horizontal position
+     */
     protected void paintGutterLine(Graphics gfx, int line, int x) {
         int y = ta.lineToY(line) + fm.getLeading() + fm.getMaxDescent();
         gfx.setColor(ta.gutterLineColor);
-        gfx.drawLine(ta.gutterWidth(), y, ta.gutterWidth(), y + fm.getHeight());
+        gfx.drawLine(ta.getGutterWidth(), y, ta.getGutterWidth(), y + fm.getHeight());
     }
 
+    /**
+     * Paint the gutter text.
+     *
+     * @param gfx the graphics context
+     * @param line 0-based line number
+     * @param x horizontal position
+     */
     protected void paintGutterText(Graphics gfx, int line, int x) {
         String text = ta.getGutterText(line);
         if (text == null) {
@@ -91,16 +113,12 @@ public class TextAreaPainter extends processing.app.syntax.TextAreaPainter {
         }
         int y = ta.lineToY(line) + fm.getHeight();
 
+        // draw 4 times to make it appear bold, displaced 1px to the right, to the bottom and bottom right.
         //int len = text.length() > ta.gutterChars ? ta.gutterChars : text.length();
-        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder(), y, gfx, this, 0);
-        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder() + 1, y, gfx, this, 0);
-        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder(), y + 1, gfx, this, 0);
-        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.gutterBorder() + 1, y + 1, gfx, this, 0);
-
-        // Draw characters via input method.
-//    if (compositionTextPainter != null && compositionTextPainter.hasComposedTextLayout()) {
-//      compositionTextPainter.draw(gfx, lineHighlightColor);
-//    }
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.getGutterMargins(), y, gfx, this, 0);
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.getGutterMargins() + 1, y, gfx, this, 0);
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.getGutterMargins(), y + 1, gfx, this, 0);
+        Utilities.drawTabbedText(new Segment(text.toCharArray(), 0, text.length()), ta.getGutterMargins() + 1, y + 1, gfx, this, 0);
     }
 
     /**

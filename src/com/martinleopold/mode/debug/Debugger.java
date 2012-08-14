@@ -34,7 +34,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JTree;
+import javax.swing.JTree; // needed for javadocs
 import javax.swing.tree.DefaultMutableTreeNode;
 import processing.app.Sketch;
 import processing.app.SketchCode;
@@ -51,15 +51,13 @@ public class Debugger implements VMEventListener {
     protected DebugRunner runtime; // the runtime, contains debuggee VM
     protected boolean started = false; // debuggee vm has started, VMStartEvent received, main class loaded
     protected boolean paused = false; // currently paused at breakpoint or step
-    //ThreadReference initialThread; // initial thread of debuggee vm
     protected ThreadReference currentThread; // thread the last breakpoint or step occured in
     protected String mainClassName; // name of the main class that's currently being debugged
-    protected ReferenceType mainClass;
-    protected Set<ReferenceType> classes = new HashSet();
+    protected ReferenceType mainClass; // the debuggee's main class
+    protected Set<ReferenceType> classes = new HashSet(); // holds all loaded classes in the debuggee VM
+    protected List<ClassLoadListener> classLoadListeners = new ArrayList(); // listeners for class load events
     protected String srcPath; // path to the src folder of the current build
-    protected DebugBuild build; // todo: might not need to be global
-    //protected Map<LineID, LineID> lineMap = new HashMap(); // maps source lines from "sketch-space" to "java-space" and vice-versa
-    protected List<LineBreakpoint> breakpoints = new ArrayList();
+    protected List<LineBreakpoint> breakpoints = new ArrayList(); // list of current breakpoints
     protected StepRequest requestedStep; // the step request we are currently in, or null if not in a step
     protected Map<LineID, LineID> runtimeLineChanges = new HashMap(); // maps line number changes at runtime (orig -> changed)
     protected Set<String> runtimeTabsTracked = new HashSet(); // contains tab filenames which already have been tracked for runtime changes
@@ -86,11 +84,37 @@ public class Debugger implements VMEventListener {
         }
     }
 
-    // TODO: fix this
-    public ReferenceType mainClass() {
-        return mainClass;
+    /**
+     * Access the editor associated with this debugger.
+     *
+     * @return the editor object
+     */
+    public DebugEditor editor() {
+        return editor;
     }
 
+    /**
+     * Retrieve the main class of the debuggee VM.
+     *
+     * @return the main classes {@link ReferenceType} or null if the debugger is
+     * not started.
+     */
+    public ReferenceType getMainClass() {
+        if (isStarted()) {
+            return mainClass;
+        } else {
+            return null;
+        }
+
+    }
+
+    /**
+     * Get the {@link ReferenceType} for a class name.
+     *
+     * @param name the class name
+     * @return the {@link ReferenceType} or null if not found (e.g. not yet
+     * loaded)
+     */
     public ReferenceType getClass(String name) {
         if (name == null) {
             return null;
@@ -105,26 +129,25 @@ public class Debugger implements VMEventListener {
         }
         return null;
     }
-    protected List<ClassLoadListener> classLoadListeners = new ArrayList();
 
+    /**
+     * Add a class load listener. Will be notified when a class is loaded in the
+     * debuggee VM.
+     *
+     * @param listener the {@link ClassLoadListener}
+     */
     public void addClassLoadListener(ClassLoadListener listener) {
         classLoadListeners.add(listener);
     }
 
+    /**
+     * Remove a class load listener. Cease to be notified when classes are
+     * loaded in the debuggee VM.
+     *
+     * @param listener {@link ClassLoadListener}
+     */
     public void removeClassLoadListener(ClassLoadListener listener) {
         classLoadListeners.remove(listener);
-    }
-
-//    public Map<LineID, LineID> lineMapping() {
-//        return lineMap;
-//    }
-    /**
-     * Access the editor associated with this debugger.
-     *
-     * @return the editor object
-     */
-    public DebugEditor editor() {
-        return editor;
     }
 
     /**
@@ -150,7 +173,7 @@ public class Debugger implements VMEventListener {
 
         try {
             Sketch sketch = editor.getSketch();
-            build = new DebugBuild(sketch);
+            DebugBuild build = new DebugBuild(sketch);
 
             Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "building sketch: {0}", sketch.getName());
             //LineMapping.addLineNumbers(sketch); // annotate
@@ -188,18 +211,11 @@ public class Debugger implements VMEventListener {
                  * blocks until finished } }).start(); return runtime;
                  */
 
-
-                // test setting a breakpoint on setup()
-                //Location
-                //vm.eventRequestManager().createBreakpointRequest(null);
-
                 startTrackingLineChanges();
             }
         } catch (Exception e) {
             editor.statusError(e);
         }
-
-        //return null;
     }
 
     /**
@@ -212,10 +228,9 @@ public class Debugger implements VMEventListener {
             Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "closing runtime");
             runtime.close();
             runtime = null;
-            build = null;
+            //build = null;
             classes.clear();
             // need to clear highlight here because, VMDisconnectedEvent seems to be unreliable. TODO: likely synchronization problem
-            //clearHighlight();
             editor.clearCurrentLine();
         }
         stopTrackingLineChanges();
@@ -245,9 +260,8 @@ public class Debugger implements VMEventListener {
     /**
      * Step through source code lines.
      *
-     * @param stepDepth the step depth ({@link StepRequest}{@code .STEP_OVER},
-     * {@link StepRequest}{@code .STEP_INTO} or
-     * {@link StepRequest}{@code .STEP_OUT})
+     * @param stepDepth the step depth ({@link StepRequest#STEP_OVER},
+     * {@link StepRequest#STEP_INTO} or {@link StepRequest#STEP_OUT})
      */
     protected void step(int stepDepth) {
         if (!isStarted()) {
@@ -330,10 +344,21 @@ public class Debugger implements VMEventListener {
         setBreakpoint(editor.getCurrentLineID());
     }
 
+    /**
+     * Set a breakpoint on a line in the current tab.
+     *
+     * @param lineIdx the line index (0-based) of the current tab to set the
+     * breakpoint on
+     */
     public synchronized void setBreakpoint(int lineIdx) {
         setBreakpoint(editor.getLineIDInCurrentTab(lineIdx));
     }
 
+    /**
+     * Set a breakpoint.
+     *
+     * @param line the line id to set the breakpoint on
+     */
     public synchronized void setBreakpoint(LineID line) {
         // do nothing if we are kinda busy
         if (isStarted() && !isPaused()) {
@@ -354,6 +379,12 @@ public class Debugger implements VMEventListener {
         removeBreakpoint(editor.getCurrentLineID().lineIdx());
     }
 
+    /**
+     * Remove a breakpoint from a line in the current tab.
+     *
+     * @param lineIdx the line index (0-based) in the current tab to remove the
+     * breakpoint from
+     */
     protected void removeBreakpoint(int lineIdx) {
         // do nothing if we are kinda busy
         if (isBusy()) {
@@ -384,8 +415,11 @@ public class Debugger implements VMEventListener {
         breakpoints.clear();
     }
 
-    // TODO: doc
-    // clear breakpoints in a specific tab
+    /**
+     * Clear breakpoints in a specific tab.
+     *
+     * @param tabFilename the tab's file name
+     */
     public synchronized void clearBreakpoints(String tabFilename) {
         //TODO: handle busy-ness correctly
         if (isBusy()) {
@@ -420,12 +454,17 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Toggle the breakpoint on the current line.
+     * Toggle a breakpoint on the current line.
      */
     public synchronized void toggleBreakpoint() {
         toggleBreakpoint(editor.getCurrentLineID().lineIdx());
     }
 
+    /**
+     * Toggle a breakpoint on a line in the current tab.
+     *
+     * @param lineIdx the line index (0-based) in the current tab
+     */
     public synchronized void toggleBreakpoint(int lineIdx) {
         LineID line = editor.getLineIDInCurrentTab(lineIdx);
         if (!hasBreakpoint(line)) {
@@ -435,6 +474,12 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    /**
+     * Check if there's a breakpoint on a particular line.
+     *
+     * @param line the line id
+     * @return true if a breakpoint is set on the given line, otherwise false
+     */
     protected boolean hasBreakpoint(LineID line) {
         LineBreakpoint bp = breakpointOnLine(line);
         return bp != null;
@@ -454,6 +499,12 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    /**
+     * Retrieve a list of breakpoint in a particular tab.
+     *
+     * @param tabFilename the tab's file name
+     * @return the list of breakpoints in the given tab
+     */
     public synchronized List<LineBreakpoint> getBreakpoints(String tabFilename) {
         List<LineBreakpoint> list = new ArrayList();
         for (LineBreakpoint bp : breakpoints) {
@@ -507,36 +558,9 @@ public class Debugger implements VMEventListener {
                     //printType(rt);
                     mainClass = rt;
                     Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "main class load: {0}", rt.name());
-
-                    //                if (breakpoints.isEmpty()) {
-                    //                    System.out.println("using auto brekapoints (no manual breakpoints set)");
-                    //                    System.out.println("setting breakpoint on setup()");
-                    //                    Location setupLocation = rt.methodsByName("setup").get(0).location();
-                    //                    BreakpointRequest setupBp =
-                    //                            runtime.vm().eventRequestManager().createBreakpointRequest(setupLocation);
-                    //                    setupBp.enable();
-                    //
-                    //                    System.out.println("setting breakpoint on draw()");
-                    //                    Location drawLocation = rt.methodsByName("draw").get(0).location();
-                    //                    BreakpointRequest drawBp =
-                    //                            runtime.vm().eventRequestManager().createBreakpointRequest(drawLocation);
-                    //                    drawBp.enable();
-                    //                } else {
-                    //                    System.out.println("setting breakpoints:");
-                    //                    for (LineBreakpoint bp : breakpoints) {
-                    //                        bp.attach();
-                    //                    }
-                    //                }
-
-//                    if (!breakpoints.isEmpty()) {
-//                        Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "setting breakpoints:");
-//                        for (LineBreakpoint bp : breakpoints) {
-//                            bp.attach();
-//                        }
-//                    }
                     started = true; // now that main class is loaded, we're started
                 } else {
-                    classes.add(rt);
+                    classes.add(rt); // save loaded classes
                     Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "class load: {0}", rt.name());
                 }
 
@@ -589,7 +613,7 @@ public class Debugger implements VMEventListener {
 
                 // disallow stepping into invisible lines
                 if (!locationIsVisible(se.location())) {
-                    stepIntoView(currentThread);
+                    stepOutIntoViewOrContinue();
                 }
             } else if (e instanceof VMDisconnectEvent) {
 //                started = false;
@@ -602,23 +626,32 @@ public class Debugger implements VMEventListener {
         }
     }
 
+    /**
+     * Check whether a location corresponds to a code line in the editor.
+     *
+     * @param l the location
+     * @return true if the location corresponds to a line in the editor
+     */
     protected boolean locationIsVisible(Location l) {
         return locationToLineID(l) != null;
     }
 
-    // step out to the next visible location on the stackframe or continue
-    protected void stepIntoView(ThreadReference thread) {
+    /**
+     * Step out if this results in a visible location, otherwise continue.
+     */
+    protected void stepOutIntoViewOrContinue() {
         try {
-            List<StackFrame> frames = thread.frames();
+            List<StackFrame> frames = currentThread.frames();
             if (frames.size() > 1) {
                 if (locationIsVisible(frames.get(1).location())) {
-                    System.out.println("stepping out to: " + locationToString(frames.get(1).location()));
+                    //System.out.println("stepping out to: " + locationToString(frames.get(1).location()));
                     stepOut();
                     return;
                 }
             }
             continueDebug();
 
+//            //Step out to the next visible location on the stack frame
 //            if (thread.frames(i, i1))
 //            for (StackFrame f : thread.frames()) {
 //                    Location l = f.location();
@@ -644,7 +677,7 @@ public class Debugger implements VMEventListener {
 
     /**
      * Check whether the debugger is paused. i.e. it is currently suspended at a
-     * breakpoint or step
+     * breakpoint or step.
      *
      * @return true if the debugger is paused, false otherwise or if not started
      * ({@link #isStarted()})
@@ -653,6 +686,12 @@ public class Debugger implements VMEventListener {
         return isStarted() && paused && currentThread != null && currentThread.isSuspended();
     }
 
+    /**
+     * Check whether the debugger is currently busy. i.e. running (not
+     * suspended).
+     *
+     * @return true if the debugger is currently running and not suspended.
+     */
     public synchronized boolean isBusy() {
         return isStarted() && !isPaused();
     }
@@ -927,37 +966,6 @@ public class Debugger implements VMEventListener {
         return new ArrayList();
     }
 
-//    /**
-//     * Recursively resolve a field for use in a {@link JTree}. Uses an object
-//     * reference as environment. Used by {@link #getLocals} and
-//     * {@link #getThisFields}.
-//     *
-//     * @param field the field to resolve
-//     * @param obj the object reference used as environment (must contain the
-//     * field to resolve)
-//     * @param depth the current depth (in the recursive call)
-//     * @param maxDepth the depth to stop recursion at
-//     * @return the resolved field
-//     */
-//    protected VariableNode getFieldRecursive(Field field, ObjectReference obj, int depth, int maxDepth) {
-//        // resolve the field to a value using the provided object reference
-//        Value val = obj.getValue(field);
-//        VariableNode var = new VariableNode(field.name(), field.typeName(), val == null ? "null" : val.toString());
-//        //System.out.println("field: " + var);
-//
-//        if (val != null && depth < maxDepth) {
-//            // add all child fields (if field represents an object)
-//            if (val instanceof ObjectReference) {
-//                ObjectReference env = (ObjectReference) val;
-//                //add all children
-//                for (Field f : env.referenceType().visibleFields()) {
-//                    //System.out.print(String.format(String.format("%%0%dd", depth + 1), 0).replace("0", "  "));
-//                    var.addChild(getFieldRecursive(f, env, depth + 1, maxDepth));
-//                }
-//            }
-//        }
-//        return var;
-//    }
     /**
      * Recursively get the fields of a {@link Value} for insertion into a
      * {@link JTree}.
@@ -1003,7 +1011,12 @@ public class Debugger implements VMEventListener {
         return getFields(value, 0, maxDepth, includeInherited);
     }
 
-    // TODO: doc
+    /**
+     * Get the fields of an array for insertion into a {@link JTree}.
+     *
+     * @param array the array reference
+     * @return list of array fields
+     */
     protected List<VariableNode> getArrayFields(ArrayReference array) {
         List<VariableNode> fields = new ArrayList();
         if (array != null) {
@@ -1173,36 +1186,6 @@ public class Debugger implements VMEventListener {
     }
 
     /**
-     * Mark a line in the editor by selecting it. Switches to appropriate tab.
-     *
-     * @param l {@link Location} object that describes source location to
-     * select.
-     */
-//    protected void selectSourceLocation(Location l) {
-//        try {
-//            LineID sketchLine = lineMap.get(LineID.create(l.sourceName(), l.lineNumber()));
-//            editor.clearSelection();
-//            if (sketchLine != null) {
-//                int lineIdx = sketchLine.lineIdx(); // 0-based line number
-//                String tab = sketchLine.fileName();
-//                //System.out.println("sketch line: " + sketchLine);
-//
-//                // switch to tab
-//                Sketch s = editor.getSketch();
-//                for (int i = 0; i < s.getCodeCount(); i++) {
-//                    if (tab.equals(s.getCode(i).getFileName())) {
-//                        s.setCurrentCode(i);
-//                        break;
-//                    }
-//                }
-//                // select line
-//                editor.selectLine(lineIdx);
-//            }
-//        } catch (AbsentInformationException ex) {
-//            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//    }
-    /**
      * Translate a java source location to a sketch line id.
      *
      * @param l the location to translate
@@ -1236,15 +1219,6 @@ public class Debugger implements VMEventListener {
             return originalToRuntimeLine(javaLine);
         }
 
-//        for (int i = 0; i < sketch.getCodeCount(); i++) {
-//            SketchCode code = sketch.getCode(i);
-//            if (code.isExtension("java")) {
-//                if (javaLine.fileName().equals(code.getFileName())) {
-//                    return LineID.create(code.getFileName(), javaLine.lineIdx());
-//                }
-//            }
-//        }
-
         // check if it is the preprocessed/assembled file for this sketch
         // java file name needs to match the sketches filename
         if (!javaLine.fileName().equals(sketch.getName() + ".java")) {
@@ -1256,7 +1230,7 @@ public class Debugger implements VMEventListener {
         for (int i = sketch.getCodeCount() - 1; i >= 0; i--) {
             tab = sketch.getCode(i);
             // ignore .java files
-            // the tabs offset must not be greater than the java line number
+            // the tab's offset must not be greater than the java line number
             if (tab.isExtension("pde") && tab.getPreprocOffset() <= javaLine.lineIdx()) {
                 return originalToRuntimeLine(new LineID(tab.getFileName(), javaLine.lineIdx() - tab.getPreprocOffset()));
             }
@@ -1320,7 +1294,7 @@ public class Debugger implements VMEventListener {
         }
 
         // the java file has a name sketchname.java
-        // just add the tabs offset to get the java name
+        // just add the tab's offset to get the java name
         LineID javaLine = new LineID(editor.getSketch().getName() + ".java", sketchLine.lineIdx() + tab.getPreprocOffset());
         return javaLine;
     }
@@ -1328,6 +1302,7 @@ public class Debugger implements VMEventListener {
     /**
      * Start tracking all line changes (due to edits) in the current tab.
      */
+    // TODO: maybe move this to the editor?
     protected void startTrackingLineChanges() {
         SketchCode tab = editor.getSketch().getCurrentCode();
         if (runtimeTabsTracked.contains(tab.getFileName())) {

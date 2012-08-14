@@ -20,7 +20,8 @@ package com.martinleopold.mode.debug;
 import java.awt.Color;
 
 /**
- * Model/Controller for a highlighted source code line.
+ * Model/Controller for a highlighted source code line. Implements a custom
+ * background color and a text based marker placed in the left-hand gutter area.
  *
  * @author Martin Leopold <m@martinleopold.com>
  */
@@ -28,9 +29,25 @@ public class LineHighlight implements LineListener {
 
     protected DebugEditor editor; // the view, used for highlighting lines by setting a background color
     protected Color bgColor; // the background color for highlighting lines
-    protected LineID lineID;
-    protected String marker;
+    protected LineID lineID; // the id of the line
+    protected String marker; //
     protected Color markerColor;
+
+    /**
+     * Create a {@link LineHighlight}.
+     *
+     * @param lineID the line id to highlight
+     * @param bgColor the background color used for highlighting
+     * @param editor the {@link DebugEditor}
+     */
+    public LineHighlight(LineID lineID, Color bgColor, DebugEditor editor) {
+        this.lineID = lineID;
+        this.bgColor = bgColor;
+        this.editor = editor;
+        lineID.addListener(this);
+        lineID.startTracking(editor.getTab(lineID.fileName()).getDocument()); // TODO: overwrite a previous doc?
+        paint(); // already checks if on current tab
+    }
 
     /**
      * Create a {@link LineHighlight} on the current tab.
@@ -39,25 +56,29 @@ public class LineHighlight implements LineListener {
      * @param bgColor the background color used for highlighting
      * @param editor the {@link DebugEditor}
      */
+    // TODO: Remove and replace by {@link #LineHighlight(LineID lineID, Color bgColor, DebugEditor editor)}
     public LineHighlight(int lineIdx, Color bgColor, DebugEditor editor) {
         this(editor.getLineIDInCurrentTab(lineIdx), bgColor, editor);
     }
 
-    // TODO: doc
-    public LineHighlight(LineID lineID, Color bgColor, DebugEditor editor) {
-        this.lineID = lineID;
-        this.bgColor = bgColor;
-        this.editor = editor;
-        lineID.addListener(this);
-        lineID.startTracking(editor.getTab(lineID.fileName()).getDocument()); // todo: overwrite a previous doc?
-        paint(); // already checks if on current tab
-    }
-
+    /**
+     * Set a text based marker displayed in the left hand gutter area of this
+     * highlighted line.
+     *
+     * @param marker the marker text
+     */
     public void setMarker(String marker) {
         this.marker = marker;
         paint();
     }
 
+    /**
+     * Set a text based marker displayed in the left hand gutter area of this
+     * highlighted line. Also use a custom text color.
+     *
+     * @param marker the marker text
+     * @param markerColor the text color
+     */
     public void setMarker(String marker, Color markerColor) {
         this.markerColor = markerColor;
         setMarker(marker);
@@ -111,8 +132,8 @@ public class LineHighlight implements LineListener {
     }
 
     /**
-     * Notify this line highlight that it is no linger used.
-     *
+     * Notify this line highlight that it is no longer used. Call this for
+     * cleanup before the {@link LineHighlight} is discarded.
      */
     public void dispose() {
         lineID.removeListener(this);
@@ -120,8 +141,7 @@ public class LineHighlight implements LineListener {
     }
 
     /**
-     * (Re-)paint this line highlight. Needs to be on the current tab
-     * (obviously).
+     * (Re-)paint this line highlight.
      */
     public void paint() {
         if (editor.isInCurrentTab(lineID)) {
@@ -136,10 +156,10 @@ public class LineHighlight implements LineListener {
         }
     }
 
-/**
- * Clear this line highlight. Needs to be on the current tab (obviously).
- */
-public void clear() {
+    /**
+     * Clear this line highlight.
+     */
+    public void clear() {
         if (editor.isInCurrentTab(lineID)) {
             editor.textArea().clearLineBgColor(lineID.lineIdx());
             editor.textArea().clearGutterText(lineID.lineIdx());
