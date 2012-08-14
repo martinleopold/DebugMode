@@ -545,7 +545,78 @@ Exception in thread "AWT-EventQueue-0" java.lang.StringIndexOutOfBoundsException
 	at processing.app.syntax.Brackets.findMatchingBracket(Brackets.java:69)
 	at processing.app.syntax.JEditTextArea.updateBracketHighlight(JEditTextArea.java:2002)
 	at processing.app.syntax.JEditTextArea.select(JEditTextArea.java:1211)
+14.8.
+* current line marker is lost, when moving lines above it
 
+
+
+BUGS:
+* debugging w/2 editors open, focusing second (empty) editor just after hitting debug on first:
+	Exception in thread "AWT-EventQueue-0" java.lang.IllegalArgumentException: Bounds out of range: 32,47 [32]
+	at processing.app.syntax.JEditTextArea.select(JEditTextArea.java:1193)
+	at processing.app.syntax.JEditTextArea$DragHandler.mouseDragged(JEditTextArea.java:2313)
+	at java.awt.AWTEventMulticaster.mouseDragged(AWTEventMulticaster.java:302)
+* sporadic while switching tabs (breakpoint hits,…):
+	java.lang.ArrayIndexOutOfBoundsException: 344
+	at javax.swing.text.Utilities.drawTabbedText(Utilities.java:132)
+	at javax.swing.text.Utilities.drawTabbedText(Utilities.java:89)
+	at javax.swing.text.Utilities.drawTabbedText(Utilities.java:67)
+	at processing.app.syntax.SyntaxUtilities.paintSyntaxLine(SyntaxUtilities.java:146)
+	at processing.app.syntax.TextAreaPainter.paintSyntaxLine(TextAreaPainter.java:625)
+	at processing.app.syntax.TextAreaPainter.paintLine(TextAreaPainter.java:588)
+	at com.martinleopold.mode.debug.TextAreaPainter.paintLine(Unknown Source)
+! https://github.com/martinleopold/DebugMode/issues/3
+	Exception in thread "AWT-EventQueue-0" com.sun.jdi.ObjectCollectedException
+	at com.sun.tools.jdi.JDWPException.toJDIException(JDWPException.java:27)
+	at com.sun.tools.jdi.ObjectReferenceImpl.referenceType(ObjectReferenceImpl.java:139)
+	at com.martinleopold.mode.debug.VariableNode.getAllowsChildren(Unknown Source)
+	at com.martinleopold.mode.debug.VariableNode.isLeaf(Unknown Source)
+* multiple steps when nodes expanded...
+	Exception in thread "AWT-EventQueue-0" java.lang.IndexOutOfBoundsException: Index: 8, Size: 3
+	at java.util.ArrayList.RangeCheck(ArrayList.java:547)
+	at java.util.ArrayList.get(ArrayList.java:322)
+	at com.martinleopold.mode.debug.VariableNode.getChildAt(Unknown Source)
+	at javax.swing.tree.DefaultTreeModel.getChild(DefaultTreeModel.java:156)
+	at org.netbeans.swing.outline.DefaultOutlineModel.getChild(DefaultOutlineModel.java:231)
+	at javax.swing.tree.FixedHeightLayoutCache$SearchInfo.getPath(FixedHeightLayoutCache.java:1448)
+	at javax.swing.tree.FixedHeightLayoutCache.getPathForRow(FixedHeightLayoutCache.java:193)
+	at org.netbeans.swing.outline.DefaultOutlineCellRenderer.getTableCellRendererComponent(DefaultOutlineCellRenderer.java:253)
+
+! stepping out of print(), println() returns to the same line
+	-> NullPointerException, AbsentInformation + VMMismatchException when restarting dbg
+* debug doesn't properly restart the session. stopDebug() needs to wait for vmdisconnected
+
+
+UX BUGS:
+* current line marker is lost, when moving lines above it
+* standard examples do not appear in debug mode
+* toggling var insp. shouldn't focus var insp. window
+
+* line highlight on first line doesn't move down
+* deleting a line doesn't remove a breakpoint
+* debug button highlight not working
+	-> removes highlight when mouse moved (rollover event, p5 bug?)
+* implicit stepping (invisible code) updates var inspector
+* can't set breakpoint in a classes constructor?
+* stepping into constructors, lands at closing bracket of constructor first
+
+* sorting of processing node (appears first)
+* sorting by value doesn't work inside Processing folder
+
+* current line hides underlying breakpoint
+
+
+
+ENHANCEMENTS:
+* use resources/theme/theme.txt for highlight colors (current, breakpoint)
+* in stacktrace indicate if in native or static method
+* rethink: isPaused() vs. isBusy()
+* stepping out of setup doesn't stop in draw() (should it?)
+* VMEventReader should reset things too, on disconnect? (to avoid invalid states…)
+* keyboard shortcuts
+	set breakpoints
+* continue, step should do nothing when no dbg session is active
+* indicate debugger status somewhere (off, busy, suspended)
 
 
 
