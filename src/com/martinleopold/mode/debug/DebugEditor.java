@@ -58,6 +58,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     public static final Color CURRENT_LINE_MARKER_COLOR = new Color(226, 117, 0); // the color of current line gutter markers
     protected List<LineHighlight> breakpointedLines = new ArrayList(); // breakpointed lines
     protected LineHighlight currentLine; // line the debugger is currently suspended at
+    protected final String breakpointMarkerComment = " //<>//"; // breakpoint marker comment
     // menus
     protected JMenu debugMenu; // the debug menu
     // debugger control
@@ -305,7 +306,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         }
         return didOpen;
     }
-    protected final String breakpointMarkerComment = "//--";
 
     /**
      * Extract breakpointed lines from source code marker comments. This removes
