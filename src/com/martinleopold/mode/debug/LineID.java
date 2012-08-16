@@ -109,15 +109,15 @@ public class LineID implements DocumentListener {
         return fileName + ":" + (lineIdx + 1);
     }
 
-    /**
-     * Retrieve a copy of this line ID.
-     *
-     * @return the copy
-     */
-    @Override
-    public LineID clone() {
-        return new LineID(fileName, lineIdx);
-    }
+//    /**
+//     * Retrieve a copy of this line ID.
+//     *
+//     * @return the copy
+//     */
+//    @Override
+//    public LineID clone() {
+//        return new LineID(fileName, lineIdx);
+//    }
 
     /**
      * Attach a {@link Document} to enable line number tracking when editing.
@@ -148,7 +148,6 @@ public class LineID implements DocumentListener {
             pos = doc.createPosition(line.getStartOffset() + nonWhiteSpaceOffset(lineText));
             this.doc = doc;
             doc.addDocumentListener(this);
-            System.out.println("line tracked: " + System.identityHashCode(this));
         } catch (BadLocationException ex) {
             Logger.getLogger(LineID.class.getName()).log(Level.SEVERE, null, ex);
             pos = null;
@@ -179,10 +178,8 @@ public class LineID implements DocumentListener {
             int oldLineIdx = lineIdx;
             lineIdx = doc.getDefaultRootElement().getElementIndex(offset); // offset to lineNo
             if (lineIdx != oldLineIdx) {
-                System.out.println("updating line listeners: " + System.identityHashCode(this));
                 for (LineListener l : listeners) {
                     if (l != null) {
-                        System.out.println(l.hashCode());
                         l.lineChanged(this, oldLineIdx, lineIdx);
                     } else {
                         listeners.remove(l); // remove null listener

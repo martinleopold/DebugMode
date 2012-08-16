@@ -18,6 +18,8 @@
 package com.martinleopold.mode.debug;
 
 import java.awt.Color;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Model/Controller for a highlighted source code line. Implements a custom
@@ -32,6 +34,17 @@ public class LineHighlight implements LineListener {
     protected LineID lineID; // the id of the line
     protected String marker; //
     protected Color markerColor;
+    protected int priority = 0;
+    protected static Set<LineHighlight> allHighlights = new HashSet();
+
+    protected static boolean isHighestPriority(LineHighlight hl) {
+        for (LineHighlight check : allHighlights) {
+            if (check.lineID().equals(hl.lineID()) && check.priority() > hl.priority()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     /**
      * Create a {@link LineHighlight}.
@@ -41,14 +54,21 @@ public class LineHighlight implements LineListener {
      * @param editor the {@link DebugEditor}
      */
     public LineHighlight(LineID lineID, Color bgColor, DebugEditor editor) {
-        //lineID = lineID.clone(); // use a clone, so highlights will be updated (lineChanged event) in order of creation
-        System.out.println("highlight created: " + this.hashCode());
         this.lineID = lineID;
         this.bgColor = bgColor;
         this.editor = editor;
         lineID.addListener(this);
         lineID.startTracking(editor.getTab(lineID.fileName()).getDocument()); // TODO: overwrite a previous doc?
         paint(); // already checks if on current tab
+        allHighlights.add(this);
+    }
+
+    public void setPriority(int p) {
+        this.priority = p;
+    }
+
+    public int priority() {
+        return priority;
     }
 
     /**
@@ -124,14 +144,18 @@ public class LineHighlight implements LineListener {
      */
     @Override
     public void lineChanged(LineID line, int oldLineIdx, int newLineIdx) {
-        System.out.println("highlight changed: " + this.hashCode());
         // clear old line
         if (editor.isInCurrentTab(new LineID(line.fileName(), oldLineIdx))) {
             editor.textArea().clearLineBgColor(oldLineIdx);
             editor.textArea().clearGutterText(oldLineIdx);
         }
+
         // paint new line
-        paint();
+        // but only if it's on top -> fixes current line being hidden by breakpoint moving it down.
+        // lineChanged events seem to come in inverse order of startTracking the LineID. (and bp is created first...)
+        if (LineHighlight.isHighestPriority(this)) {
+            paint();
+        }
     }
 
     /**
@@ -141,6 +165,7 @@ public class LineHighlight implements LineListener {
     public void dispose() {
         lineID.removeListener(this);
         lineID.stopTracking();
+        allHighlights.remove(this);
     }
 
     /**

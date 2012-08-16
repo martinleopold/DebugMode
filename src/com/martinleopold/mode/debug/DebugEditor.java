@@ -613,7 +613,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      * @param line the line to highlight as current suspended line
      */
     public void setCurrentLine(LineID line) {
-
         clearCurrentLine();
         if (line == null) {
             return; // safety, e.g. when no line mapping is found and the null line is used.
@@ -624,7 +623,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         // highlight line
         currentLine = new LineHighlight(line.lineIdx(), CURRENT_LINE_COLOR, this);
         currentLine.setMarker(CURRENT_LINE_MARKER, CURRENT_LINE_MARKER_COLOR);
-        System.out.println("setting current line highlight: " + currentLine.hashCode());
+        currentLine.setPriority(10); // fixes current line being hidden by the breakpoint when moved down
     }
 
     /**
@@ -653,7 +652,6 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     public void addBreakpointedLine(LineID lineID) {
         LineHighlight hl = new LineHighlight(lineID, BREAKPOINT_COLOR, this);
-        System.out.println("setting breakpoint line highlight: " + hl.hashCode());
         hl.setMarker(BREAKPOINT_MARKER, BREAKPOINT_MARKER_COLOR);
         breakpointedLines.add(hl);
         // repaint current line if it's on this line
