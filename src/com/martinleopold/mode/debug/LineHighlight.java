@@ -41,6 +41,8 @@ public class LineHighlight implements LineListener {
      * @param editor the {@link DebugEditor}
      */
     public LineHighlight(LineID lineID, Color bgColor, DebugEditor editor) {
+        //lineID = lineID.clone(); // use a clone, so highlights will be updated (lineChanged event) in order of creation
+        System.out.println("highlight created: " + this.hashCode());
         this.lineID = lineID;
         this.bgColor = bgColor;
         this.editor = editor;
@@ -122,6 +124,7 @@ public class LineHighlight implements LineListener {
      */
     @Override
     public void lineChanged(LineID line, int oldLineIdx, int newLineIdx) {
+        System.out.println("highlight changed: " + this.hashCode());
         // clear old line
         if (editor.isInCurrentTab(new LineID(line.fileName(), oldLineIdx))) {
             editor.textArea().clearLineBgColor(oldLineIdx);
