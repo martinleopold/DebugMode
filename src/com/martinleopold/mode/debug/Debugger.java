@@ -579,10 +579,16 @@ public class Debugger implements VMEventListener {
                 BreakpointRequest br = (BreakpointRequest) be.request();
 
                 //printSourceLocation(currentThread);
-                editor.setCurrentLine(locationToLineID(be.location()));
-                updateVariableInspector(currentThread);
-                editor.toolbar().deactivate(DebugToolbar.STEP);
-                editor.toolbar().deactivate(DebugToolbar.CONTINUE);
+                updateVariableInspector(currentThread); // this is already on the EDT
+                final LineID newCurrentLine = locationToLineID(be.location());
+                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        editor.setCurrentLine(newCurrentLine);
+                        editor.toolbar().deactivate(DebugToolbar.STEP);
+                        editor.toolbar().deactivate(DebugToolbar.CONTINUE);
+                    }
+                });
 
                 // hit a breakpoint during a step, need to cancel the step.
                 if (requestedStep != null) {
@@ -600,10 +606,16 @@ public class Debugger implements VMEventListener {
                 currentThread = se.thread();
 
                 //printSourceLocation(currentThread);
-                editor.setCurrentLine(locationToLineID(se.location()));
-                updateVariableInspector(currentThread);
-                editor.toolbar().deactivate(DebugToolbar.STEP);
-                editor.toolbar().deactivate(DebugToolbar.CONTINUE);
+                updateVariableInspector(currentThread); // this is already on the EDT
+                final LineID newCurrentLine = locationToLineID(se.location());
+                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        editor.setCurrentLine(newCurrentLine);
+                        editor.toolbar().deactivate(DebugToolbar.STEP);
+                        editor.toolbar().deactivate(DebugToolbar.CONTINUE);
+                    }
+                });
 
                 // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
                 EventRequestManager mgr = runtime.vm().eventRequestManager();
@@ -613,7 +625,7 @@ public class Debugger implements VMEventListener {
 
                 // disallow stepping into invisible lines
                 if (!locationIsVisible(se.location())) {
-                    stepOutIntoViewOrContinue();
+                    stepOutIntoViewOrContinue(); // TODO: this leads to stepping, should it run on the EDT?
                 }
             } else if (e instanceof VMDisconnectEvent) {
 //                started = false;
@@ -836,19 +848,32 @@ public class Debugger implements VMEventListener {
         if (!t.isSuspended()) {
             return;
         }
-        VariableInspector vi = editor.variableInspector();
         try {
             if (t.frameCount() == 0) {
                 // TODO: needs to be handled in a better way:
                 Logger.getLogger(Debugger.class.getName()).log(Level.WARNING, "call stack empty");
             } else {
-                vi.updateCallStack(getStackTrace(t), "Call Stack");
-                List<VariableNode> locals = getLocals(t, 0);
-                vi.updateLocals(locals, "Locals at " + currentLocation(t));
-                vi.updateThisFields(getThisFields(t, 0, true), "Class " + thisName(t));
-                vi.updateDeclaredThisFields(getThisFields(t, 0, false), "Class " + thisName(t));
-                vi.unlock(); // need to do this before rebuilding, otherwise we get these ... dots in the labels
-                vi.rebuild();
+                final VariableInspector vi = editor.variableInspector();
+                // first get data
+                final List<DefaultMutableTreeNode> stackTrace = getStackTrace(t);
+                final List<VariableNode> locals = getLocals(t, 0);
+                final String currentLocation = currentLocation(t);
+                final List<VariableNode> thisFields = getThisFields(t, 0, true);
+                final List<VariableNode> declaredThisFields = getThisFields(t, 0, false);
+                final String thisName = thisName(t);
+                // now update asynchronously
+                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        //System.out.println("updating vi. from EDT: " + javax.swing.SwingUtilities.isEventDispatchThread());
+                        vi.updateCallStack(stackTrace, "Call Stack");
+                        vi.updateLocals(locals, "Locals at " + currentLocation);
+                        vi.updateThisFields(thisFields, "Class " + thisName);
+                        vi.updateDeclaredThisFields(declaredThisFields, "Class " + thisName);
+                        vi.unlock(); // need to do this before rebuilding, otherwise we get these ... dots in the labels
+                        vi.rebuild();
+                    }
+                });
             }
         } catch (IncompatibleThreadStateException ex) {
             Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
