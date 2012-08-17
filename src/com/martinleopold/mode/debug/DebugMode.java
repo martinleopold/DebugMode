@@ -61,6 +61,10 @@ public class DebugMode extends JavaMode {
         } else {
             logger.setLevel(Level.WARNING);
         }
+
+        // Fetch examples from java mode
+        // thx to Manindra (https://github.com/martinleopold/DebugMode/issues/4)
+        examplesFolder = Base.getContentFile("modes/java/examples");
     }
 
     /**

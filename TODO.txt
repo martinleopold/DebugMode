@@ -514,19 +514,19 @@ x override buildModeMenu() in Editor, instead of manual menu creation.
 	-> this is a feature (auto scroll on expand)
 * debug doesn't properly restart the session. stopDebug() needs to wait for vmdisconnected
 1.8.
-! https://github.com/martinleopold/DebugMode/issues/3
+x https://github.com/martinleopold/DebugMode/issues/3
 	Exception in thread "AWT-EventQueue-0" com.sun.jdi.ObjectCollectedException
 	at com.sun.tools.jdi.JDWPException.toJDIException(JDWPException.java:27)
 	at com.sun.tools.jdi.ObjectReferenceImpl.referenceType(ObjectReferenceImpl.java:139)
 	at com.martinleopold.mode.debug.VariableNode.getAllowsChildren(Unknown Source)
 	at com.martinleopold.mode.debug.VariableNode.isLeaf(Unknown Source)
 2.8.
-* standard examples do not appear in debug mode
+x standard examples do not appear in debug mode
 8.8.
 x set breakpoint (menu item) -> can produce duplicate breakpoints
 12.8.
 * sorting by value doesn't work inside Processing folder
-* multiple steps when nodes expanded...
+x multiple steps when nodes expanded...
 	Exception in thread "AWT-EventQueue-0" java.lang.IndexOutOfBoundsException: Index: 8, Size: 3
 	at java.util.ArrayList.RangeCheck(ArrayList.java:547)
 	at java.util.ArrayList.get(ArrayList.java:322)
@@ -546,8 +546,9 @@ Exception in thread "AWT-EventQueue-0" java.lang.StringIndexOutOfBoundsException
 	at processing.app.syntax.JEditTextArea.updateBracketHighlight(JEditTextArea.java:2002)
 	at processing.app.syntax.JEditTextArea.select(JEditTextArea.java:1211)
 14.8.
-* current line marker is lost, when moving lines above it
-
+x current line marker is lost, when moving lines above it
+16.8.
+* editor doesn't scroll on breakpoint hit?
 
 
 BUGS:
@@ -565,13 +566,13 @@ BUGS:
 	at processing.app.syntax.TextAreaPainter.paintSyntaxLine(TextAreaPainter.java:625)
 	at processing.app.syntax.TextAreaPainter.paintLine(TextAreaPainter.java:588)
 	at com.martinleopold.mode.debug.TextAreaPainter.paintLine(Unknown Source)
-! https://github.com/martinleopold/DebugMode/issues/3
+x https://github.com/martinleopold/DebugMode/issues/3
 	Exception in thread "AWT-EventQueue-0" com.sun.jdi.ObjectCollectedException
 	at com.sun.tools.jdi.JDWPException.toJDIException(JDWPException.java:27)
 	at com.sun.tools.jdi.ObjectReferenceImpl.referenceType(ObjectReferenceImpl.java:139)
 	at com.martinleopold.mode.debug.VariableNode.getAllowsChildren(Unknown Source)
 	at com.martinleopold.mode.debug.VariableNode.isLeaf(Unknown Source)
-* multiple steps when nodes expanded...
+x multiple steps when nodes expanded...
 	Exception in thread "AWT-EventQueue-0" java.lang.IndexOutOfBoundsException: Index: 8, Size: 3
 	at java.util.ArrayList.RangeCheck(ArrayList.java:547)
 	at java.util.ArrayList.get(ArrayList.java:322)
@@ -588,8 +589,10 @@ BUGS:
 
 
 UX BUGS:
-* current line marker is lost, when moving lines above it
-* standard examples do not appear in debug mode
+! editor doesn't scroll on breakpoint hit?
+
+x current line marker is lost, when moving lines above it
+x standard examples do not appear in debug mode
 * toggling var insp. shouldn't focus var insp. window
 
 * line highlight on first line doesn't move down
