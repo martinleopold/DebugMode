@@ -593,6 +593,7 @@ UX BUGS:
 
 x current line marker is lost, when moving lines above it
 x standard examples do not appear in debug mode
+x Width of breakpoint bar increases on Windows
 * toggling var insp. shouldn't focus var insp. window
 
 * line highlight on first line doesn't move down

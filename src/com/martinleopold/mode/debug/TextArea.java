@@ -19,6 +19,7 @@ package com.martinleopold.mode.debug;
 
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.FontMetrics;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -40,7 +41,6 @@ public class TextArea extends JEditTextArea {
     // line properties
     protected Map<Integer, Color> lineColors = new HashMap(); // contains line background colors
     // left-hand gutter properties
-    protected final int gutterChars = 2; // # of gutter characters characters
     protected final int gutterMargins = 3; // [px] space added to the left and right of gutter chars
     protected final Color gutterBgColor = new Color(252, 252, 252); // gutter background color
     protected final Color gutterLineColor = new Color(233, 233, 233); // color of vertical seperation line
@@ -86,7 +86,9 @@ public class TextArea extends JEditTextArea {
      * @return gutter width in pixels
      */
     protected int getGutterWidth() {
-        return gutterChars * painter.getFontMetrics().getMaxAdvance() + 2 * gutterMargins;
+        FontMetrics fm = painter.getFontMetrics();
+        int textWidth = Math.max(fm.stringWidth(DebugEditor.BREAKPOINT_MARKER), fm.stringWidth(DebugEditor.CURRENT_LINE_MARKER));
+        return textWidth + 2 * gutterMargins;
     }
 
     /**
