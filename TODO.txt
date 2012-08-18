@@ -281,7 +281,7 @@ list of knows issues, upcoming features
 
 
 PROTOTYPE 6:
-iteration/final polish/wrap up
+gsoc wrap up
 goal: 13.8.2012
 
 x loose dependency on core hack
@@ -289,22 +289,31 @@ x UI
 	x maintain node expansions and scroll position in variable inspector
 	x clickable left gutter (toggle breakpoints)
 	x rework toolbar icons
+	x properly gray out folder icons
 x save bps with sketch (comment annotation, another file?)
 
 goal: 20.8.2012
-* list of known bugs (open issues)
-	* prioritize
-	* fix if possible
+x list of known bugs (open issues)
+	x java mode examples
+	x EDT fix (fixes exceptions on variable inspector update)
+	x breakpoint bar width on windows
+x update javadocs
+* update readme for gsoc
+* update processing svn
+
+
+PROTOTYPE 7:
+community testing release
 * keyboard shortcuts
 	* debug
 	* step
 	* continue
-* update javadocs
 * revise logging
 	* logfiles ?
 	* show fatal errors in p5 console?
 * tutorial
 * project mini site. download, infos, tutorials
+
 
 
 FUTURE:
