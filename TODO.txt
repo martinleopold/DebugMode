@@ -298,8 +298,8 @@ x list of known bugs (open issues)
 	x EDT fix (fixes exceptions on variable inspector update)
 	x breakpoint bar width on windows
 x update javadocs
-* update readme for gsoc
-* update processing svn
+x update readme for gsoc
+x update processing svn
 
 
 PROTOTYPE 7:
@@ -320,7 +320,7 @@ FUTURE:
 ? switch to advanced mode
 ? support p5 types
 	color: show rgb values
-	PImage: 
+	PImage:
 	etc
 
 
