@@ -53,37 +53,39 @@ public class DebugMode extends JavaMode {
             }
         }
 
-        // output version from manifest file
-        Package p = DebugMode.class.getPackage();
-        String titleAndVersion = p.getImplementationTitle() + " (v" + p.getImplementationVersion() + ")";
-        //System.out.println(titleAndVersion);
-        Logger.getLogger(DebugMode.class.getName()).log(Level.INFO, titleAndVersion);
+        // Fetch examples from java mode
+        // thx to Manindra (https://github.com/martinleopold/DebugMode/issues/4)
+        examplesFolder = Base.getContentFile("modes/java/examples");
 
         // set logging level
-        Logger logger = Logger.getLogger("");
+        Logger globalLogger = Logger.getLogger("");
         //Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME); // doesn't work on os x
         if (VERBOSE_LOGGING) {
-            logger.setLevel(Level.INFO);
+            globalLogger.setLevel(Level.INFO);
         } else {
-            logger.setLevel(Level.WARNING);
+            globalLogger.setLevel(Level.WARNING);
         }
 
         // enable logging to file
         try {
             File logFile = getContentFile("logs/DebugMode.%g.log");
             File logFolder = logFile.getParentFile();
-            if (!logFolder.exists()) logFolder.mkdir();
+            if (!logFolder.exists()) {
+                logFolder.mkdir();
+            }
             Handler handler = new FileHandler(logFile.getAbsolutePath(), LOG_SIZE, 10, false);
-            logger.addHandler(handler);
+            globalLogger.addHandler(handler);
         } catch (IOException ex) {
             Logger.getLogger(DebugMode.class.getName()).log(Level.SEVERE, null, ex);
         } catch (SecurityException ex) {
             Logger.getLogger(DebugMode.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        // Fetch examples from java mode
-        // thx to Manindra (https://github.com/martinleopold/DebugMode/issues/4)
-        examplesFolder = Base.getContentFile("modes/java/examples");
+        // output version from manifest file
+        Package p = DebugMode.class.getPackage();
+        String titleAndVersion = p.getImplementationTitle() + " (v" + p.getImplementationVersion() + ")";
+        //System.out.println(titleAndVersion);
+        Logger.getLogger(DebugMode.class.getName()).log(Level.INFO, titleAndVersion);
     }
 
     /**
