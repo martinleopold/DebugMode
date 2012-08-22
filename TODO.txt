@@ -558,6 +558,10 @@ Exception in thread "AWT-EventQueue-0" java.lang.StringIndexOutOfBoundsException
 x current line marker is lost, when moving lines above it
 16.8.
 * editor doesn't scroll on breakpoint hit?
+22.8.
+* remove #clicked menu item text
+* focus main window when toggling var. inspector (to properly enable "I" shortcut)
+* focus main window on breakpoint hit (prevents effective use of shortcuts)
 
 
 BUGS:
@@ -630,7 +634,7 @@ REQUESTS:
 * Editor: method to get caret line, without using getTextArea().getCaretLine() (for future releases that won't use JEditTextArea)
 * JEditTextArea: allow setting TextAreaPainter. (e.g. using a factory method)
 * JEditTextArea: make ComponentHandler, MouseHandler, DragHandler protected
-! Editor.java: allow setting TextArea without overwriting class and copying/modifying constructor. copying the constructor is not easy due to protected/private fields..
+x Editor.java: allow setting TextArea without overwriting class and copying/modifying constructor. copying the constructor is not easy due to protected/private fields..
     --> factory method
 * switching modes doesn't produce a windowClosing() event at the editor. (need to override dispose() instead)
 

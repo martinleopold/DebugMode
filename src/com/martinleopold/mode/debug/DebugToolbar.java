@@ -33,18 +33,17 @@ import processing.mode.java.JavaToolbar;
  * @author Martin Leopold <m@martinleopold.com>
  */
 public class DebugToolbar extends JavaToolbar {
-    // preserve original button id's
-    /*
-     static protected final int RUN    = 0;
-     static protected final int STOP   = 1;
+    // preserve original button id's, but re-define so they are accessible (they are protected)
 
-     static protected final int NEW    = 2;
-     static protected final int OPEN   = 3;
-     static protected final int SAVE   = 4;
-     static protected final int EXPORT = 5;
-     */
+     static protected final int RUN    = 100; // change this, to be able to get it's name via getTitle()
+     static protected final int STOP   = JavaToolbar.STOP;
 
-    static protected final int DEBUG = RUN;
+     static protected final int NEW    = JavaToolbar.NEW;
+     static protected final int OPEN   = JavaToolbar.OPEN;
+     static protected final int SAVE   = JavaToolbar.SAVE;
+     static protected final int EXPORT = JavaToolbar.EXPORT;
+
+    static protected final int DEBUG = JavaToolbar.RUN;
     static protected final int CONTINUE = 101;
     static protected final int STEP = 102;
     static protected final int TOGGLE_BREAKPOINT = 103;
@@ -79,8 +78,8 @@ public class DebugToolbar extends JavaToolbar {
      */
     public static String getTitle(int id, boolean shift) {
         switch (id) {
-//            case RUN:
-//                return JavaToolbar.getTitle(JavaToolbar.RUN, shift);
+            case DebugToolbar.RUN:
+                return JavaToolbar.getTitle(JavaToolbar.RUN, shift);
             case STOP:
                 return JavaToolbar.getTitle(JavaToolbar.STOP, shift);
             case NEW:
@@ -126,7 +125,7 @@ public class DebugToolbar extends JavaToolbar {
         int id = buttonId(idx); // convert index/position to button id
 
         switch (id) {
-//            case RUN:
+//            case DebugToolbar.RUN:
 //                super.handlePressed(e, JavaToolbar.RUN);
 //                break;
             case STOP:

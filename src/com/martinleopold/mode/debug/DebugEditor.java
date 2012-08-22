@@ -21,6 +21,7 @@ import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import processing.app.syntax.JEditTextArea;
 import processing.app.syntax.PdeTextAreaDefaults;
 import processing.core.PApplet;
 import processing.mode.java.JavaEditor;
+import processing.mode.java.JavaToolbar;
 
 /**
  * Main View Class. Handles the editor window including tool bar and menu. Has
@@ -146,6 +148,39 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     }
 
     /**
+     * Overrides sketch menu creation to change keyboard shortcuts from "Run".
+     *
+     * @return the sketch menu
+     */
+    @Override
+    public JMenu buildSketchMenu() {
+        JMenuItem runItem = Base.newJMenuItemShift(DebugToolbar.getTitle(DebugToolbar.RUN, false), KeyEvent.VK_R);
+        runItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleRun();
+            }
+        });
+
+        JMenuItem presentItem = new JMenuItem(DebugToolbar.getTitle(DebugToolbar.RUN, true));
+        presentItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handlePresent();
+            }
+        });
+
+        JMenuItem stopItem = new JMenuItem(DebugToolbar.getTitle(DebugToolbar.STOP, false));
+        stopItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleStop();
+            }
+        });
+        return buildSketchMenu(new JMenuItem[]{runItem, presentItem, stopItem});
+    }
+
+    /**
      * Creates the debug menu. Includes ActionListeners for the menu items.
      * Intended for adding to the menu bar.
      *
@@ -154,23 +189,23 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     protected JMenu buildDebugMenu() {
         debugMenu = new JMenu("Debug");
 
-        debugMenuItem = new JMenuItem("Debug");
+        debugMenuItem = Base.newJMenuItem("Debug", KeyEvent.VK_R);
         debugMenuItem.addActionListener(this);
-        continueMenuItem = new JMenuItem("Continue");
+        continueMenuItem = Base.newJMenuItem("Continue", KeyEvent.VK_U);
         continueMenuItem.addActionListener(this);
         stopMenuItem = new JMenuItem("Stop");
         stopMenuItem.addActionListener(this);
 
-        toggleBreakpointMenuItem = new JMenuItem("Toggle Breakpoint");
+        toggleBreakpointMenuItem = Base.newJMenuItem("Toggle Breakpoint", KeyEvent.VK_B);
         toggleBreakpointMenuItem.addActionListener(this);
         listBreakpointsMenuItem = new JMenuItem("List Breakpoints");
         listBreakpointsMenuItem.addActionListener(this);
 
-        stepOverMenuItem = new JMenuItem("Step");
+        stepOverMenuItem = Base.newJMenuItem("Step", KeyEvent.VK_J);
         stepOverMenuItem.addActionListener(this);
-        stepIntoMenuItem = new JMenuItem("Step Into");
+        stepIntoMenuItem = Base.newJMenuItemShift("Step Into", KeyEvent.VK_J);
         stepIntoMenuItem.addActionListener(this);
-        stepOutMenuItem = new JMenuItem("Step Out");
+        stepOutMenuItem = Base.newJMenuItemAlt("Step Out", KeyEvent.VK_J);
         stepOutMenuItem.addActionListener(this);
 
         printStackTraceMenuItem = new JMenuItem("Print Stack Trace");
@@ -184,7 +219,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         printThreads = new JMenuItem("Print Threads");
         printThreads.addActionListener(this);
 
-        toggleVariableInspectorMenuItem = new JMenuItem("Toggle Variable Inspector");
+        toggleVariableInspectorMenuItem = Base.newJMenuItem("Toggle Variable Inspector", KeyEvent.VK_I);
         toggleVariableInspectorMenuItem.addActionListener(this);
 
         debugMenu.add(debugMenuItem);
