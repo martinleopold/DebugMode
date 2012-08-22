@@ -259,49 +259,49 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 
         JMenuItem source = (JMenuItem) ae.getSource();
         if (source == debugMenuItem) {
-            System.out.println("# clicked debug menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Debug' menu item");
             //dmode.handleDebug(sketch, this);
             dbg.startDebug();
         } else if (source == stopMenuItem) {
-            System.out.println("# clicked stop menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Stop' menu item");
             //dmode.handleDebug(sketch, this);
             dbg.stopDebug();
         } else if (source == continueMenuItem) {
-            System.out.println("# clicked continue menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Continue' menu item");
             //dmode.handleDebug(sketch, this);
             dbg.continueDebug();
         } else if (source == stepOverMenuItem) {
-            System.out.println("# clicked step over menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Step Over' menu item");
             dbg.stepOver();
         } else if (source == stepIntoMenuItem) {
-            System.out.println("# clicked step into menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Step Into' menu item");
             dbg.stepInto();
         } else if (source == stepOutMenuItem) {
-            System.out.println("# clicked step out menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Step Out' menu item");
             dbg.stepOut();
         } else if (source == printStackTraceMenuItem) {
-            System.out.println("# clicked print stack trace menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Print Stack Trace' menu item");
             dbg.printStackTrace();
         } else if (source == printLocalsMenuItem) {
-            System.out.println("# clicked print locals menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Print Locals' menu item");
             dbg.printLocals();
         } else if (source == printThisMenuItem) {
-            System.out.println("# clicked print this menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Print This' menu item");
             dbg.printThis();
         } else if (source == printSourceMenuItem) {
-            System.out.println("# clicked print source menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Print Source' menu item");
             dbg.printSource();
         } else if (source == printThreads) {
-            System.out.println("# clicked print threads menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Print Threads' menu item");
             dbg.printThreads();
         } else if (source == toggleBreakpointMenuItem) {
-            System.out.println("# clicked toggle breakpoint menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Toggle Breakpoint' menu item");
             dbg.toggleBreakpoint();
         } else if (source == listBreakpointsMenuItem) {
-            System.out.println("# clicked list breakpoints menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'List Breakpoints' menu item");
             dbg.listBreakpoints();
         } else if (source == toggleVariableInspectorMenuItem) {
-            System.out.println("# clicked toggle variable inspector menu item");
+            Logger.getLogger(DebugEditor.class.getName()).log(Level.INFO, "Invoked 'Toggle Variable Inspector' menu item");
             toggleVariableInspector();
         }
     }
