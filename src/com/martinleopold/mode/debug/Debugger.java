@@ -544,7 +544,6 @@ public class Debugger implements VMEventListener {
                         customClassPrepare.addClassFilter(tab.getPrettyName());
                         customClassPrepare.enable();
                     }
-
                 }
 
                 runtime.vm().resume();

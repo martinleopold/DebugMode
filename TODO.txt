@@ -560,8 +560,8 @@ x current line marker is lost, when moving lines above it
 * editor doesn't scroll on breakpoint hit?
 22.8.
 x remove #clicked menu item text
-* focus main window when toggling var. inspector (to properly enable "I" shortcut)
-* focus main window on breakpoint hit (prevents effective use of shortcuts)
+x focus main window when toggling var. inspector (to properly enable "I" shortcut)
+* focus processing application debuggee start (prevents effective use of shortcuts)
 
 
 BUGS:
