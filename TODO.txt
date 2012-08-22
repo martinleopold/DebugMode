@@ -304,13 +304,13 @@ x update processing svn
 
 PROTOTYPE 7:
 community testing release
-* keyboard shortcuts
-	* debug
-	* step
-	* continue
-* revise logging
-	* logfile ?
-	* show fatal errors in p5 console?
+x keyboard shortcuts
+	x debug
+	x step
+	x continue
+x revise logging
+	x logfile
+	/ show fatal errors in p5 console?
 * tutorial
 * project mini site. download, infos, tutorials
 
@@ -611,8 +611,6 @@ ENHANCEMENTS:
 * rethink: isPaused() vs. isBusy()
 * stepping out of setup doesn't stop in draw() (should it?)
 * VMEventReader should reset things too, on disconnect? (to avoid invalid states…)
-* keyboard shortcuts
-	set breakpoints
 * continue, step should do nothing when no dbg session is active
 * indicate debugger status somewhere (off, busy, suspended)
 

@@ -19,6 +19,8 @@ package com.martinleopold.mode.debug;
 
 import java.awt.Image;
 import java.awt.event.MouseEvent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import processing.app.Base;
 import processing.app.Editor;
 import processing.mode.java.JavaToolbar;
@@ -129,37 +131,48 @@ public class DebugToolbar extends JavaToolbar {
 //                super.handlePressed(e, JavaToolbar.RUN);
 //                break;
             case STOP:
+                Logger.getLogger(DebugToolbar.class.getName()).log(Level.INFO, "Invoked 'Stop' toolbar button");
                 super.handlePressed(e, JavaToolbar.STOP);
                 break;
             case NEW:
+                Logger.getLogger(DebugToolbar.class.getName()).log(Level.INFO, "Invoked 'New' toolbar button");
                 super.handlePressed(e, JavaToolbar.NEW);
                 break;
             case OPEN:
+                Logger.getLogger(DebugToolbar.class.getName()).log(Level.INFO, "Invoked 'Open' toolbar button");
                 super.handlePressed(e, JavaToolbar.OPEN);
                 break;
             case SAVE:
+                Logger.getLogger(DebugToolbar.class.getName()).log(Level.INFO, "Invoked 'Save' toolbar button");
                 super.handlePressed(e, JavaToolbar.SAVE);
                 break;
             case EXPORT:
+                Logger.getLogger(DebugToolbar.class.getName()).log(Level.INFO, "Invoked 'Export' toolbar button");
                 super.handlePressed(e, JavaToolbar.EXPORT);
                 break;
             case DEBUG:
                 if (shift) {
+                    Logger.getLogger(DebugToolbar.class.getName()).log(Level.INFO, "Invoked 'Run' toolbar button");
                     deditor.handleRun();
                 } else {
+                    Logger.getLogger(DebugToolbar.class.getName()).log(Level.INFO, "Invoked 'Debug' toolbar button");
                     deditor.dbg.startDebug();
                 }
                 break;
             case CONTINUE:
+                Logger.getLogger(DebugToolbar.class.getName()).log(Level.INFO, "Invoked 'Continue' toolbar button");
                 deditor.dbg.continueDebug();
                 break;
             case TOGGLE_BREAKPOINT:
+                Logger.getLogger(DebugToolbar.class.getName()).log(Level.INFO, "Invoked 'Toggle Breakpoint' toolbar button");
                 deditor.dbg.toggleBreakpoint();
                 break;
             case STEP:
                 if (shift) {
+                    Logger.getLogger(DebugToolbar.class.getName()).log(Level.INFO, "Invoked 'Step Into' toolbar button");
                     deditor.dbg.stepInto();
                 } else {
+                    Logger.getLogger(DebugToolbar.class.getName()).log(Level.INFO, "Invoked 'Step' toolbar button");
                     deditor.dbg.stepOver();
                 }
                 break;
@@ -170,6 +183,7 @@ public class DebugToolbar extends JavaToolbar {
 //                deditor.dbg.stepOut();
 //                break;
             case TOGGLE_VAR_INSPECTOR:
+                Logger.getLogger(DebugToolbar.class.getName()).log(Level.INFO, "Invoked 'Variable Inspector' toolbar button");
                 deditor.toggleVariableInspector();
                 break;
         }

@@ -18,6 +18,9 @@
 package com.martinleopold.mode.debug;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import processing.app.Base;
@@ -33,6 +36,7 @@ import processing.mode.java.JavaMode;
 public class DebugMode extends JavaMode {
 
     public static final boolean VERBOSE_LOGGING = true;
+    public static final int LOG_SIZE = 524288; // max log file size (in bytes)
 
     // important inherited fields:
     // protected Base base;
@@ -51,15 +55,30 @@ public class DebugMode extends JavaMode {
 
         // output version from manifest file
         Package p = DebugMode.class.getPackage();
-        System.out.println(p.getImplementationTitle() + " (v" + p.getImplementationVersion() + ")");
+        String titleAndVersion = p.getImplementationTitle() + " (v" + p.getImplementationVersion() + ")";
+        //System.out.println(titleAndVersion);
+        Logger.getLogger(DebugMode.class.getName()).log(Level.INFO, titleAndVersion);
 
         // set logging level
         Logger logger = Logger.getLogger("");
         //Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME); // doesn't work on os x
         if (VERBOSE_LOGGING) {
-            logger.setLevel(Level.ALL);
+            logger.setLevel(Level.INFO);
         } else {
             logger.setLevel(Level.WARNING);
+        }
+
+        // enable logging to file
+        try {
+            File logFile = getContentFile("logs/DebugMode.%g.log");
+            File logFolder = logFile.getParentFile();
+            if (!logFolder.exists()) logFolder.mkdir();
+            Handler handler = new FileHandler(logFile.getAbsolutePath(), LOG_SIZE, 10, false);
+            logger.addHandler(handler);
+        } catch (IOException ex) {
+            Logger.getLogger(DebugMode.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SecurityException ex) {
+            Logger.getLogger(DebugMode.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         // Fetch examples from java mode
