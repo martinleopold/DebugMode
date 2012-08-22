@@ -545,7 +545,7 @@ x multiple steps when nodes expanded...
 	at javax.swing.tree.FixedHeightLayoutCache$SearchInfo.getPath(FixedHeightLayoutCache.java:1448)
 	at javax.swing.tree.FixedHeightLayoutCache.getPathForRow(FixedHeightLayoutCache.java:193)
 	at org.netbeans.swing.outline.DefaultOutlineCellRenderer.getTableCellRendererComponent(DefaultOutlineCellRenderer.java:253)
-* indicate debugger status somewhere (off, busy, suspended)
+x indicate debugger status somewhere (off, busy, suspended)
 13.8.
 * deleting a line doesn't remove a breakpoint
 * multiple tabs, selecting, fast switching… (not clearly reproducible)
@@ -557,7 +557,7 @@ Exception in thread "AWT-EventQueue-0" java.lang.StringIndexOutOfBoundsException
 14.8.
 x current line marker is lost, when moving lines above it
 16.8.
-* editor doesn't scroll on breakpoint hit?
+* editor sometimes doesn't scroll on breakpoint hit (in combination with tab switching)
 22.8.
 x remove #clicked menu item text
 x focus main window when toggling var. inspector (to properly enable "I" shortcut)
@@ -588,8 +588,6 @@ BUGS:
 UX BUGS:
 ! editor sometimes doesn't scroll on breakpoint hit (in combination with tab switching)
 
-* toggling var insp. maybe shouldn't focus var insp. window
-
 * line highlight on first line doesn't move down
 * deleting a line doesn't remove a breakpoint
 * debug button highlight not working
@@ -612,7 +610,6 @@ ENHANCEMENTS:
 * stepping out of setup doesn't stop in draw() (should it?)
 * VMEventReader should reset things too, on disconnect? (to avoid invalid states…)
 * continue, step should do nothing when no dbg session is active
-* indicate debugger status somewhere (off, busy, suspended)
 
 
 

@@ -160,6 +160,9 @@ public class Debugger implements VMEventListener {
             return; // do nothing
         }
 
+        // we are busy now
+        editor.statusBusy();
+
         // clear console
         editor.clearConsole();
 
@@ -212,6 +215,7 @@ public class Debugger implements VMEventListener {
                  */
 
                 startTrackingLineChanges();
+                editor.statusBusy();
             }
         } catch (Exception e) {
             editor.statusError(e);
@@ -238,6 +242,7 @@ public class Debugger implements VMEventListener {
         editor.toolbar().deactivate(DebugToolbar.DEBUG);
         editor.toolbar().deactivate(DebugToolbar.CONTINUE);
         editor.toolbar().deactivate(DebugToolbar.STEP);
+        editor.statusEmpty();
     }
 
     /**
@@ -254,6 +259,7 @@ public class Debugger implements VMEventListener {
         } else if (isPaused()) {
             runtime.vm().resume();
             paused = false;
+            editor.statusBusy();
         }
     }
 
@@ -276,6 +282,7 @@ public class Debugger implements VMEventListener {
             requestedStep.enable();
             paused = false;
             runtime.vm().resume();
+            editor.statusBusy();
         }
     }
 
@@ -600,6 +607,7 @@ public class Debugger implements VMEventListener {
                 resumeOtherThreads(currentThread);
 
                 paused = true;
+                editor.statusHalted();
             } else if (e instanceof StepEvent) {
                 StepEvent se = (StepEvent) e;
                 currentThread = se.thread();
@@ -621,6 +629,7 @@ public class Debugger implements VMEventListener {
                 mgr.deleteEventRequest(se.request());
                 requestedStep = null; // mark that there is no step request pending
                 paused = true;
+                editor.statusHalted();
 
                 // disallow stepping into invisible lines
                 if (!locationIsVisible(se.location())) {
@@ -633,6 +642,7 @@ public class Debugger implements VMEventListener {
                 stopDebug();
             } else if (e instanceof VMDeathEvent) {
                 started = false;
+                editor.statusEmpty();
             }
         }
     }

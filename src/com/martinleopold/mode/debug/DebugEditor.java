@@ -880,4 +880,12 @@ public class DebugEditor extends JavaEditor implements ActionListener {
             dbg.toggleBreakpoint(lineIdx);
         }
     }
+
+    public void statusBusy() {
+        statusNotice("Debugger busy...");
+    }
+
+    public void statusHalted() {
+        statusNotice("Debugger halted.");
+    }
 }
