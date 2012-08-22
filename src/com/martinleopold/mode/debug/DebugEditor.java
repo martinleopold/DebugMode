@@ -626,7 +626,9 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      * Toggle visibility of the variable inspector window.
      */
     public void toggleVariableInspector() {
+        vi.setFocusableWindowState(false); // to not get focus when set visible
         vi.setVisible(!vi.isVisible());
+        vi.setFocusableWindowState(true); // allow to get focus again
     }
 
     /**
