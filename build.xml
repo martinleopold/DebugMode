@@ -6,7 +6,7 @@
     <property name="lib.name" 	value="DebugMode" />
 
     <!-- version -->
-    <property name="release" 	value="0.6" />
+    <property name="release" 	value="0.7" />
 
     <!-- java version -->
     <property name="java.target.version" value="1.6" />
@@ -52,8 +52,11 @@
         BUILD
     - - - - - - - - - - - - - - - - - - - - - - - -->
     <target name="build">
-        <propertyfile file="build.number" /> <!-- create the build.number file if it doesn't exist -->
+        <propertyfile file="build.number"> <!-- create file if it doesn't exist. add release version -->
+            <entry key="release" value="${release}" />
+        </propertyfile>
         <buildnumber file="build.number" /> <!-- increment build number -->
+
 
         <!-- insert build nos. in source code -->
         <!--
