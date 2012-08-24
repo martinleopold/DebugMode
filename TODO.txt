@@ -459,7 +459,7 @@ x hitting a breakpoint during a step + stepping again: DuplicateRequestException
 -> policy: when breakpoint hit during step: cancel step, cause we stopped anyway (only finer grained)
 * in stacktrace indicate if in native or static method
 x add/rem a bp on the current line: messes up line highlight colors (-> color stacking system!)
-* debugging w/2 editors open, focusing second (empty) editor just after hitting debug on first:
+x debugging w/2 editors open, focusing second (empty) editor just after hitting debug on first:
 	Exception in thread "AWT-EventQueue-0" java.lang.IllegalArgumentException: Bounds out of range: 32,47 [32]
 	at processing.app.syntax.JEditTextArea.select(JEditTextArea.java:1193)
 	at processing.app.syntax.JEditTextArea$DragHandler.mouseDragged(JEditTextArea.java:2313)
@@ -477,8 +477,8 @@ x gutter fg color, bg color, per line. general bg color, trennlinie?
 / change logger console format to something more readable
 x allow setting log-level
 5.7.2012
-* sporadic while switching tabs (breakpoint hits,…):
-java.lang.ArrayIndexOutOfBoundsException: 344
+x sporadic while switching tabs (breakpoint hits,…):
+	java.lang.ArrayIndexOutOfBoundsException: 344
 	at javax.swing.text.Utilities.drawTabbedText(Utilities.java:132)
 	at javax.swing.text.Utilities.drawTabbedText(Utilities.java:89)
 	at javax.swing.text.Utilities.drawTabbedText(Utilities.java:67)
@@ -545,11 +545,11 @@ x multiple steps when nodes expanded...
 	at javax.swing.tree.FixedHeightLayoutCache$SearchInfo.getPath(FixedHeightLayoutCache.java:1448)
 	at javax.swing.tree.FixedHeightLayoutCache.getPathForRow(FixedHeightLayoutCache.java:193)
 	at org.netbeans.swing.outline.DefaultOutlineCellRenderer.getTableCellRendererComponent(DefaultOutlineCellRenderer.java:253)
-x indicate debugger status somewhere (off, busy, suspended)
+* indicate debugger status somewhere (off, busy, suspended)
 13.8.
 * deleting a line doesn't remove a breakpoint
 * multiple tabs, selecting, fast switching… (not clearly reproducible)
-Exception in thread "AWT-EventQueue-0" java.lang.StringIndexOutOfBoundsException: String index out of range: 46
+	Exception in thread "AWT-EventQueue-0" java.lang.StringIndexOutOfBoundsException: String index out of range: 46
 	at java.lang.String.charAt(String.java:686)
 	at processing.app.syntax.Brackets.findMatchingBracket(Brackets.java:69)
 	at processing.app.syntax.JEditTextArea.updateBracketHighlight(JEditTextArea.java:2002)
@@ -562,23 +562,44 @@ x current line marker is lost, when moving lines above it
 x remove #clicked menu item text
 x focus main window when toggling var. inspector (to properly enable "I" shortcut)
 * focus processing application debuggee start (prevents effective use of shortcuts)
+23.8.
+* debugging w/2 editors open, focus-spamming second (empty) editor just after hitting debug on first:
+	Exception in thread "AWT-EventQueue-0" java.lang.ArrayIndexOutOfBoundsException: 10
+	at processing.app.syntax.JEditTextArea.xToOffset(JEditTextArea.java:675)
+	at com.martinleopold.mode.debug.TextArea.xToOffset(Unknown Source)
+	at processing.app.syntax.JEditTextArea$MouseHandler.mousePressed(JEditTextArea.java:2388)
+	at com.martinleopold.mode.debug.TextArea$MouseHandler.mousePressed(Unknown Source)
+	...
+	at java.awt.EventDispatchThread.run(EventDispatchThread.java:122)
+* switching tabs while hitting continue... (sporadic)
+	SEVERE: VMEventReader quit
+	java.lang.NullPointerException
+	at com.martinleopold.mode.debug.DebugEditor.clearCurrentLine(Unknown Source)
+	at com.martinleopold.mode.debug.Debugger.continueDebug(Unknown Source)
+	at com.martinleopold.mode.debug.Debugger.stepOutIntoViewOrContinue(Unknown Source)
+	at com.martinleopold.mode.debug.Debugger.vmEvent(Unknown Source)
+	at com.martinleopold.mode.debug.VMEventReader.run(Unknown Source)
+
 
 
 BUGS:
-? debugging w/2 editors open, focusing second (empty) editor just after hitting debug on first:
-	Exception in thread "AWT-EventQueue-0" java.lang.IllegalArgumentException: Bounds out of range: 32,47 [32]
-	at processing.app.syntax.JEditTextArea.select(JEditTextArea.java:1193)
-	at processing.app.syntax.JEditTextArea$DragHandler.mouseDragged(JEditTextArea.java:2313)
-	at java.awt.AWTEventMulticaster.mouseDragged(AWTEventMulticaster.java:302)
-? sporadic while switching tabs (breakpoint hits,…):
-	java.lang.ArrayIndexOutOfBoundsException: 344
-	at javax.swing.text.Utilities.drawTabbedText(Utilities.java:132)
-	at javax.swing.text.Utilities.drawTabbedText(Utilities.java:89)
-	at javax.swing.text.Utilities.drawTabbedText(Utilities.java:67)
-	at processing.app.syntax.SyntaxUtilities.paintSyntaxLine(SyntaxUtilities.java:146)
-	at processing.app.syntax.TextAreaPainter.paintSyntaxLine(TextAreaPainter.java:625)
-	at processing.app.syntax.TextAreaPainter.paintLine(TextAreaPainter.java:588)
-	at com.martinleopold.mode.debug.TextAreaPainter.paintLine(Unknown Source)
+* debugging w/2 editors open, focus-spamming second (empty) editor just after hitting debug on first:
+	Exception in thread "AWT-EventQueue-0" java.lang.ArrayIndexOutOfBoundsException: 10
+	at processing.app.syntax.JEditTextArea.xToOffset(JEditTextArea.java:675)
+	at com.martinleopold.mode.debug.TextArea.xToOffset(Unknown Source)
+	at processing.app.syntax.JEditTextArea$MouseHandler.mousePressed(JEditTextArea.java:2388)
+	at com.martinleopold.mode.debug.TextArea$MouseHandler.mousePressed(Unknown Source)
+	...
+	at java.awt.EventDispatchThread.run(EventDispatchThread.java:122)
+
+* switching tabs while hitting continue... (sporadic)
+	SEVERE: VMEventReader quit
+	java.lang.NullPointerException
+	at com.martinleopold.mode.debug.DebugEditor.clearCurrentLine(Unknown Source)
+	at com.martinleopold.mode.debug.Debugger.continueDebug(Unknown Source)
+	at com.martinleopold.mode.debug.Debugger.stepOutIntoViewOrContinue(Unknown Source)
+	at com.martinleopold.mode.debug.Debugger.vmEvent(Unknown Source)
+	at com.martinleopold.mode.debug.VMEventReader.run(Unknown Source)
 
 ! stepping out of print(), println() returns to the same line
 	-> NullPointerException, AbsentInformation + VMMismatchException when restarting dbg
@@ -610,6 +631,7 @@ ENHANCEMENTS:
 * stepping out of setup doesn't stop in draw() (should it?)
 * VMEventReader should reset things too, on disconnect? (to avoid invalid states…)
 * continue, step should do nothing when no dbg session is active
+* indicate debugger status somewhere (off, busy, suspended)
 
 
 

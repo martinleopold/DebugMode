@@ -36,7 +36,6 @@ import processing.app.syntax.JEditTextArea;
 import processing.app.syntax.PdeTextAreaDefaults;
 import processing.core.PApplet;
 import processing.mode.java.JavaEditor;
-import processing.mode.java.JavaToolbar;
 
 /**
  * Main View Class. Handles the editor window including tool bar and menu. Has
