@@ -311,9 +311,9 @@ x keyboard shortcuts
 x revise logging
 	x logfile
 	/ show fatal errors in p5 console?
-* tutorial
-* project mini site. download, infos, tutorials
-
+x tutorial
+x project mini site. download, infos, tutorials
+x update to p5 2.0b1
 
 
 FUTURE:
