@@ -1,12 +1,10 @@
 Debugger for the PDE (Processing Development Environment)
 ---------------------------------------------------------
 
-Project Site: [http://debug.martinleopold.com](debug.martinleopold.com)<br />
+Project Site: [http://debug.martinleopold.com](http://debug.martinleopold.com)<br />
 Latest version/Repository: [https://github.com/martinleopold/DebugMode](https://github.com/martinleopold/DebugMode)<br />
 
-For Processing 2.0: [http://www.processing.org](http://www.processing.org)<br />
-
-The goal of this project is to develop a working prototype of a Debugger for the Processing Development Environment. It is implemented using the Mode framework of Processing 2.0. One of Processing's main strengths is its suitability for learning and teaching programming and generative design. Having an easy to use debugging feature available should facilitate teaching and understanding program flow in general as well as fixing actual bugs.<br />
+The goal of this project is to develop a working prototype of a Debugger for the [Processing Development Environment](http://processing.org). It is implemented using the Mode framework of Processing 2.0. One of Processing's main strengths is its suitability for learning and teaching programming and generative design. Having an easy to use debugging feature available should facilitate teaching and understanding program flow in general as well as fixing actual bugs.<br />
 
 This is free software, and you are welcome to redistribute it under certain conditions. See [GPLv2](http://www.gnu.org/licenses/gpl-2.0.html) for details.<br />
 
@@ -16,11 +14,11 @@ Supported by [Google Summer of Code 2012](http://code.google.com/soc/)
 
 Current Release Info:
 
-PROTOTYPE 7.
-Community release
+PROTOTYPE 7 (v0.7)<br />
+Community release.
 
 INSTALLATION:
-* Requires Processing 2.0b1 or later. [http://www.processing.org/download](http://www.processing.org/download)
+* Requires Processing 2.0b1 or later. ([http://www.processing.org/download](http://www.processing.org/download))
 * If not already present, create a folder named "modes" inside your Sketchbook folder. (The location of the sketchbook folder is shown in Processing's Preferences dialog)
 * Copy "dist/DebugMode" from the extracted .zip into the "modes" folder.
 * Restart Processing.
@@ -52,4 +50,3 @@ PLANNED/UPCOMING FEATURES:
 * "advanced mode" for variable inspector (shows stack trace and all local variables and fields)
 * handle processing types in some way (color, PImage, etc)
 * properly highlight debug button (seems like a processing issue?)
-
