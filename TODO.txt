@@ -316,6 +316,11 @@ x project mini site. download, infos, tutorials
 x update to p5 2.0b1
 
 
+PROTOTYPE 8:
+community requests
+x use resources/theme/theme.txt
+
+
 FUTURE:
 ? switch to advanced mode
 ? support p5 types
@@ -442,7 +447,7 @@ x line highlighting
 	x DebugEditor should provide the functions for setting the current line, not Debugger
 	x LineID is a design mess, need to restructure
 / VMDisconnectedEvent seems to be unreliable. likely synchronization problem.
-* use resources/theme/theme.txt for highlight colors (current, breakpoint)
+x use resources/theme/theme.txt for highlight colors (current, breakpoint)
 16.6.2012
 x fast stepping exception: Only one step request allowed per thread
 * toggling var insp. shouldn't focus var insp. window
@@ -625,13 +630,13 @@ UX BUGS:
 
 
 ENHANCEMENTS:
-* use resources/theme/theme.txt for highlight colors (current, breakpoint)
+x use resources/theme/theme.txt for highlight colors (current, breakpoint)
 * in stacktrace indicate if in native or static method
 * rethink: isPaused() vs. isBusy()
 * stepping out of setup doesn't stop in draw() (should it?)
 * VMEventReader should reset things too, on disconnect? (to avoid invalid states…)
 * continue, step should do nothing when no dbg session is active
-* indicate debugger status somewhere (off, busy, suspended)
+x indicate debugger status somewhere (off, busy, suspended)
 
 
 

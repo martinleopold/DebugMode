@@ -41,15 +41,16 @@ public class TextArea extends JEditTextArea {
     // line properties
     protected Map<Integer, Color> lineColors = new HashMap(); // contains line background colors
     // left-hand gutter properties
-    protected final int gutterMargins = 3; // [px] space added to the left and right of gutter chars
-    protected final Color gutterBgColor = new Color(252, 252, 252); // gutter background color
-    protected final Color gutterLineColor = new Color(233, 233, 233); // color of vertical seperation line
+    protected int gutterPadding = 3; // [px] space added to the left and right of gutter chars
+    protected Color gutterBgColor = new Color(252, 252, 252); // gutter background color
+    protected Color gutterLineColor = new Color(233, 233, 233); // color of vertical separation line
+    protected String breakpointMarker = "<>"; // the text marker for highlighting breakpoints in the gutter
+    protected String currentLineMarker = "->"; // the text marker for highlighting the current line in the gutter
     protected Map<Integer, String> gutterText = new HashMap(); // maps line index to gutter text
     protected Map<Integer, Color> gutterTextColors = new HashMap(); // maps line index to gutter text color
 
     public TextArea(TextAreaDefaults defaults, DebugEditor editor) {
         super(defaults);
-
         this.editor = editor;
 
         // replace the painter:
@@ -78,6 +79,14 @@ public class TextArea extends JEditTextArea {
         painter.addMouseMotionListener(mouseHandler);
 
         add(CENTER, painter);
+
+        // load settings from theme.txt
+        DebugMode theme = (DebugMode) editor.getMode();
+        gutterBgColor = theme.loadColorFromTheme("gutter.bgcolor", gutterBgColor);
+        gutterLineColor = theme.loadColorFromTheme("gutter.linecolor", gutterLineColor);
+        gutterPadding = theme.getInteger("gutter.padding");
+        breakpointMarker = theme.loadStringFromTheme("breakpoint.marker", breakpointMarker);
+        currentLineMarker = theme.loadStringFromTheme("currentline.marker", currentLineMarker);
     }
 
     /**
@@ -87,8 +96,12 @@ public class TextArea extends JEditTextArea {
      */
     protected int getGutterWidth() {
         FontMetrics fm = painter.getFontMetrics();
-        int textWidth = Math.max(fm.stringWidth(DebugEditor.BREAKPOINT_MARKER), fm.stringWidth(DebugEditor.CURRENT_LINE_MARKER));
-        return textWidth + 2 * gutterMargins;
+//        System.out.println("fm: " + (fm == null));
+//        System.out.println("editor: " + (editor == null));
+        //System.out.println("BPBPBPBPB: " + (editor.breakpointMarker == null));
+
+        int textWidth = Math.max(fm.stringWidth(breakpointMarker), fm.stringWidth(currentLineMarker));
+        return textWidth + 2 * gutterPadding;
     }
 
     /**
@@ -98,7 +111,7 @@ public class TextArea extends JEditTextArea {
      * @return margins in pixels
      */
     protected int getGutterMargins() {
-        return gutterMargins;
+        return gutterPadding;
     }
 
     /**

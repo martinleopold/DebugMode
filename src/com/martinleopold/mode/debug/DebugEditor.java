@@ -51,12 +51,10 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     //protected EditorToolbar toolbar;
 
     // highlighting
-    public static final Color BREAKPOINT_COLOR = new Color(240, 240, 240); // the background color for highlighting lines
-    public static final Color CURRENT_LINE_COLOR = new Color(255, 255, 150); // the background color for highlighting lines
-    public static final String BREAKPOINT_MARKER = "<>"; // the text marker for highlighting breakpoints in the gutter
-    public static final String CURRENT_LINE_MARKER = "->"; // the text marker for highlighting the current line in the gutter
-    public static final Color BREAKPOINT_MARKER_COLOR = new Color(74, 84, 94); // the color of breakpoint gutter markers
-    public static final Color CURRENT_LINE_MARKER_COLOR = new Color(226, 117, 0); // the color of current line gutter markers
+    protected Color breakpointColor = new Color(240, 240, 240); // the background color for highlighting lines
+    protected Color currentLineColor = new Color(255, 255, 150); // the background color for highlighting lines
+    protected Color breakpointMarkerColor = new Color(74, 84, 94); // the color of breakpoint gutter markers
+    protected Color currentLineMarkerColor = new Color(226, 117, 0); // the color of current line gutter markers
     protected List<LineHighlight> breakpointedLines = new ArrayList(); // breakpointed lines
     protected LineHighlight currentLine; // line the debugger is currently suspended at
     protected final String breakpointMarkerComment = " //<>//"; // breakpoint marker comment
@@ -109,6 +107,13 @@ public class DebugEditor extends JavaEditor implements ActionListener {
 //                onWindowClosing(e);
 //            }
 //        });
+
+        // load settings from theme.txt
+        DebugMode theme = dmode;
+        breakpointColor = theme.loadColorFromTheme("breakpoint.bgcolor", breakpointColor);
+        breakpointMarkerColor = theme.loadColorFromTheme("breakpoint.marker.color", breakpointMarkerColor);
+        currentLineColor = theme.loadColorFromTheme("currentline.bgcolor", currentLineColor);
+        currentLineMarkerColor = theme.loadColorFromTheme("currentline.marker.color", currentLineMarkerColor);
 
         // set breakpoints from marker comments
         for (LineID lineID : stripBreakpointComments()) {
@@ -657,8 +662,8 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         // scroll to line, by setting the cursor
         cursorToLineStart(line.lineIdx());
         // highlight line
-        currentLine = new LineHighlight(line.lineIdx(), CURRENT_LINE_COLOR, this);
-        currentLine.setMarker(CURRENT_LINE_MARKER, CURRENT_LINE_MARKER_COLOR);
+        currentLine = new LineHighlight(line.lineIdx(), currentLineColor, this);
+        currentLine.setMarker(ta.currentLineMarker, currentLineMarkerColor);
         currentLine.setPriority(10); // fixes current line being hidden by the breakpoint when moved down
     }
 
@@ -687,8 +692,8 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      * @param lineID the line id to highlight as breakpointed
      */
     public void addBreakpointedLine(LineID lineID) {
-        LineHighlight hl = new LineHighlight(lineID, BREAKPOINT_COLOR, this);
-        hl.setMarker(BREAKPOINT_MARKER, BREAKPOINT_MARKER_COLOR);
+        LineHighlight hl = new LineHighlight(lineID, breakpointColor, this);
+        hl.setMarker(ta.breakpointMarker, breakpointMarkerColor);
         breakpointedLines.add(hl);
         // repaint current line if it's on this line
         if (currentLine != null && currentLine.lineID().equals(lineID)) {

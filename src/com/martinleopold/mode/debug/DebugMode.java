@@ -17,6 +17,7 @@
  */
 package com.martinleopold.mode.debug;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.FileHandler;
@@ -106,6 +107,7 @@ public class DebugMode extends JavaMode {
     public processing.app.Editor createEditor(Base base, String path, EditorState state) {
         return new DebugEditor(base, path, state, this);
     }
+
     /**
      * Returns the default extension for this editor setup.
      */
@@ -125,4 +127,38 @@ public class DebugMode extends JavaMode {
     /*
      * @Override public String[] getIgnorable() { return null; }
      */
+    /**
+     * Load a String value from theme.txt
+     *
+     * @param attribute the attribute key to load
+     * @param defaultValue the default value
+     * @return the attributes value, or the default value if the attribute
+     * couldn't be loaded
+     */
+    public String loadStringFromTheme(String attribute, String defaultValue) {
+        String newString = theme.get(attribute);
+        if (newString != null) {
+            return newString;
+        }
+        Logger.getLogger(DebugMode.class.getName()).log(Level.WARNING, "Error loading String: {0}", attribute);
+        return defaultValue;
+    }
+
+    /**
+     * Load a Color value from theme.txt
+     *
+     * @param attribute the attribute key to load
+     * @param defaultValue the default value
+     * @return the attributes value, or the default value if the attribute
+     * couldn't be loaded
+     */
+    public Color loadColorFromTheme(String attribute, Color defaultValue) {
+        Color newColor = theme.getColor(attribute);
+        if (newColor != null) {
+            return newColor;
+        }
+        System.out.println("error loading color: " + attribute);
+        Logger.getLogger(DebugMode.class.getName()).log(Level.WARNING, "Error loading Color: {0}", attribute);
+        return defaultValue;
+    }
 }
