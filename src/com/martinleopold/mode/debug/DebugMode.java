@@ -54,9 +54,11 @@ public class DebugMode extends JavaMode {
             }
         }
 
-        // Fetch examples from java mode
+        // Fetch examples and reference from java mode
         // thx to Manindra (https://github.com/martinleopold/DebugMode/issues/4)
         examplesFolder = Base.getContentFile("modes/java/examples");
+        // https://github.com/martinleopold/DebugMode/issues/6
+        referenceFolder = Base.getContentFile("modes/java/reference");
 
         // set logging level
         Logger globalLogger = Logger.getLogger("");
