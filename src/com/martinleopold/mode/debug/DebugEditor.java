@@ -158,7 +158,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
      */
     @Override
     public JMenu buildSketchMenu() {
-        JMenuItem runItem = Base.newJMenuItemShift(DebugToolbar.getTitle(DebugToolbar.RUN, false), KeyEvent.VK_R);
+        JMenuItem runItem = Toolkit.newJMenuItemShift(DebugToolbar.getTitle(DebugToolbar.RUN, false), KeyEvent.VK_R);
         runItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -193,23 +193,23 @@ public class DebugEditor extends JavaEditor implements ActionListener {
     protected JMenu buildDebugMenu() {
         debugMenu = new JMenu("Debug");
 
-        debugMenuItem = Base.newJMenuItem("Debug", KeyEvent.VK_R);
+        debugMenuItem = Toolkit.newJMenuItem("Debug", KeyEvent.VK_R);
         debugMenuItem.addActionListener(this);
-        continueMenuItem = Base.newJMenuItem("Continue", KeyEvent.VK_U);
+        continueMenuItem = Toolkit.newJMenuItem("Continue", KeyEvent.VK_U);
         continueMenuItem.addActionListener(this);
         stopMenuItem = new JMenuItem("Stop");
         stopMenuItem.addActionListener(this);
 
-        toggleBreakpointMenuItem = Base.newJMenuItem("Toggle Breakpoint", KeyEvent.VK_B);
+        toggleBreakpointMenuItem = Toolkit.newJMenuItem("Toggle Breakpoint", KeyEvent.VK_B);
         toggleBreakpointMenuItem.addActionListener(this);
         listBreakpointsMenuItem = new JMenuItem("List Breakpoints");
         listBreakpointsMenuItem.addActionListener(this);
 
-        stepOverMenuItem = Base.newJMenuItem("Step", KeyEvent.VK_J);
+        stepOverMenuItem = Toolkit.newJMenuItem("Step", KeyEvent.VK_J);
         stepOverMenuItem.addActionListener(this);
-        stepIntoMenuItem = Base.newJMenuItemShift("Step Into", KeyEvent.VK_J);
+        stepIntoMenuItem = Toolkit.newJMenuItemShift("Step Into", KeyEvent.VK_J);
         stepIntoMenuItem.addActionListener(this);
-        stepOutMenuItem = Base.newJMenuItemAlt("Step Out", KeyEvent.VK_J);
+        stepOutMenuItem = Toolkit.newJMenuItemAlt("Step Out", KeyEvent.VK_J);
         stepOutMenuItem.addActionListener(this);
 
         printStackTraceMenuItem = new JMenuItem("Print Stack Trace");
@@ -223,7 +223,7 @@ public class DebugEditor extends JavaEditor implements ActionListener {
         printThreads = new JMenuItem("Print Threads");
         printThreads.addActionListener(this);
 
-        toggleVariableInspectorMenuItem = Base.newJMenuItem("Toggle Variable Inspector", KeyEvent.VK_I);
+        toggleVariableInspectorMenuItem = Toolkit.newJMenuItem("Toggle Variable Inspector", KeyEvent.VK_I);
         toggleVariableInspectorMenuItem.addActionListener(this);
 
         debugMenu.add(debugMenuItem);
