@@ -67,15 +67,13 @@
                     <ide-action name="debug"/>
                 </context-menu>
             </view>
-            <subprojects>
-                <project>/Users/mlg/Documents/NetBeansProjects/p5-svn</project>
-            </subprojects>
+            <subprojects/>
             <project-license>gpl20</project-license>
         </general-data>
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/3">
             <compilation-unit>
                 <package-root>src</package-root>
-                <classpath mode="compile">/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/pde.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/core.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/ecj.jar:lib/org-netbeans-swing-outline.jar</classpath>
+                <classpath mode="compile">lib/org-netbeans-swing-outline.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/core/library/core.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/app/pde.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/java/mode/ecj.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/core/src:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/app/src</classpath>
                 <built-to>build</built-to>
                 <javadoc-built-to>doc</javadoc-built-to>
                 <source-level>1.6</source-level>
