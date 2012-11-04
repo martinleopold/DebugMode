@@ -163,4 +163,8 @@ public class DebugMode extends JavaMode {
         Logger.getLogger(DebugMode.class.getName()).log(Level.WARNING, "Error loading Color: {0}", attribute);
         return defaultValue;
     }
+
+    public ClassLoader getJavaModeClassLoader() {
+        return super.getClassLoader();
+    }
 }
