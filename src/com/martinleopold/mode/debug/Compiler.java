@@ -19,12 +19,9 @@ package com.martinleopold.mode.debug;
 
 import java.io.*;
 import java.lang.reflect.Method;
-import org.eclipse.jdt.core.compiler.CompilationProgress;
-import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import processing.app.Base;
 import processing.app.SketchException;
 import processing.core.PApplet;
-import processing.mode.java.JavaBuild;
 
 /**
  * Copied from processing.mode.java.Compiler, just added -g switch to generate
@@ -112,7 +109,8 @@ public class Compiler extends processing.mode.java.Compiler {
 
       // Version that *is* dynamically loaded. First gets the mode class loader
       // so that it can grab the compiler JAR files from it.
-      ClassLoader loader = build.getMode().getJavaModeClassLoader();
+      //ClassLoader loader = build.getMode().getJavaModeClassLoader();
+      ClassLoader loader = build.getMode().getClassLoader();
       try {
         Class batchClass =
           Class.forName("org.eclipse.jdt.core.compiler.batch.BatchCompiler", false, loader);
