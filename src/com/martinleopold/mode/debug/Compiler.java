@@ -33,8 +33,9 @@ public class Compiler extends processing.mode.java.Compiler {
    /**
    * Compile with ECJ. See http://j.mp/8paifz for documentation.
    *
+   * @param build the build to compile
    * @return true if successful.
-   * @throws RunnerException Only if there's a problem. Only then.
+   * @throws SketchException Only if there's a problem. Only then.
    */
 //  public boolean compile(Sketch sketch,
 //                         File srcFolder,
@@ -109,8 +110,11 @@ public class Compiler extends processing.mode.java.Compiler {
 
       // Version that *is* dynamically loaded. First gets the mode class loader
       // so that it can grab the compiler JAR files from it.
-      //ClassLoader loader = build.getMode().getJavaModeClassLoader();
-      ClassLoader loader = build.getMode().getClassLoader();
+
+      ClassLoader loader = build.getMode().getJavaModeClassLoader();
+      //ClassLoader loader = build.getMode().getClassLoader();
+      //ClassLoader loader = ClassLoader.getSystemClassLoader();
+
       try {
         Class batchClass =
           Class.forName("org.eclipse.jdt.core.compiler.batch.BatchCompiler", false, loader);

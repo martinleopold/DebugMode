@@ -164,7 +164,19 @@ public class DebugMode extends JavaMode {
         return defaultValue;
     }
 
+    /**
+     * Retrieve the ClassLoader for JavaMode. This is used by Compiler to load
+     * ECJ classes. Thanks to Ben Fry.
+     *
+     * @return the class loader from java mode
+     */
     public ClassLoader getJavaModeClassLoader() {
-        return super.getClassLoader();
+        for (Mode m : base.getModeList()) {
+            if (m.getClass() == JavaMode.class) {
+                JavaMode jMode = (JavaMode) m;
+                return jMode.getClassLoader();
+            }
+        }
+        return null;  // badness
     }
 }
