@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <project name="DebugMode" default="install" basedir="./">
-    <description>Debugger for the PDE, Processing >2.0a6</description>
+    <description>Debugger for the PDE, Processing 2.0</description>
 
     <!-- name of your mode package (will be used as dir name) -->
     <property name="lib.name" 	value="DebugMode" />
 
     <!-- version -->
-    <property name="release" 	value="0.7" />
+    <property name="release" 	value="0.7.1" />
 
     <!-- java version -->
     <property name="java.target.version" value="1.6" />
@@ -16,7 +16,7 @@
     <property name="processing.pde" location="/Users/mlg/Documents/NetbeansProjects/p5-svn/trunk/processing/app/pde.jar" />
     <property name="processing.ecj" location="/Users/mlg/Documents/NetbeansProjects/p5-svn/trunk/processing/java/mode/ecj.jar" />
 
-        <!-- location of extra processing jars to be added to the classpath. (not really needed)  -->
+    <!-- location of extra processing jars to be added to the classpath. (not really needed)  -->
     <property name="processing.classes" location="/Users/mlg/Documents/NetbeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/" />
 
     <!-- folder to install modes in (probably a folder called "modes" inside your sketchbook folder) -->

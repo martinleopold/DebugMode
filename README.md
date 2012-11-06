@@ -14,11 +14,11 @@ Supported by [Google Summer of Code 2012](http://code.google.com/soc/)
 
 Current Release Info:
 
-PROTOTYPE 7 (v0.7)<br />
-Community release.
+PROTOTYPE 7 (v0.7.1)<br />
+Community release. Fixed for Processing 2.0b6.
 
 INSTALLATION:
-* Requires Processing 2.0b1 or later. ([http://www.processing.org/download](http://www.processing.org/download))
+* Requires Processing 2.0b6 ([http://www.processing.org/download](http://www.processing.org/download))
 * If not already present, create a folder named "modes" inside your Sketchbook folder. (The location of the sketchbook folder is shown in Processing's Preferences dialog)
 * Copy "dist/DebugMode" from the extracted .zip into the "modes" folder.
 * Restart Processing.
