@@ -73,7 +73,7 @@
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/3">
             <compilation-unit>
                 <package-root>src</package-root>
-                <classpath mode="compile">lib/org-netbeans-swing-outline.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/core/library/core.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/app/pde.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/java/mode/ecj.jar:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/core/src:/Users/mlg/Documents/NetBeansProjects/p5-svn/trunk/processing/app/src</classpath>
+                <classpath mode="compile">lib/org-netbeans-swing-outline.jar:/Users/mlg/Documents/NetBeansProjects/p5-git/processing/core/library/core.jar:/Users/mlg/Documents/NetBeansProjects/p5-git/processing/app/pde.jar:/Users/mlg/Documents/NetBeansProjects/p5-git/processing/core/src:/Users/mlg/Documents/NetBeansProjects/p5-git/processing/app/src</classpath>
                 <built-to>build</built-to>
                 <javadoc-built-to>doc</javadoc-built-to>
                 <source-level>1.6</source-level>

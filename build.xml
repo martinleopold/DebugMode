@@ -6,15 +6,15 @@
     <property name="lib.name" 	value="DebugMode" />
 
     <!-- version -->
-    <property name="release" 	value="0.7.1" />
+    <property name="release" 	value="0.7.2" />
 
     <!-- java version -->
     <property name="java.target.version" value="1.6" />
 
     <!-- processing jars are in different locations now (2.0b5). we need: core.jar, pde.jar, ecj.jar -->
-    <property name="processing.core" location="/Users/mlg/Documents/NetbeansProjects/p5-svn/trunk/processing/core/library/core.jar" />
-    <property name="processing.pde" location="/Users/mlg/Documents/NetbeansProjects/p5-svn/trunk/processing/app/pde.jar" />
-    <property name="processing.ecj" location="/Users/mlg/Documents/NetbeansProjects/p5-svn/trunk/processing/java/mode/ecj.jar" />
+    <property name="processing.core" location="/Users/mlg/Documents/NetbeansProjects/p5-git/processing/core/library/core.jar" />
+    <property name="processing.pde" location="/Users/mlg/Documents/NetbeansProjects/p5-git/processing/app/pde.jar" />
+    <property name="processing.ecj" location="/Users/mlg/Documents/NetbeansProjects/p5-git/processing/java/mode/ecj.jar" />
 
     <!-- location of extra processing jars to be added to the classpath. (not really needed)  -->
     <property name="processing.classes" location="/Users/mlg/Documents/NetbeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/" />
