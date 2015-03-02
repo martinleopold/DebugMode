@@ -6,24 +6,24 @@
     <property name="lib.name" 	value="DebugMode" />
 
     <!-- version -->
-    <property name="release" 	value="0.7.2" />
+    <property name="release" 	value="0.7.3" />
 
     <!-- java version -->
-    <property name="java.target.version" value="1.6" />
+    <property name="java.target.version" value="1.7" />
 
     <!-- processing jars are in different locations now (2.0b5). we need: core.jar, pde.jar, ecj.jar -->
-    <property name="processing.core" location="/Users/mlg/Documents/NetbeansProjects/p5-git/processing/core/library/core.jar" />
-    <property name="processing.pde" location="/Users/mlg/Documents/NetbeansProjects/p5-git/processing/app/pde.jar" />
+    <property name="processing.core" location="/Applications/Processing.app/Contents/Java/core.jar" />
+    <property name="processing.pde" location="/Applications/Processing.app/Java/pde.jar" />
     <property name="processing.ecj" location="/Users/mlg/Documents/NetbeansProjects/p5-git/processing/java/mode/ecj.jar" />
 
     <!-- location of extra processing jars to be added to the classpath. (not really needed)  -->
-    <property name="processing.classes" location="/Users/mlg/Documents/NetbeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/Resources/Java/" />
+    <property name="processing.classes" location="/Applications/Processing.app/Contents/Java/" />
 
     <!-- folder to install modes in (probably a folder called "modes" inside your sketchbook folder) -->
-    <property name="processing.modes" location="/Users/mlg/Documents/Processing/modes"/>
+    <property name="processing.modes" location="${user.home}/Documents/Processing/modes"/>
 
     <!-- path to your processing executable. -->
-    <property name="processing.executable" location="/Users/mlg/Documents/NetbeansProjects/p5-svn/trunk/processing/build/macosx/work/Processing.app/Contents/MacOS/JavaApplicationStub"/>
+    <property name="processing.executable" location="/Applications/Processing.app/Contents/MacOS/Processing"/>
 
 
 
@@ -75,7 +75,7 @@
 
         <mkdir dir="${build}" />
         <!-- <echo message="debug: ${debug}" /> -->
-        <javac srcdir="${src}" destdir="${build}" source="${java.target.version}" includeantruntime="false" debug="${debug}">
+        <javac srcdir="${src}" destdir="${build}" source="${java.target.version}" target="${java.target.version}" includeantruntime="false" debug="${debug}">
             <classpath>
                 <path refid="library-classpath"/>
             </classpath>
@@ -85,7 +85,7 @@
     <!-- - - - - - - - - - - - - - - - - - - - - - -
         PACKAGE
     - - - - - - - - - - - - - - - - - - - - - - - -->
-    <target name="package" depends="build, javadoc">
+    <target name="package" depends="clean, build, javadoc">
         <delete dir="${dist}" />
         <property name="bundle" value="${dist}/${lib.name}"/>
         <mkdir dir="${bundle}" />
