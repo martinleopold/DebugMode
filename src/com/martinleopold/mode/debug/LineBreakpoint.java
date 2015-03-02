@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Martin Leopold <m@martinleopold.com>
+ * Copyright (C) 2015 Martin Leopold <m@martinleopold.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,6 +22,7 @@ import com.sun.jdi.Location;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.request.BreakpointRequest;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,7 +35,8 @@ import java.util.logging.Logger;
 public class LineBreakpoint implements ClassLoadListener {
 
     protected Debugger dbg; // the debugger
-    protected LineID line; // the line this breakpoint is set on
+    protected LineID line, javaLine; // the line this breakpoint is set on in sketch space and java space.
+    protected Location location; // the location of this line in the corresponding class/type. needed to set the breakpoint
     protected BreakpointRequest bpr; // the request on the VM's event request manager
     protected ReferenceType theClass; // the class containing this breakpoint, null when not yet loaded
 
@@ -51,7 +53,7 @@ public class LineBreakpoint implements ClassLoadListener {
         this.line = line;
         line.startTracking(dbg.editor().getTab(line.fileName()).getDocument());
         this.dbg = dbg;
-        theClass = dbg.getClass(className()); // try to get the class immediately, may return null if not yet loaded
+        tryClass(dbg.getClass(className())); // the class might already be loaded
         set(); // activate the breakpoint (show highlight, attach if debugger is running)
     }
 
@@ -101,25 +103,13 @@ public class LineBreakpoint implements ClassLoadListener {
             return;
         }
 
-        // find line in java space
-        LineID javaLine = dbg.sketchToJavaLine(line);
-        if (javaLine == null) {
-            Logger.getLogger(LineBreakpoint.class.getName()).log(Level.WARNING, "couldn't find line {0} in the java code", line);
-            return;
+        if (location == null ) {
+            Logger.getLogger(LineBreakpoint.class.getName()).log(Level.WARNING, "no location found for line {0} -> {1}", new Object[]{line, javaLine});
         }
-        try {
-            List<Location> locations = theClass.locationsOfLine(javaLine.lineIdx() + 1);
-            if (locations.isEmpty()) {
-                Logger.getLogger(LineBreakpoint.class.getName()).log(Level.WARNING, "no location found for line {0} -> {1}", new Object[]{line, javaLine});
-                return;
-            }
-            // use first found location
-            bpr = dbg.vm().eventRequestManager().createBreakpointRequest(locations.get(0));
-            bpr.enable();
-            Logger.getLogger(LineBreakpoint.class.getName()).log(Level.INFO, "attached breakpoint to {0} -> {1}", new Object[]{line, javaLine});
-        } catch (AbsentInformationException ex) {
-            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
-        }
+
+        bpr = dbg.vm().eventRequestManager().createBreakpointRequest(location);
+        bpr.enable();
+        Logger.getLogger(LineBreakpoint.class.getName()).log(Level.INFO, "attached breakpoint to {0} -> {1}", new Object[]{line, javaLine});
     }
 
     /**
@@ -138,11 +128,12 @@ public class LineBreakpoint implements ClassLoadListener {
      * attaches the breakpoint by calling {@link #attach()}.
      */
     protected void set() {
-        dbg.addClassLoadListener(this); // class may not yet be loaded
+        if (theClass == null) { // class not yet loaded, need to listen for class loads
+            dbg.addClassLoadListener(this); 
+        }
         dbg.editor().addBreakpointedLine(line);
         if (theClass != null && dbg.isPaused()) { // class is loaded
-            // immediately activate the breakpoint
-            attach();
+            attach();// immediately activate the breakpoint
         }
         if (dbg.editor().isInCurrentTab(line)) {
             dbg.editor().getSketch().setModified(true);
@@ -202,6 +193,31 @@ public class LineBreakpoint implements ClassLoadListener {
     }
 
     /**
+     * Try to find this lines location in a reference type. This is primarily used to find the right nested class. e.g. MainClass$Nested1. location and theClass instance variables are set on sucess.
+     * 
+     * @param  theClass class to try
+     * @return true if the right class/location was found, otherwise false
+     */
+    protected boolean tryClass(ReferenceType theClass) {
+        if (theClass == null) return false;
+        javaLine = dbg.sketchToJavaLine(line); // find line in java space
+        if (javaLine == null) {
+            Logger.getLogger(LineBreakpoint.class.getName()).log(Level.WARNING, "couldn't find line {0} in the java code", line);
+        }
+        try {
+            List<Location> locations = theClass.locationsOfLine(javaLine.lineIdx() + 1);
+            if (!locations.isEmpty()) {
+                this.location = locations.get(0); // use first location found
+                this.theClass = theClass;
+                return true; 
+            }
+        } catch (AbsentInformationException ex) {
+            Logger.getLogger(Debugger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false; // location not found in class
+    }
+
+    /**
      * Event handler called when a class is loaded in the debugger. Causes the
      * breakpoint to be attached, if its class was loaded.
      *
@@ -210,8 +226,8 @@ public class LineBreakpoint implements ClassLoadListener {
     @Override
     public void classLoaded(ReferenceType theClass) {
         // check if our class is being loaded
-        if (theClass.name().equals(className())) {
-            this.theClass = theClass;
+        if ( theClass.name().startsWith(className()) && tryClass(theClass) ) { // this includes nested classes e.g. MySketch$NestedClass
+            //dbg.removeClassLoadListener(this); // we found it, no need to check any more classes as they are loaded
             attach();
         }
     }

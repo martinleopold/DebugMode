@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Martin Leopold <m@martinleopold.com>
+ * Copyright (C) 2015 Martin Leopold <m@martinleopold.com>
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -96,7 +96,7 @@ public class Debugger implements VMEventListener {
     /**
      * Retrieve the main class of the debuggee VM.
      *
-     * @return the main classes {@link ReferenceType} or null if the debugger is
+     * @return the main class {@link ReferenceType} or null if the debugger is
      * not started.
      */
     public ReferenceType getMainClass() {
@@ -536,21 +536,23 @@ public class Debugger implements VMEventListener {
                 //initialThread = ((VMStartEvent) e).thread();
                 ThreadReference t = ((VMStartEvent) e).thread();
                 //printStackTrace(t);
-
-                // break on main class load
-                Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "requesting event on main class load: {0}", mainClassName);
-                ClassPrepareRequest mainClassPrepare = runtime.vm().eventRequestManager().createClassPrepareRequest();
-                mainClassPrepare.addClassFilter(mainClassName);
-                mainClassPrepare.enable();
-
-                // break on loading custom classes
-                for (SketchCode tab : editor.getSketch().getCode()) {
+                
+                // classes to break on when loaded. add nested classes too.
+                ArrayList<String> classList = new ArrayList<String>();
+                classList.add(mainClassName); // main class
+                classList.add(mainClassName + "$*"); // any nested classes
+                for (SketchCode tab : editor.getSketch().getCode()) { // custom classes
                     if (tab.isExtension("java")) {
-                        Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "requesting event on class load: {0}", tab.getPrettyName());
-                        ClassPrepareRequest customClassPrepare = runtime.vm().eventRequestManager().createClassPrepareRequest();
-                        customClassPrepare.addClassFilter(tab.getPrettyName());
-                        customClassPrepare.enable();
+                        classList.add(tab.getPrettyName());
+                        classList.add(tab.getPrettyName() + "$*");
                     }
+                }
+                ClassPrepareRequest cpr;
+                for (String className : classList) {
+                    Logger.getLogger(Debugger.class.getName()).log(Level.INFO, "requesting event on class load: {0}", className);
+                    cpr = runtime.vm().eventRequestManager().createClassPrepareRequest();
+                    cpr.addClassFilter(className);
+                    cpr.enable();
                 }
 
                 runtime.vm().resume();
